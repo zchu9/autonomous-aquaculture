@@ -1,0 +1,15 @@
+services:
+  backend:
+    container_name: oyster-backend-service
+    image: oyster-backend-service
+    build: ./backend
+    ports:
+      - "3000:3000"
+    links:
+      - mqtt
+  mqtt:
+    container_name: oyster-message-broker
+    image: oyster-message-broker
+    build: ./broker
+    ports:
+      - "1883:1883"
