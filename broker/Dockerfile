@@ -6,4 +6,6 @@ RUN apt install -y mosquitto mosquitto-clients
 
 COPY . .
 
+EXPOSE 5173
+
 CMD ["mosquitto", "-c", "mosquitto.conf", "-v"]
