@@ -10,8 +10,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@material/web": "^2.2.0",
+    "@mui/icons-material": "^6.4.3",
+    "@mui/material": "^6.4.3",
+    "@mui/x-date-pickers": "^7.25.0",
+    "dayjs": "^1.11.13",
+    "dotenv": "^16.4.7",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.29.0",
+    "rmwc": "^14.3.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
