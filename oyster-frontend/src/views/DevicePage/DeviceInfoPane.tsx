@@ -10,7 +10,7 @@ import IOSSwitch from '../comm/Switch';
 import Paper from '@mui/material/Paper';
 import { styled } from '@mui/material/styles';
 
-interface ModalTemplateProps {
+interface DeviceInfoPaneProps {
     uuid: string
 }
 
@@ -25,7 +25,8 @@ const InfoPaneRow = styled(Box)(({ them }) => ({
     textAlign: 'left',
 }))
 
-export default function DeviceInfoPane(props: ModalTemplateProps) {
+export default function DeviceInfoPane(props: DeviceInfoPaneProps) {
+
     return (
         <InfoPane>
             <Stack spacing={2}>
@@ -79,7 +80,7 @@ export default function DeviceInfoPane(props: ModalTemplateProps) {
                 </Grid>
 
                 <Grid container spacing={2}>
-                    <Grid size={1}>
+                    <Grid size={2}>
                         Active
                     </Grid>
                     <Grid>
@@ -93,27 +94,5 @@ export default function DeviceInfoPane(props: ModalTemplateProps) {
                 </Grid>
             </Stack>
         </InfoPane>
-        // // <div>
-
-        //     {/* 
-
-        //     <Box>
-        //         
-                
-
-        //         <h3>UUID: {props.uuid}</h3>
-        //         <h3>Created on</h3>
-        //         <h3>Device Status (Last updated Updated mm/dd/yy)</h3>
-        //         <h3>Cage Status (Last updated mm/dd/yy)</h3>
-
-        //         <h3>Last Scheduled Operation (Sent mm/dd/yy)</h3>
-        //         <h3>Next Scheduled Operation (Sent mm/dd/yy)</h3>
-
-        //         <div>
-        //             <h3>Active</h3>
-        //             
-        //         </div>
-        //     </Box> */}
-        // // </div>
     )
 }

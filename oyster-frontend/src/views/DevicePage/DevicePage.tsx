@@ -6,11 +6,25 @@ import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid2';
 import Box from '@mui/material/Box';
 import DeviceInfoPane from './DeviceInfoPane';
+import {DeviceDataPane, IQueryResult} from './DeviceDataPane';
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined';
 import { Link as RouterLink } from 'react-router-dom';
 
 
 const base_url = `${import.meta.env.VITE_API_URL}`
+
+const device_data: IQueryResult[] = [
+  {date: "1/21/25", temperature_c: 37.01, height: 0.1},
+  {date: "1/22/25", temperature_c: 35.6, height: 0.11},
+  {date: "1/23/25", temperature_c: 36.8, height: 1.2},
+  {date: "1/24/25", temperature_c: 40.1, height: 1.4},
+  {date: "1/25/25", temperature_c: 39.2, height: 0.0},
+  // {date: "HI", temperature_c: 0.01},
+  // {date: "HELLO", temperature_c: 0.02},
+  // {date: "HEY", temperature_c: 0.02},
+  // {date: "YO", temperature_c: 0.02},
+  // {date: "NI HAO MA", temperature_c: 0.02},
+]
 
 export default function DevicePage() {
     const [deviceUUID, setDeviceUUID] = useSearchParams();
@@ -90,12 +104,12 @@ export default function DevicePage() {
             </Button>
           </Box>
           
-          <Grid container spacing={2}>
+          <Grid container spacing={4}>
             <Grid size={6}>
               <DeviceInfoPane uuid={deviceUUID}/>
             </Grid>
             <Grid size={6}>
-              <DeviceInfoPane uuid={deviceUUID}/>
+              <DeviceDataPane data={device_data}/>
             </Grid>
           </Grid>
         </Container>
