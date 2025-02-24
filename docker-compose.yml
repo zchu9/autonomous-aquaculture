@@ -5,8 +5,20 @@ services:
     build: ./backend
     ports:
       - "3000:3000"
+    depends_on:
+      - mongo
     links:
       - mqtt
+      - mongo
+  mongo:
+    container_name: oyster-mongoDB
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    restart: always
   mqtt:
     container_name: oyster-message-broker
     image: oyster-message-broker

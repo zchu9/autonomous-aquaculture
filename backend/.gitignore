@@ -26,4 +26,6 @@ shared
 *.sln
 *.sw?
 
-data
+# Python cache
+__pycache__
+
