@@ -1,15 +1,15 @@
 #include "pins.h"
 // --- Pin Assignments ---
-//#define POT_PIN A0       // Potentiometer input
+#define POT_PIN A0       // Potentiometer input
 
 void setup() {
   Serial.begin(9600);  // Start Serial Monitor
-  pinMode(DISPLAY_VOLTAGE_PIN, OUTPUT);  // Set display pin as output
+  pinMode(POT_PIN, INPUT);  
 }
 
 void loop() {
   // --- Read Raw Potentiometer Value ---
-  int potValue = analogRead(POT_PIN);  // Get raw value (0-1023)
+  int potValue = analogRead(POT_PIN);  // Get raw value (0-4095)  - SAMD21 ADC is 12 bits.
 
 
   // --- Display Readings in Serial Monitor ---

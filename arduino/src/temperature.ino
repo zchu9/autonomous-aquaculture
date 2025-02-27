@@ -1,7 +1,7 @@
-#include <OneWire.h>
-#include <DallasTemperature.h>
+#include <OneWire.h>            // blocking, disables interrupts for crit sections
+#include <DallasTemperature.h>  // blocking
 #include "pins.h"
-//Pin 2
+// Pin 2
 // Setup a OneWire instance
 OneWire oneWire(ONE_WIRE_BUS);
 
@@ -18,12 +18,11 @@ void setup() {
 void loop() {
   sensors.requestTemperatures(); // Send command to get temperatures
   float temperatureC = sensors.getTempCByIndex(0); // Get temperature in Celsius
+  float temperatureF = sensors.getTempFByIndex(0);
 
   if (temperatureC == DEVICE_DISCONNECTED_C) {
     Serial.println("Error: Could not read temperature data");
   } else {
-    float temperatureF = temperatureC * 9.0 / 5.0 + 32.0; // Convert to Fahrenheit
-
     Serial.print("Temperature: ");
     Serial.print(temperatureC);
     Serial.print(" °C  |  ");
