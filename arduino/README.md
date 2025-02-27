@@ -2,7 +2,7 @@ Arduino Sensor & Display Project
 This project includes two separate Arduino sketches:
 1. Potentiometer Reader – Reads a potentiometer value and displays it via serial.
 2. DS18B20 Temperature Sensor – Reads temperature in Celsius & Fahrenheit using the DS18B20 sensor.
-
+3. Pins.h includes pin assignments and should be included as a header #include "pins.h"
 Potentiometer Reader (`potentiometer.ino`)
 Functionality:
 - Reads the analog value from a potentiometer (0-1023).
