@@ -1,5 +1,6 @@
+#include "pins.h"
 // --- Pin Assignments ---
-#define POT_PIN A0       // Potentiometer input
+//#define POT_PIN A0       // Potentiometer input
 
 void setup() {
   Serial.begin(9600);  // Start Serial Monitor
