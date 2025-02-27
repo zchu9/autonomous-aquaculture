@@ -1,6 +1,5 @@
 // --- Pin Assignments ---
 #define POT_PIN A0       // Potentiometer input
-#define DISPLAY_VOLTAGE_PIN 9  // Voltage output for 3-wire display (PWM)
 
 void setup() {
   Serial.begin(9600);  // Start Serial Monitor
