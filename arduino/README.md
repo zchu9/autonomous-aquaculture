@@ -17,7 +17,6 @@ Pin Connections:
 | Potentiometer (VCC) | 5V |
 | Potentiometer (GND) | GND |
 | Potentiometer (Signal) | A0 |
-| Display Voltage Output | D9 (PWM) |
 
 
 
