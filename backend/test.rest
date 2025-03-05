@@ -1,0 +1,54 @@
+POST http://localhost:3000/addFarm
+Content-Type: application/json
+
+{
+    "location": "somewhere",
+    "cage_position": "up",
+    "created_at": "today",
+    "status": "connected"
+}
+
+###
+
+PUT http://localhost:3000/farm/67c8dfef07d0f8fc2fb6e2ca/update
+Content-Type: application/json
+
+{
+    "status": "connected"
+}
+
+###
+
+GET http://localhost:3000/farm/67c8dfef07d0f8fc2fb6e2ca/info
+Content-Type: application/json
+
+{
+
+}
+
+###
+
+GET http://localhost:3000/farm/67c8dfef07d0f8fc2fb6e2ca/check_status
+Content-Type: application/json
+
+{
+
+}
+
+###
+
+GET http://localhost:3000/farm/67c8dfef07d0f8fc2fb6e2ca/getActiveSensorData
+Content-Type: application/json
+
+{
+
+}
+
+###
+
+GET http://localhost:3000/farm
+Content-Type: application/json
+
+{
+
+}
