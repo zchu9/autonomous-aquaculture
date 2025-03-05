@@ -32,8 +32,13 @@ mqtt = Mqtt(app)
 def handle_connect(client, userdata, flags, rc):
     print(f"Successfully connected to MQTT broker on {MQTT_HOST_NAME}:{MQTT_PORT_NUM}")
 
+    # Setup for Last Will and Testament message for farm status
+    farm_id = client._client_id
+    client.will_set(f"farm/{farm_id}/status", payload="disconnected", qos=1, retain=True)
+
     mqtt.subscribe('test/topic/1')
     mqtt.subscribe('farm')
+    mqtt.subscribe('farm/+/status')
     mqtt.subscribe('farm/+/getActiveSensorData')
     mqtt.subscribe('farm/+/getActiveSystemLevels')
 
@@ -45,13 +50,31 @@ def handle_mqtt_message(client, userdata, message):
     global data_updated
 
     try:
-        topic = message.topic.decode("utf-8")
+        topic = message.topic
         payload = message.payload.decode("utf-8")
         data = json.loads(payload)
         print(f"Decoded topic: {topic}")
         print(f"Decoded message: {data}")
 
-        if "getActiveSensorData" in topic:
+        if "status" in topic:
+            farm_id = topic.split("/")[1]
+            print(f"Farm ID: {farm_id}")
+
+            if payload == "disconnected":
+            # Update farm status to disconnected in MongoDB when LWT message is received
+                farm_collection.update_one(
+                    {"_id": ObjectId(farm_id)},
+                    {"$set": {"status": "disconnected"}}
+                )
+        
+            elif payload == "connected":
+                # Update farm status to connected in MongoDB
+                farm_collection.update_one(
+                    {"_id": ObjectId(farm_id)},
+                    {"$set": {"status": "connected"}}
+                )
+    
+        elif "getActiveSensorData" in topic:
             farm_id = topic.split("/")[1]
             existing_data = sensor_active_data_collection.find_one({"farm_id": farm_id})
 
@@ -68,6 +91,7 @@ def handle_mqtt_message(client, userdata, message):
 
             data["created_at"] = get_eastern_time()
             sensor_active_data_collection.insert_one(data)
+
             data_updated = True
             print("Sensor data updated succesfully")
         
@@ -86,6 +110,7 @@ def handle_mqtt_message(client, userdata, message):
             
             data["created_at"] = get_eastern_time()
             system_active_levels_collection.insert_one(data)
+
             data_updated = True
             print("System level data updated successfully")
 
@@ -103,7 +128,6 @@ def test_pub():
     mqtt.publish('test/topic', 'this is a test topic')
     return "Published to MQTT broker"
 
-
 """ Rotues dedicated to just farm collection """
 @app.route("/addFarm", methods=["POST"])
 def add_farm():
@@ -112,6 +136,7 @@ def add_farm():
     if 'location' not in farm_data:
         return jsonify({"error": "Location is required"}), 400
 
+    farm_data["cage_position"] = "up"
     farm_data["created_at"] = get_eastern_time()
 
     try:
@@ -144,7 +169,8 @@ def update_farm(id):
     updated_data = request.json
 
     try:
-        result = farm_collection.update_one({"$set": updated_data})
+        farm_id = ObjectId(id)
+        result = farm_collection.update_one({"_id": farm_id}, {"$set": updated_data})
 
         if result.matched_count == 1:
             return f"Farm {id} updated successfully", 200
@@ -159,7 +185,8 @@ def update_farm(id):
 @app.route("/farm/<id>/info", methods=["GET"])
 def get_farm(id):
     try:
-        farm_data = farm_collection.find_one({"_id": id})
+        farm_id = ObjectId(id)
+        farm_data = farm_collection.find_one({"_id": farm_id})
 
         if farm_data:
             farm_data["_id"] = str(farm_data["_id"])
@@ -171,6 +198,48 @@ def get_farm(id):
         logging.error("Failed to get farm: %s", e)
         return "Error getting farm", 500
 
+@app.route("/farm", methods=["GET"])
+def get_multiple_farms():
+    try:
+        farm_ids = request.json.get("farm_ids", [])
+        
+        if not farm_ids:
+            return "There is no farm IDs", 400
+        
+        farms_data = [] # Array to hold all farms' data
+
+        for farm_id in farm_ids:
+            farm_data = farm_collection.find_one({"_id": ObjectId(farm_id)})
+
+            # Converts _id back to string and adds current farm into array
+            if farm_data:
+                farm_data["_id"] = str(farm_data["_id"])
+                farms_data.append(farm_data)
+        
+        if not farms_data:
+            return "No farms found for the given IDs", 400
+        
+        return jsonify(farms_data), 200
+
+    except Exception as e:
+        logging.error("Failed to get farms: %s", e)
+        return "Error getting farms", 500
+    
+@app.route("/farm/<id>/check_status", methods=["GET"])
+def get_farm_status(id):
+    try:
+        farm_id = ObjectId(id)
+        farm_data = farm_collection.find_one({"_id": farm_id})
+
+        if farm_data:
+            farm_data["_id"] = str(farm_data["_id"])
+            return jsonify({"status": farm_data["status"]}), 200
+        else:
+            return f"Farm {id} is not in database", 404
+
+    except Exception as e:
+        logging.error("Failed to get farm status: %s", e)
+        return "Error getting farm status", 500
 
 """ Rotues dedicated to just sensor collections """
 @app.route("/farm/<id>/getActiveSensorData", methods=["GET"])
