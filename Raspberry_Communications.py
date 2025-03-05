@@ -27,12 +27,11 @@ time.sleep(1) #!!!need to fine tune this!!!
 def send_command(command):
     lora.write((command + "\r\n").encode('utf-8'))
     time.sleep(0.1) #!!!need to fine tune this!!!
-    lora.flushInput()
 
 def configure_lora():
     send_command("AT+IPR=9600")
-    send_command("AT+CRFOP=3")
-    send_command("AT+NETWORKID=6")
+    send_command("AT+CRFOP=3") #!!!set to max(22) later!!!
+    send_command("AT+NETWORKID=6") 
     send_command("AT+BAND=915000000")
     send_command("AT+PARAMETER=9,7,1,12")
     send_command("AT+ADDRESS=0") #!!!same as default transciever address; may cause problems during farm expansion; needs fine tuning!!!
