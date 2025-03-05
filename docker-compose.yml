@@ -33,3 +33,6 @@ services:
       -  "5173:5173"
     links:
       - backend
+    volumes:
+      - ./oyster-frontend:/usr/src/app
+      - /usr/src/app/node_modules
