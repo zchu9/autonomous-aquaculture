@@ -1,0 +1,8 @@
+# Ignore Pytest cache
+.pytest_cache
+
+# Ignore Data folder for mongoDB
+data/
+
+# Ignore VS code settings
+.vs/
