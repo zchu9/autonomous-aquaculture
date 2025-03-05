@@ -200,33 +200,26 @@ def get_farm(id):
         logging.error("Failed to get farm: %s", e)
         return "Error getting farm", 500
 
+
 @app.route("/farm", methods=["GET"])
 def get_multiple_farms():
     try:
-        farm_ids = request.json.get("farm_ids", [])
-        
-        if not farm_ids:
-            return "There is no farm IDs", 400
-        
-        farms_data = [] # Array to hold all farms' data
+        farms_data = []  # Array to hold all farms' data
 
-        for farm_id in farm_ids:
-            farm_data = farm_collection.find_one({"_id": ObjectId(farm_id)})
-
+        for farm in farm_collection:
             # Converts _id back to string and adds current farm into array
-            if farm_data:
-                farm_data["_id"] = str(farm_data["_id"])
-                farms_data.append(farm_data)
-        
+            if farm:
+                farms_data.append(farm)
+
         if not farms_data:
             return "No farms found for the given IDs", 400
-        
+
         return jsonify(farms_data), 200
 
     except Exception as e:
         logging.error("Failed to get farms: %s", e)
         return "Error getting farms", 500
-    
+
 @app.route("/farm/<id>/check_status", methods=["GET"])
 def get_farm_status(id):
     try:
