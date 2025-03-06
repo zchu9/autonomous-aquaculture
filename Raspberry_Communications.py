@@ -1,17 +1,12 @@
-#######################################################################
-#This is also kinda dogwater :(
-#Hopefully it'll work for tonight; likely to fine tune throughout the day
-#May add ACK functionality depending on MCU side development progress
-#######################################################################
 import paho.mqtt.client as mqtt
 import serial
 import time
 
-MQTT_BROKER = "73.152.188.231" 
+MQTT_BROKER = "172.29.45.144" 
 MQTT_PORT = 1883
-MQTT_SUB_TOPIC = "server_to_farm"  #!!!not a real topic!!!
-MQTT_PUB_TOPIC = "farm_to_server" #!!!not a real topic!!!
-LORA_PORT = "/dev/serial0"  #!!!need to confirm this!!!
+MQTT_SUB_TOPIC = "farm/67c8dfef07d0f8fc2fb6e2ca/status"  #!!!not a real topic!!!
+MQTT_PUB_TOPIC = "farm/67c8dfef07d0f8fc2fb6e2ca/status" #!!!not a real topic!!!
+LORA_PORT = 'COM7' #!!!need to confirm this!!!
 BAUD_RATE = 9600 #!!!need to fine tune this!!!
 PACKET_SIZE = 100 #!!!need to fine tune this!!!
 MAX_PACKETS = 10  #!!!need to fine tune this!!!
@@ -27,11 +22,12 @@ time.sleep(1) #!!!need to fine tune this!!!
 def send_command(command):
     lora.write((command + "\r\n").encode('utf-8'))
     time.sleep(0.1) #!!!need to fine tune this!!!
+    lora.flushInput()
 
 def configure_lora():
     send_command("AT+IPR=9600")
-    send_command("AT+CRFOP=3") #!!!set to max(22) later!!!
-    send_command("AT+NETWORKID=6") 
+    send_command("AT+CRFOP=3")
+    send_command("AT+NETWORKID=6")
     send_command("AT+BAND=915000000")
     send_command("AT+PARAMETER=9,7,1,12")
     send_command("AT+ADDRESS=0") #!!!same as default transciever address; may cause problems during farm expansion; needs fine tuning!!!
@@ -48,10 +44,10 @@ def send_fragmented_message(message):
         command = f"AT+SEND=1,{len(packet)},{packet}"
         print(f"Sending: {packet}") #debug info
         send_command(command)
-        time.sleep(10)  #Don't overload the receiver, won't be necessary once ACKs are working.
+        time.sleep(10)  # Ensure proper timing
     print("Message sent successfully!") #debug info
 
-def on_connect(client, userdata, flags, rc):
+def on_connect(client, userdata, flags, rc, properties):
     print(f"Connected to MQTT Broker with result code {rc}") #debug info
     client.subscribe(MQTT_SUB_TOPIC)
 
@@ -89,11 +85,12 @@ def reconstruct_message():
     full_message = "".join(received_packets[:total_packets])
     print(f"Final Reconstructed Message: {full_message}") #debug info
     #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    # This is where a function call would go to decipher and format the message before publishing it to the server
+    # This is where a funtion call would go to decipher and format the message before publishing it to the server
     #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    mqtt_client.publish(MQTT_PUB_TOPIC, full_message)
+    # mqtt_client.publish(MQTT_PUB_TOPIC, full_message)
+    mqtt_client.publish(MQTT_PUB_TOPIC, '{"status": "disconneted"}')
 
-mqtt_client = mqtt.Client()
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "logan")
 mqtt_client.on_connect = on_connect
 mqtt_client.on_message = on_message
 mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60) #!!!potentially adust keep alive interval!!!
