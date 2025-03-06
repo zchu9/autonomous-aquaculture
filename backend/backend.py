@@ -204,12 +204,11 @@ def get_farm(id):
 @app.route("/farm", methods=["GET"])
 def get_multiple_farms():
     try:
-        farms_data = []  # Array to hold all farms' data
+        farms_data = []
 
-        for farm in farm_collection:
-            # Converts _id back to string and adds current farm into array
-            if farm:
-                farms_data.append(farm)
+        for farm in farm_collection.find():
+            if farm:        
+                farms_data.append(str(farm))
 
         if not farms_data:
             return "No farms found for the given IDs", 400
@@ -307,7 +306,7 @@ def get_active_system_levels(id):
 
     while not data_updated:
         time.sleep(0.1)
-    
+
     # Get the most recent system level information from active system level collection
     try:
         farm_id = ObjectId(id)
