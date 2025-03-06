@@ -14,6 +14,13 @@ enum State
     LOW_POWER_NO_CONNECTION
 };
 
+enum device
+{
+    BMS,
+    MPPT,
+    RADIO
+}; // victron bms, placeholder for renogy mppt, placeholder for LoRA module.
+
 struct data
 {
     bool liftFlag;
@@ -22,6 +29,7 @@ struct data
     double height;
     double power_placeholder;
     int img[10]; // Assuming the size of the array is 10, you can adjust it as needed
+    String whatever;
 };
 
 #define POWER_THRESHOLD 0.5
@@ -50,7 +58,11 @@ void commsHandler(data &d);
 void emergencyLiftHandler(data &d);
 
 // power helpers
-double checkPower();
+double checkPower(data &d);
+
+void uartSwitch(device d, long baud, uint16_t config);
+int messageTest(data &data);
+
 void getIntoLowPowerMode(data &d);
 void getOutOfLowPowerMode(data &d);
 
@@ -72,4 +84,5 @@ void lowerLift();
 
 // Debugging
 void initializeDebug();
+
 #endif // FSM_H

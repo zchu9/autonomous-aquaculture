@@ -35,7 +35,7 @@ void setupInterrupts()
     // Initialize the timer with the selected timer and interval
     while (millis() < 5000)
         ;
-    if (powerTimer.attachInterrupt(POWER_TIMER_INTERVAL_MS, PowerTimerHandler))
+    if (powerTimer.attachInterruptInterval_MS(POWER_TIMER_INTERVAL_MS, PowerTimerHandler))
     {
         preMillisTimer = millis();
         Serial.print(F("Starting ITimer OK, millis() = "));

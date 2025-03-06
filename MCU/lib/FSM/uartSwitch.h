@@ -1,8 +1,9 @@
 // 2.13.2025
 // header for switching UART lines
-
+// #include <Arduino.h>
 // set pinMode to OUTPUT in main.
 // currently unassigned
+/*
 #define MUX_PIN_0 -1
 #define MUX_PIN_1 -1
 #define MUX_DISABLE -1
@@ -24,7 +25,7 @@ void uartSwitch(device d, long baud, uint16_t config) {
 
     Serial1.flush();              // Wait for tx to clear.
     Serial1.begin(baud, config);  // change baud.
-    while (Serial1.availible()) {
+    while (Serial1.available()) {
         Serial1.read();  // clear input buffer.
     }
 
@@ -69,3 +70,4 @@ int messageTest(data &data) {
     return 1;
 }
 #endif
+*/
