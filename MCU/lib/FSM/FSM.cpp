@@ -1,11 +1,11 @@
 #include "FSM.h"
+#include "uartSwitch.h"
 
 /**
  * @brief
  *
  */
-void FSM(data &d)
-{
+void FSM(data& d) {
     sleep();
     // Serial.println("sleep dont work");
     checkPowerHandler(d);
@@ -22,8 +22,7 @@ void FSM(data &d)
  *
  * @param d the data struct that will be passed from the main function.
  */
-void initializeStartup(data &d)
-{
+void initializeStartup(data& d) {
 #if DEBUG
     initializeDebug();
 #endif
@@ -33,8 +32,8 @@ void initializeStartup(data &d)
     // initialize the data struct
     d.power_placeholder = 0;
     // d.height = getHeight();
-    d.img[10] = {0};
-    d.whatever = "Nice data Zachary";
+    d.img[10] = { 0 };
+    // d.whatever = "Nice data Zachary"; it is nice thank you everyone always says how nice it is, i didn't say that but everyone is saying its very very nice data, not like that nasty data some other poeple are bringing in here with its crime and all that
     // initializes the check power interrupt the comms handler, and the emergency lift lowering timer interrupt
     initializeLPMandNCM(d);
 }
@@ -43,8 +42,7 @@ void initializeStartup(data &d)
  * @brief Initializes variables to be used in the (Low Power/No Connection) Mode
  *
  */
-void initializeLPMandNCM(data &d)
-{
+void initializeLPMandNCM(data& d) {
     // initialize: Low Power, No Connection, RF Mode
     d.state = LOW_POWER_NO_CONNECTION;
 
@@ -62,8 +60,7 @@ void initializeLPMandNCM(data &d)
  * The LPM should be set to 0\n
  * check power should be initialized
  */
-void initializeLPM(data &d)
-{
+void initializeLPM(data& d) {
     d.state = LOW_POWER;
 }
 
@@ -73,8 +70,7 @@ void initializeLPM(data &d)
  * If NCM was 1, then the "reconnected" should be initialized already\n
  * TODO: initializeReconnection() is undefined
  */
-void initializeNCM(data &d)
-{
+void initializeNCM(data& d) {
     d.state = NO_CONNECTION;
 }
 
@@ -86,15 +82,12 @@ void initializeNCM(data &d)
  * if NCM was 1, then a "connected" initialization might be needed\n
  * TODO: Come up with a better name for the "connected" initialization
  */
-void initializeNormalFSM(data &d)
-{
+void initializeNormalFSM(data& d) {
     // NCM -> Normal
     d.state = NORMAL;
 }
 
-void sleep()
-{
-
+void sleep() {
     // Sleep until an interrupt occurs
     // asm - tells compiler this is inline assembly
     // __volatile__ - tells compiler this code has side effects that should not be optimized away
@@ -102,8 +95,7 @@ void sleep()
     //__asm__ __volatile__("wfi");
 }
 
-void checkPowerHandler(data &d)
-{
+void checkPowerHandler(data& d) {
     if (getPowerFlag() == 1)
     {
 #if DEBUG
@@ -111,13 +103,12 @@ void checkPowerHandler(data &d)
 #endif
         setPowerFlag(false);
         checkPower(d);
-        d.power_placeholder = 100; // checkPower();
+        // d.power_placeholder = 100; // checkPower();
         powerStateChange(d);
     }
 }
 
-void commsHandler(data &d)
-{
+void commsHandler(data& d) {
     if (getCommsFlag() == 1)
     {
 #if DEBUG
@@ -138,22 +129,19 @@ void commsHandler(data &d)
     }
 }
 
-void RFDisconnectedCase(data &d)
-{
+void RFDisconnectedCase(data& d) {
 #if DEBUG
     Serial.println("RF Disconnected");
 #endif
 }
 
-void RFConnectedCase(data &d)
-{
+void RFConnectedCase(data& d) {
 #if DEBUG
     Serial.println("RF Connected");
 #endif
 }
 
-void getIntoLowPowerMode(data &d)
-{
+void getIntoLowPowerMode(data& d) {
     if (d.state == NORMAL)
     {
         d.state = LOW_POWER;
@@ -163,8 +151,7 @@ void getIntoLowPowerMode(data &d)
         d.state = LOW_POWER_NO_CONNECTION;
     }
 };
-void getOutOfLowPowerMode(data &d)
-{
+void getOutOfLowPowerMode(data& d) {
     if (d.state == LOW_POWER_NO_CONNECTION)
     {
         d.state = NO_CONNECTION;
@@ -175,8 +162,7 @@ void getOutOfLowPowerMode(data &d)
     }
 }
 
-void powerStateChange(data &d)
-{
+void powerStateChange(data& d) {
     bool already_in_lpm = d.state == LOW_POWER || d.state == LOW_POWER_NO_CONNECTION;
     if (d.power_placeholder < POWER_THRESHOLD)
     {
@@ -198,96 +184,28 @@ void powerStateChange(data &d)
 /**
  * @brief initialize serial communication
  */
-void initializeDebug()
-{
+void initializeDebug() {
     Serial.begin(9600);
     while (!Serial)
         ;
     delay(100);
     Serial1.begin(9600, SERIAL_8N1);
-    pinMode(13, INPUT);
     Serial.println("Debugging Initialized");
 }
 ////////////////////////////////////////////////////////////////////////////
-// Zach's Room
+// Zach's House
 ////////////////////////////////////////////////////////////////////////////
-double checkPower(data &d)
-{
-#if DEBUG
-    if (Serial1.available())
-    {
-        messageTest(d);
-    }
-#endif
-    return 0.0;
+double checkPower(data& d) {
+    double ret = messageTest(d);
+    return ret;
 }
 
-void uartSwitch(device d, long baud, uint16_t config)
-{
-
-    // disable the mux, select new lines.
-#ifndef DEBUG
-    digitalWrite(MUX_DISABLE, HIGH);
-    digitalWrite(MUX_PIN_0, (d & 0x01));
-    digitalWrite(MUX_PIN_1, (d & 0x10));
-#endif
-
-    // assert(SERCOM5->USART.CTRLB.bit.CHSIZE == 0);  // check 8 bits is configured
-
-    Serial1.flush();             // Wait for tx to clear.
-    Serial1.begin(baud, config); // change baud.
-    while (Serial1.available())
-    {
-        Serial1.read(); // clear input buffer.
-    }
-
-#ifndef DEBUG
-    digitalWrite(MUX_DISABLE, LOW);
-#endif
-}
-
-#ifdef DEBUG
-int messageTest(data &data)
-{
-    // we anticipate the data sent from the power systems will be in a regular format
-    uartSwitch(MPPT, 19200, SERIAL_8N1);
-    String label;
-    String field;
-    size_t buffer_size = 6;
-    byte buffer[buffer_size];
-
-    // victron types first;
-    // we expect a label, tab, field, and lastly \r\n
-    while (Serial1.available())
-    {
-        label = Serial1.readStringUntil('\t');
-        field = Serial1.readStringUntil('\r');
-    }
-
-    if (!label.compareTo("V"))
-    {
-        data.whatever = field; // if the field matches, store it.
-    }
-
-    // TODO: implement a switch mechanism or wait here.
-
-    // secondly renogy types.
-    // first reconfigure uart.
-    uartSwitch(MPPT, 9600, SERIAL_8E1);
-    // we expect address, function, 2 bytes data, and 2 bytes crc.
-    // ignoring all except data for simplicity.
-    while (Serial1.available())
-    {
-
-        Serial1.readBytes(buffer, buffer_size);
-    }
-    byte value = (buffer[3] << 8) | (buffer[4]); // data transmitted is high byte then low byte.
-
-    data.whatever = String(value);
-
-    Serial.println(data.whatever);
-    // TODO: add a radio segment to change the line to the LoRA module.
-    uartSwitch(MPPT, 9600, SERIAL_8N1);
-    return 1;
-}
-#endif
+/*
+      `'::::.
+        _____A_
+       /      /\
+    __/__/\__/  \___
+---/__|" '' "| /___/\----
+   |''|"'||'"| |' '||
+   `""`""))""`"`""""`
+*/

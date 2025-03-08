@@ -11,9 +11,9 @@
 // Select only one to be true for SAMD21. Must must be placed at the beginning before #include "SAMDTimerInterrupt.h"
 #define USING_TIMER_TC3 false // Only TC3 can be used for SAMD51
 #define USING_TIMER_TC4 false // Not to use with Servo library
-#define USING_TIMER_TC5 false
+#define USING_TIMER_TC5 true
 #define USING_TIMER_TCC false
-#define USING_TIMER_TCC1 true
+#define USING_TIMER_TCC1 false
 #define USING_TIMER_TCC2 false // Don't use this, can crash on some boards
 
 // #include <TimerInterrupt_Generic.h>

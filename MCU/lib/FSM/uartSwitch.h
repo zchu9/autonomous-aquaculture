@@ -1,27 +1,30 @@
-// 2.13.2025
+// 3.08.2025
 // header for switching UART lines
-// #include <Arduino.h>
+#include <Arduino.h>
+
+#ifndef SWITCH_H
+#define SWITCH_H
+#include "FSM.h"
+
 // set pinMode to OUTPUT in main.
-// currently unassigned
-/*
-#define MUX_PIN_0 -1
-#define MUX_PIN_1 -1
-#define MUX_DISABLE -1
+// currently unassigned, move to a dedicated pins header when merged with sensors;
+#define MUX_SEL_0 -1
+#define MUX_SEL_1 -1
+#define MUX_SEL_2 -1
 
-#define DEBUG 1
-
-enum device { BMS, MPPT, RADIO };  // victron bms, placeholder for renogy mppt, placeholder for LoRA module.
+#define MUX_DISABLE_0 -1    // RX
+#define MUX_DISABLE_1 -1    // TX
+#define MUX_DISABLE_2 -1    // Winch
 
 void uartSwitch(device d, long baud, uint16_t config) {
-
     // disable the mux, select new lines.
 #ifndef DEBUG
-    digitalWrite(MUX_DISABLE, HIGH);
-    digitalWrite(MUX_PIN_0, (d & 0x01));
-    digitalWrite(MUX_PIN_1, (d & 0x10));
+    digitalWrite(MUX_DISABLE_0, HIGH);
+    digitalWrite(MUX_DISABLE_1, HIGH);
+    digitalWrite(MUX_SEL_0, (d & 0x001));
+    digitalWrite(MUX_SEL_1, (d & 0x010));
+    digitalWrite(MUX_SEL_2, (d & 0x100));
 #endif
-
-    // assert(SERCOM5->USART.CTRLB.bit.CHSIZE == 0);  // check 8 bits is configured
 
     Serial1.flush();              // Wait for tx to clear.
     Serial1.begin(baud, config);  // change baud.
@@ -30,44 +33,89 @@ void uartSwitch(device d, long baud, uint16_t config) {
     }
 
 #ifndef DEBUG
-    digitalWrite(MUX_DISABLE, LOW);
+    digitalWrite(MUX_DISABLE_0, LOW);
+    digitalWrite(MUX_DISABLE_1, LOW);
 #endif
-}
+};
 
 #ifdef DEBUG
-int messageTest(data &data) {
-    // we anticipate the data sent from the power systems will be in a regular format
-    uartSwitch(0, 19200, SERIAL_8N1);
-    // victron types first;
-    // we expect a label, tab, field, and lastly \r\n
-    while (Serial1.availible()) {
-        String label = Serial1.readStringUntil('\t');
-        String field = Serial1.readStringUntil('\r');
+int messageTest(data& data) {
+    size_t buffer_size = 30;
+    char buffer[buffer_size];
+    char testMessage[] = "TestMessage";
+    int chars = 0, messageLen = (int)(sizeof(testMessage) / sizeof(testMessage[0]));
+    bool passA = false, passB = false;
+
+    // naive timeout
+    int timeout = 10000;
+    int count = 0;
+
+    // switch to BMS line
+    uartSwitch(BMS, 19200, SERIAL_8N1);
+    while (!passA) {
+        while (Serial1.available()) {
+            chars = Serial1.readBytes(buffer, buffer_size);
+            if (chars != 0) {
+                for (int i = 0; i < messageLen; i++) {
+                    if (testMessage[i] != buffer[i]) {
+                        passA = false;
+                        break;
+                    }
+                    passA = true;
+                }
+                snprintf(buffer, buffer_size, "t:%lu | passed 1", millis());
+                Serial.println(buffer);
+            }
+        }
+
+        delay(20);  // arbitrary;
+        count++;
+        if (count == timeout) {
+            Serial.println("timeout1");
+            count = 0;
+            break;
+        }
     }
 
-    if(!label.compareTo("V")) {
-        data.whatever = field;  // if the field matches, store it.
+    // switch to the mppt line
+    uartSwitch(MPPT, 9600, SERIAL_8E1);
+    count = 0;
+    while (!passB) {
+        while (Serial1.available()) {
+            chars = Serial1.readBytes(buffer, buffer_size);
+            if (chars != 0) {
+                for (int i = 0; i < messageLen; i++) {
+                    if (testMessage[i] != buffer[i]) {
+                        passB = false;
+                        break;
+                    }
+                    passB = true;
+                }
+                snprintf(buffer, buffer_size, "t:%lu | passed 2", millis());
+                Serial.println(buffer);
+            }
+        }
+
+        delay(20);  // arbitrary;
+        count++;
+        if (count == timeout) {
+            Serial.println("timeout2");
+            count = 0;
+            break;
+        }
     }
 
-    // TODO: implement a switch mechanism or wait here.
-
-    // secondly renogy types.
-    // first reconfigure uart.
-    uartSwitch(0, 9600, SERIAL_8E1);
-    // we expect address, function, 2 bytes data, and 2 bytes crc.
-    // ignoring all except data for simplicity.
-    while (Serial1.availible()) {
-        size_t buffer_size = 6;
-        byte buffer[buffer_size];
-        Serial1.readBytes(buffer, buffer_size);
+    if (passA && passB) {
+        data.power_placeholder = 420;
+        return 1;
     }
-    byte value = (buffer[3] << 8) | (buffer[4]); // data transmitted is high byte then low byte.
-
-    data.whatever = value;
+    else {
+        data.power_placeholder = -1; //  ):
+        return 0;
+    }
 
     // TODO: add a radio segment to change the line to the LoRA module.
-    uartSwitch(0, 9600, SERIAL_8N1);
-    return 1;
-}
-#endif
-*/
+    // uartSwitch(RADIO, 9600, SERIAL_8N1);
+};
+#endif  // DEBUG
+#endif  // SWITCH_H

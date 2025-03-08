@@ -45,6 +45,8 @@
 //  PID     |           |   Product ID
 //  MON     |           |   DC monitor mode (v4.08+)
 
+#include <Arduino.h>
+
 #define FIELDSTART '\r' // 0x0D, 0x0A
 #define TAB '\t'        // 0x09
 #define victronBaud 19200

@@ -16,10 +16,10 @@ enum State
 
 enum device
 {
-    BMS,
-    MPPT,
-    RADIO
-}; // victron bms, placeholder for renogy mppt, placeholder for LoRA module.
+    BMS = 0x001,
+    MPPT = 0x010,
+    RADIO = 0x100
+}; // victron bms, renogy mppt, LoRA module.
 
 struct data
 {
@@ -29,7 +29,6 @@ struct data
     double height;
     double power_placeholder;
     int img[10]; // Assuming the size of the array is 10, you can adjust it as needed
-    String whatever;
 };
 
 #define POWER_THRESHOLD 0.5
@@ -59,9 +58,6 @@ void emergencyLiftHandler(data &d);
 
 // power helpers
 double checkPower(data &d);
-
-void uartSwitch(device d, long baud, uint16_t config);
-int messageTest(data &data);
 
 void getIntoLowPowerMode(data &d);
 void getOutOfLowPowerMode(data &d);
