@@ -10,8 +10,16 @@ import IOSSwitch from '../comm/Switch';
 import Paper from '@mui/material/Paper';
 import { styled } from '@mui/material/styles';
 
+export interface DeviceInfo {
+    _id: string,
+    location: string,
+    status: string,
+    cage_position: string,
+    created_at: Date
+}
+
 interface DeviceInfoPaneProps {
-    uuid: string
+    deviceInfo: DeviceInfo
 }
 
 const InfoPane = styled(Paper)(({ theme }) => ({
@@ -25,7 +33,24 @@ const InfoPaneRow = styled(Box)(({ them }) => ({
     textAlign: 'left',
 }))
 
-export default function DeviceInfoPane(props: DeviceInfoPaneProps) {
+export function DeviceInfoPane(props: DeviceInfoPaneProps) {
+
+    if (!props.deviceInfo) {
+        return (
+            <InfoPane>
+                <Stack spacing={2}>
+                    <h2>Loading Device Info...</h2>
+                </Stack>
+            </InfoPane>
+        );
+    }
+
+    const { _id, status, cage_position, created_at } = props.deviceInfo || {};
+    console.log(created_at)
+    const formattedDate = created_at ? new Date(created_at) : null;
+    const createdAtString = formattedDate && !isNaN(formattedDate.getTime())
+        ? formattedDate.toLocaleString()
+        : "Invalid Date";
 
     return (
         <InfoPane>
@@ -34,7 +59,7 @@ export default function DeviceInfoPane(props: DeviceInfoPaneProps) {
                     <Grid size={6}>
                         <InfoPaneRow>
                             <h2>Device Name</h2>
-                            UUID
+                            {_id}
                         </InfoPaneRow>
                     </Grid>
                     <Grid size={6} sx={{textAlign: 'right'}}>
@@ -51,7 +76,9 @@ export default function DeviceInfoPane(props: DeviceInfoPaneProps) {
                 </Grid>
 
                 <InfoPaneRow>
-                    Created On:
+                    {/* Created On: {deviceInfo.created_at.toString()} */}
+                    {/* Created On: {props.deviceInfo.created_at.toString()} */}
+                    Created On: {createdAtString}
                 </InfoPaneRow>
 
                 <Box></Box>
@@ -59,7 +86,7 @@ export default function DeviceInfoPane(props: DeviceInfoPaneProps) {
                 <Grid container spacing={2}>
                     <Grid size={6}>
                         <InfoPaneRow>
-                            Device Status:
+                            Connection Status: {status}
                         </InfoPaneRow>
                     </Grid>
                     <Grid size={6}>
@@ -69,7 +96,7 @@ export default function DeviceInfoPane(props: DeviceInfoPaneProps) {
                     </Grid> 
                     <Grid size={6}>
                         <InfoPaneRow>
-                            Cage Status: 
+                            Cage Status: {cage_position}
                         </InfoPaneRow>
                     </Grid>
                     <Grid size={6}>

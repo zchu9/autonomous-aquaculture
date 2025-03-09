@@ -207,8 +207,9 @@ def get_multiple_farms():
         farms_data = []
 
         for farm in farm_collection.find():
-            if farm:        
-                farms_data.append(str(farm))
+            if farm:     
+                farm["_id"] = str(farm["_id"])   
+                farms_data.append(farm)
 
         if not farms_data:
             return "No farms found for the given IDs", 400
