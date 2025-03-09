@@ -39,73 +39,79 @@ void uartSwitch(device d, long baud, uint16_t config) {
 };
 
 #ifdef DEBUG
-int messageTest(data& data) {
-    size_t buffer_size = 30;
-    char buffer[buffer_size];
-    char testMessage[] = "TestMessage";
-    int chars = 0, messageLen = (int)(sizeof(testMessage) / sizeof(testMessage[0]));
-    bool passA = false, passB = false;
+int messageTest(data& data, bool useLED = false) {
+    // attempts to read "TestMessage" at 19200 8N1, then 9600 8E1, then returns to 9600 8N1.
+    // if use LED is true, the built in LED will be on when the second loop is entered. this indicates the sender can switch modes if not on a timer.
 
-    // naive timeout
-    int timeout = 10000;
-    int count = 0;
+    String testMessage = "TestMessage";
+    const size_t buffer_size = 64;    // on SAMD the rx buffer is 256 bytes total
+    char buffer[buffer_size] = { '\0' };
+    bool pass = false;
+    int bytesToRead = 8;
+
+    unsigned long start = millis();
+    unsigned long timeout = 10000;
 
     // switch to BMS line
     uartSwitch(BMS, 19200, SERIAL_8N1);
-    while (!passA) {
-        while (Serial1.available()) {
-            chars = Serial1.readBytes(buffer, buffer_size);
-            if (chars != 0) {
-                for (int i = 0; i < messageLen; i++) {
-                    if (testMessage[i] != buffer[i]) {
-                        passA = false;
+    while (!pass) {
+        // spins until testMessage is matched or timeout is reached.
+        // with no delay in tx, this buffer may always contain junk and never complete.
+        if (Serial1.available() > bytesToRead) {
+            memset(buffer, '\0', buffer_size);
+            Serial1.readBytes(buffer, buffer_size);
+            for (size_t i = 0; i < buffer_size; i++) {
+                if (buffer[i] == testMessage[0]) {
+                    if (!String(buffer).substring(i, i + testMessage.length()).compareTo(testMessage)) {    // <-- ugly; sorry not sorry
+                        pass = true;
                         break;
                     }
-                    passA = true;
                 }
-                snprintf(buffer, buffer_size, "t:%lu | passed 1", millis());
-                Serial.println(buffer);
             }
         }
 
-        delay(20);  // arbitrary;
-        count++;
-        if (count == timeout) {
-            Serial.println("timeout1");
-            count = 0;
-            break;
+        if (millis() - start > timeout) {
+            uartSwitch(RADIO, 9600, SERIAL_8N1);
+            return -1; // timeout 1
         }
     }
 
-    // switch to the mppt line
+    if(useLED) {
+        digitalWrite(LED_BUILTIN, HIGH);
+    }
+
+    pass = false;
     uartSwitch(MPPT, 9600, SERIAL_8E1);
-    count = 0;
-    while (!passB) {
-        while (Serial1.available()) {
-            chars = Serial1.readBytes(buffer, buffer_size);
-            if (chars != 0) {
-                for (int i = 0; i < messageLen; i++) {
-                    if (testMessage[i] != buffer[i]) {
-                        passB = false;
+    while (!pass) {
+        // spins until testMessage is matched or timeout is reached.
+        // with no delay in tx, this buffer may always contain junk and never complete.
+        while (Serial1.available() > bytesToRead) {
+            memset(buffer, '\0', buffer_size);
+            Serial1.readBytes(buffer, buffer_size);
+            for (size_t i = 0; i < buffer_size; i++) {
+                if (buffer[i] == testMessage[0]) {
+                    if (!String(buffer).substring(i, i + testMessage.length()).compareTo(testMessage)) {
+                        pass = true;
                         break;
                     }
-                    passB = true;
                 }
-                snprintf(buffer, buffer_size, "t:%lu | passed 2", millis());
-                Serial.println(buffer);
             }
         }
-
-        delay(20);  // arbitrary;
-        count++;
-        if (count == timeout) {
-            Serial.println("timeout2");
-            count = 0;
-            break;
+        if (millis() - start > timeout) {
+            uartSwitch(RADIO, 9600, SERIAL_8N1);
+            if(useLED) {
+                digitalWrite(LED_BUILTIN, LOW);
+            }
+            return -2;  // timeout 2
         }
     }
 
-    if (passA && passB) {
+    uartSwitch(RADIO, 9600, SERIAL_8N1);    // must always happen
+    if(useLED) {
+        digitalWrite(LED_BUILTIN, LOW);
+    }
+    start = millis();
+    if (pass) {
         data.power_placeholder = 420;
         return 1;
     }
@@ -113,9 +119,6 @@ int messageTest(data& data) {
         data.power_placeholder = -1; //  ):
         return 0;
     }
-
-    // TODO: add a radio segment to change the line to the LoRA module.
-    // uartSwitch(RADIO, 9600, SERIAL_8N1);
 };
 #endif  // DEBUG
 #endif  // SWITCH_H
