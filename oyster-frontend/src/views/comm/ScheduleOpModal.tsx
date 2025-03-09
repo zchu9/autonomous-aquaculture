@@ -15,11 +15,13 @@ import SendIcon from '@mui/icons-material/Send';
 import Checkbox from '@mui/material/Checkbox';
 import Stack from '@mui/material/Stack';
 
-
-
 const base_url = `${import.meta.env.VITE_API_URL}`
 
-export default function ScheduleOpModal() {
+interface ScheduleModalProps {
+    closeFn: any
+}
+
+export default function ScheduleOpModal(props: ScheduleModalProps) {
 
     const [doSendNow, setDoSendNow] = React.useState<boolean>(false);
     const [dateIsValid, setDateIsValid] = React.useState<boolean>(false);
@@ -44,8 +46,6 @@ export default function ScheduleOpModal() {
           }
     
           console.log("Successfully hit!");
-          // const data = await response.json();
-          // setResult(data.message);
         } catch (error) {
           console.error('Error fetching sensor data:', error);
         }
@@ -130,7 +130,7 @@ export default function ScheduleOpModal() {
                         onClick = {
                             () => {
                                 testAPI();
-                                
+                                props.closeFn();
                             }
                         }>
                             Send

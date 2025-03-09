@@ -223,7 +223,7 @@ interface EnhancedTableProps {
             aria-labelledby="modal-modal-title"
             aria-describedby="modal-modal-description"
         >
-            <div><AddDeviceModal/></div>
+            <div><AddDeviceModal closeFn={handleDeviceModalClose}/></div>
         </Modal>
 
         <Box sx={{p: 0.5}}/>
@@ -243,7 +243,7 @@ interface EnhancedTableProps {
             aria-labelledby="modal-modal-title"
             aria-describedby="modal-modal-description"
         >
-            <div><ScheduleOpModal/></div>
+            <div><ScheduleOpModal closeFn={handleScheduleModalClose}/></div>
         </Modal>
 
 

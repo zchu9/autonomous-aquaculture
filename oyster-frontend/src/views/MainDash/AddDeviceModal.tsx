@@ -8,7 +8,11 @@ import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOu
 
 const base_url = `${import.meta.env.VITE_API_URL}`
 
-export default function AddDeviceModal() {
+interface AddDeviceModalProps {
+    closeFn: any
+}
+
+export default function AddDeviceModal(props: AddDeviceModalProps) {
 
     async function createDevice() {
         console.log("Adding new device");
@@ -50,6 +54,7 @@ export default function AddDeviceModal() {
                             () => {
                                 createDevice()
                                 // testAPI();
+                                props.closeFn()
                             }
                         }>
                             Confirm
