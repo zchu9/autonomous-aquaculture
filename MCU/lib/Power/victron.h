@@ -3,7 +3,6 @@
 // VE.Direct protocol spec 3.33
 
 // TODO:
-// implement checksums.
 // denote cases where value returned is '---'.
 // include a timeout.
 
@@ -45,50 +44,28 @@
 //  PID     |           |   Product ID
 //  MON     |           |   DC monitor mode (v4.08+)
 
-#include <Arduino.h>
+#include <map>
+#include "victronFunctions.h"
 
 #define FIELDSTART '\r' // 0x0D, 0x0A
 #define TAB '\t'        // 0x09
 #define victronBaud 19200
 #define victronConfig SERIAL_8N1
 
-volatile bool powerReadInProgress;
+bool powerReadInProgress;
 
-typedef struct victronStats {
-    static const size_t indices = 13;
-    String labels[indices] = { "V", "P", "CE", "SOC", "TTG", "H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8" };
-    String data[indices];
-};
-
-void fetchVictronStats(victronStats& stats) {
+void fetchVictronStats(std::map<std::string, std::string>& stats) {
     powerReadInProgress = true;
-    int index = -1;
-    while (Serial1.available()) {
-        String label = Serial1.readStringUntil(TAB);       // take the label.
-        String data = Serial1.readStringUntil(FIELDSTART); // read the next field.
-        while (Serial1.peek() != '\n') {                   // newline is \r\n; this is to avoid truncated data.
-            data += Serial1.readStringUntil(FIELDSTART);
-        }
+    const size_t buffer_size = 128; // SAMD RX buffer is 256 total.
+    char buffer[buffer_size] = { '\0' };
 
-        if (index == -1) {
-            for (int i = 0; i < stats.indices; i++) {
-                if (!label.compareTo(stats.labels[i])) {   // wraps strcmp.
-                    stats.data[i] = data;
-                    index = i + 1;
-                    break;
-                }
-            }
-            continue;
-        }
-
-        if (!label.compareTo(stats.labels[index])) {
-            stats.data[index] = data;
-            index++;
-        }
-
-        if (index == stats.indices) {
-            break;
+    if (Serial1.available()) {
+        Serial1.readBytes(buffer, buffer_size);
+        if (!victronChecksum(buffer, buffer_size)) {
+            // TODO
+            // transmission error.
         }
     }
+    victronParse(stats);
     powerReadInProgress = false; // all done, bye bye
 }

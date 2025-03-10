@@ -110,7 +110,6 @@ int messageTest(data& data, bool useLED = false) {
     if(useLED) {
         digitalWrite(LED_BUILTIN, LOW);
     }
-    start = millis();
     if (pass) {
         data.power_placeholder = 420;
         return 1;

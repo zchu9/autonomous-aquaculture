@@ -6,7 +6,8 @@
 // start . address . function . data    . error check . end
 // 10ms  . 1 byte  . 1 byte   . 2 bytes . 2 byte   . 10ms
 
-#include "crc.h"
+// #include <Arduino.h>
+// #include "CRC.h"
 
 #define renogyBaud 9600
 #define renogyConfig SERIAL_8E1 // modbus *requires* even parity or 2 stop bits.
@@ -22,7 +23,6 @@ struct renogyDevice
 {
     unit16_t deviceAddress;
 };
-
 
 void getDeviceAddress();
 void readRenogyPowerData() {
