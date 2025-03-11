@@ -2,11 +2,16 @@ import paho.mqtt.client as mqtt
 import serial
 import time
 
-MQTT_BROKER = "172.29.45.144" 
+file = open(".info.txt")
+broker = file.readline()
+topic = file.readline()
+file.close()
+
+MQTT_BROKER = broker
 MQTT_PORT = 1883
-MQTT_SUB_TOPIC = "farm/67c8dfef07d0f8fc2fb6e2ca/status"  #!!!not a real topic!!!
-MQTT_PUB_TOPIC = "farm/67c8dfef07d0f8fc2fb6e2ca/status" #!!!not a real topic!!!
-LORA_PORT = 'COM7' #!!!need to confirm this!!!
+MQTT_PUB_TOPIC = topic #!!!not a real topic!!!
+MQTT_SUB_TOPIC = topic #!!!not a real topic!!!
+LORA_PORT = 'COM7' #!!!need to confirm this!!!  -check /dev/ttyACM0 or /dev/ttyS0; COM# is windows.
 BAUD_RATE = 9600 #!!!need to fine tune this!!!
 PACKET_SIZE = 100 #!!!need to fine tune this!!!
 MAX_PACKETS = 10  #!!!need to fine tune this!!!
