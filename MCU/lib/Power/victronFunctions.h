@@ -1,6 +1,12 @@
 #include <map>
 #include <string>
 
+#define FIELDSTART '\r' // 0x0D, 0x0A
+#define TAB '\t'        // 0x09
+#define VICTRON_BAUD 19200
+#define VICTRON_CONFIG SERIAL_8N1
+#define VICTRON_DELAY 2500  // the shunt emits data every second; 2.5s ensures at least one full block of data.
+
 bool victronChecksum(unsigned char* serialData, size_t dataSize) {
     int checksum = 0;
     for (size_t i = 0; i < dataSize; i++) {

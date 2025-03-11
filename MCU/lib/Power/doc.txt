@@ -1,0 +1,111 @@
+
+RENOGY
+====================================================================================
+// to be expanded with additional function codes from ROVER_MODBUS.PDF
+// Register 0x100 - Battery Capacity - 0
+
+// Register 0x101 - Battery Voltage - 1
+
+// Register 0x102 - Battery Charge Current - 2
+
+// Register 0x103 - Battery/Controller Temperature - 3
+// 0x103 returns two bytes, one for battery and one for controller temp in c        
+
+// Register 0x104 - Load Voltage - 4
+
+// Register 0x105 - Load Current - 5
+
+// Register 0x106 - Load Power - 6
+
+// Register 0x107 - Solar Panel (PV) Voltage - 7
+
+// Register 0x108 - Solar Panel (PV) Current - 8
+
+// Register 0x109 - Solar Panel (PV) Power - 9
+
+// Register 0x10A - Turn on load, write register, unsupported in wanderer - 10
+// Register 0x10B - Min Battery Voltage Today - 11
+
+// Register 0x10C - Min Battery Voltage Today - 12
+
+// Register 0x10D - Max Charge Current Today - 13
+
+// Register 0x10E - Max Discharge Current Today - 14
+
+// Register 0x10F - Max Charge Power Today - 15 
+
+// Register 0x110- Max Discharge Power Today - 16
+
+// Register 0x111- Charge Amp/Hrs Today - 17
+
+// Register 0x112- Discharge Amp/Hrs Today - 18
+
+// Register 0x113- Charge Watt/Hrs Today - 19
+
+// Register 0x114- Discharge Watt/Hrs Today - 20
+
+// Register 0x115- Controller Uptime (Days) - 21
+
+// Register 0x116- Total Battery Over-charges - 22
+
+// Register 0x117- Total Battery Full Charges - 23
+
+// Registers 0x118 to 0x119- Total Charging Amp-Hours - 24/25
+// We have to combine 4 bytes, two from one register, two from a second register.
+
+// Registers 0x11A to 0x11B- Total Discharging Amp-Hours - 26/27
+// We have to combine 4 bytes, two from one register, two from a second register.     
+
+// Registers 0x11C to 0x11D- Total Cumulative power generation (kWH) - 28/29
+// We have to combine 4 bytes, two from one register, two from a second register.
+
+// Registers 0x11E to 0x11F- Total Cumulative power consumption (kWH) - 30/31
+// We have to combine 4 bytes, two from one register, two from a second register.
+
+// Register 0x120 - Load Status, Load Brightness, Charging State - 32
+// 0x120 returns two bytes, one for load status, and one for Charging State.
+
+// Registers 0x121 to 0x122 - Controller fault codes - 33/34
+
+
+VICTRON
+====================================================================================
+
+#pragma region DOC
+// messages are sent in blocks on 1 second intervals.
+
+//  label   |   unit    |   description
+// ------------------------------------------------------------------
+//  V       |   mV      |   Main or channel 1 (battery) voltage
+//  VS      |   mV      |   Auxiliary (starter) voltage
+//  VM      |   mV      |   Mid-point voltage of the battery bank
+//  DM      |   %       |   Mid-point deviation of the battery bank
+//  I       |   mA      |   Main or channel 1 battery current
+//  T       |   C       |   Battery temperature
+//  P       |   W       |   Instantaneous power
+//  CE      |   mAh     |   Consumed Amp Hours
+//  SOC     |   %       |   State-of-charge
+//  TTG     |   Minutes |   Time-to-go
+//  Alarm   |           |   Alarm condition active
+//  Relay   |           |   Relay state
+//  AR      |           |   Alarm reason
+//  H1      |   mAh     |   Depth of the deepest discharge
+//  H2      |   mAh     |   Depth of the last discharge
+//  H3      |   mAh     |   Depth of the average discharge
+//  H4      |           |   Number of charge cycles
+//  H5      |           |   Number of full discharges
+//  H6      |   mAh     |   Cumulative Amp Hours drawn
+//  H7      |   mV      |   Minimum main (battery) voltage
+//  H8      |   mV      |   Maximum main (battery) voltage
+//  H9      |   Seconds |   Number of seconds since last full charge
+//  H10     |           |   Number of automatic synchronizations
+//  H11     |           |   Number of low main voltage alarms
+//  H12     |           |   Number of high main voltage alarms
+//  H15     |   mV      |   Minimum auxiliary (battery) voltage
+//  H16     |   mV      |   Maximum auxiliary (battery) voltage
+//  H17     |   0.01kWh |   Amount of discharged energy (BMV) / Amount of produced energy (DC monitor)
+//  H18     |   0.01kWh |   Amount of charged energy (BMV) / Amount of consumed energy (DC monitor)
+//  BMV     |           |   Model description (deprecated)
+//  FW      |           |   Firmware version (16 bit)
+//  PID     |           |   Product ID
+//  MON     |           |   DC monitor mode (v4.08+)

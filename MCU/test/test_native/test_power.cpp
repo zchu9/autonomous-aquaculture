@@ -1,6 +1,6 @@
 #include <unity.h>
 #include "victronFunctions.h"
-#include "renogy.h"
+#include "renogyFunctions.h"
 
 void setUp(void) {
 }
@@ -9,7 +9,7 @@ void tearDown(void) {
 }
 
 void test_renchecksum() {
-    // from minModbus tests
+    // from minimalModbus tests
     unsigned char data1[] = { 0x02,0x07 };
     int check1 = 0x1241;
     TEST_ASSERT_TRUE(crcCheck(check1, data1, 2));
