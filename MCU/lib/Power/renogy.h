@@ -6,7 +6,7 @@
 // start . address . function . data    . error check . end
 // 10ms  . 1 byte  . 1 byte   . 2 bytes . 2 byte   . 10ms
 
-#include <Arduino.h>
+// #include <Arduino.h>
 
 // LUT for 16b CRC. https://github.com/pyhys/minimalmodbus/blob/785262db5f582f5262ddbe67afa9a192208558fc/minimalmodbus.py#L3014
 int crcLUT[] = {
