@@ -57,7 +57,7 @@ bool powerReadInProgress;
 void fetchVictronStats(std::map<std::string, std::string>& stats) {
     powerReadInProgress = true;
     const size_t buffer_size = 128; // SAMD RX buffer is 256 total.
-    char buffer[buffer_size] = { '\0' };
+    unsigned char buffer[buffer_size] = { '\0' };   // checksum byte is not guaranteed to be ascii
 
     if (Serial1.available()) {
         Serial1.readBytes(buffer, buffer_size);
@@ -66,6 +66,6 @@ void fetchVictronStats(std::map<std::string, std::string>& stats) {
             // transmission error.
         }
     }
-    victronParse(stats);
+    victronParse(stats, buffer, buffer_size);
     powerReadInProgress = false; // all done, bye bye
 }

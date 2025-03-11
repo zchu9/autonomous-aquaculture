@@ -5,6 +5,8 @@
 #ifndef SWITCH_H
 #define SWITCH_H
 #include "FSM.h"
+#include "victron.h"
+#include "renogy.h"
 
 // set pinMode to OUTPUT in main.
 // currently unassigned, move to a dedicated pins header when merged with sensors;
