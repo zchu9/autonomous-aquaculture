@@ -1,13 +1,14 @@
 #include <map>
 #include <string>
 
-#define FIELDSTART '\r' // 0x0D, 0x0A
+#define CRETURN '\r' // 0x0D, 0x0A
+#define NEWLINE '\n'
 #define TAB '\t'        // 0x09
 #define VICTRON_BAUD 19200
 #define VICTRON_CONFIG SERIAL_8N1
 #define VICTRON_DELAY 2500  // the shunt emits data every second; 2.5s ensures at least one full block of data.
 
-bool victronChecksum(unsigned char* serialData, size_t dataSize) {
+bool victronChecksum(uint8_t* serialData, size_t dataSize) {
     int checksum = 0;
     for (size_t i = 0; i < dataSize; i++) {
         if (serialData[i] != '\0') {
@@ -20,16 +21,16 @@ bool victronChecksum(unsigned char* serialData, size_t dataSize) {
     return (!checksum);
 };
 
-void victronParse(std::map<std::string, std::string>& stats, unsigned char* buffer, size_t buffer_size) {
+void victronParse(std::map<std::string, std::string>& stats, uint8_t* buffer, size_t buffer_size) {
     std::string label = "";
     std::string field = "";
     for (size_t i = 0; i < buffer_size; i++) {
         label = "";
         field = "";
-        if (buffer[i] == '\n') {
+        if (buffer[i] == NEWLINE) {
             i++;
             while (i < buffer_size) {
-                if (buffer[i] == '\t') {
+                if (buffer[i] == TAB) {
                     i++;
                     break;
                 }
@@ -38,7 +39,7 @@ void victronParse(std::map<std::string, std::string>& stats, unsigned char* buff
             }
 
             while (i < buffer_size) {
-                if (buffer[i] == '\r') {
+                if (buffer[i] == CRETURN) {
                     break;
                 }
                 field += buffer[i];
