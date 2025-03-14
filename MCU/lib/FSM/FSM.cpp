@@ -32,7 +32,7 @@ void initializeStartup(data& d) {
     // initialize the data struct
     d.power_placeholder = 0;
     // d.height = getHeight();
-    d.img[10] = { 0 };
+    memset(d.img, '\0', d.img_size);
     // d.whatever = "Nice data Zachary"; it is nice thank you everyone always says how nice it is, i didn't say that but everyone is saying its very very nice data, not like that nasty data some other poeple are bringing in here with its crime and all that
     // initializes the check power interrupt the comms handler, and the emergency lift lowering timer interrupt
     initializeLPMandNCM(d);

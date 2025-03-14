@@ -5,40 +5,40 @@
 #ifndef SWITCH_H
 #define SWITCH_H
 #include "FSM.h"
+#include "pins.h"
 #include "victron.h"
 #include "renogy.h"
 
-// set pinMode to OUTPUT in main.
-// currently unassigned, move to a dedicated pins header when merged with sensors;
-#define MUX_SEL_0 -1
-#define MUX_SEL_1 -1
-#define MUX_SEL_2 -1
+#define SWITCH_DELAY 1500   // a general timer to allow the buffer to fill (if needed) and prevent blocking.
 
-#define MUX_DISABLE_0 -1    // RX
-#define MUX_DISABLE_1 -1    // TX
-#define MUX_DISABLE_2 -1    // Winch
-
-void uartSwitch(device d, long baud, uint16_t config) {
-    // disable the mux, select new lines.
-#ifndef DEBUG
-    digitalWrite(MUX_DISABLE_0, HIGH);
-    digitalWrite(MUX_DISABLE_1, HIGH);
-    digitalWrite(MUX_SEL_0, (d & 0x001));
-    digitalWrite(MUX_SEL_1, (d & 0x010));
-    digitalWrite(MUX_SEL_2, (d & 0x100));
-#endif
-
-    Serial1.flush();              // Wait for tx to clear.
-    Serial1.begin(baud, config);  // change baud.
-    while (Serial1.available()) {
-        Serial1.read();  // clear input buffer.
+void uartSwitch(data& d, device dev, long baud, uint16_t config) {
+    if (d.liftFlag || d.lowerFlag) {
+        return; // don't interfere with running op.
     }
 
-#ifndef DEBUG
-    digitalWrite(MUX_DISABLE_0, LOW);
-    digitalWrite(MUX_DISABLE_1, LOW);
-#endif
+    if (d.currentDevice != dev) {   // if the line is active, do nothing.
+        // disable the mux, select new lines.
+        digitalWrite(MUX_DISABLE_0, HIGH);
+        digitalWrite(MUX_DISABLE_1, HIGH);
+
+        d.lastDevSwitchTime = millis();
+
+        Serial1.flush();              // Wait for tx to clear.
+        Serial1.begin(baud, config);  // change baud.
+        while (Serial1.available()) {
+            Serial1.read();  // clear input buffer.
+        }
+
+        digitalWrite(MUX_SEL_0, (dev & 0x001));
+        digitalWrite(MUX_SEL_1, (dev & 0x010));
+        digitalWrite(MUX_SEL_2, (dev & 0x100)); // ancillary in this case, we won't have this many lines.
+
+        digitalWrite(MUX_DISABLE_0, LOW);
+        digitalWrite(MUX_DISABLE_1, LOW);
+    }
 };
+
+void winchControl();
 
 #ifdef DEBUG
 int messageTest(data& data, bool useLED = false) {
@@ -55,7 +55,7 @@ int messageTest(data& data, bool useLED = false) {
     unsigned long timeout = 10000;
 
     // switch to BMS line
-    uartSwitch(BMS, 19200, SERIAL_8N1);
+    uartSwitch(data, BMS, 19200, SERIAL_8N1);
     while (!pass) {
         // spins until testMessage is matched or timeout is reached.
         // with no delay in tx, this buffer may always contain junk and never complete.
@@ -73,17 +73,17 @@ int messageTest(data& data, bool useLED = false) {
         }
 
         if (millis() - start > timeout) {
-            uartSwitch(RADIO, 9600, SERIAL_8N1);
+            uartSwitch(data, RADIO, 9600, SERIAL_8N1);
             return -1; // timeout 1
         }
     }
 
-    if(useLED) {
+    if (useLED) {
         digitalWrite(LED_BUILTIN, HIGH);
     }
 
     pass = false;
-    uartSwitch(MPPT, 9600, SERIAL_8E1);
+    uartSwitch(data, MPPT, 9600, SERIAL_8E1);
     while (!pass) {
         // spins until testMessage is matched or timeout is reached.
         // with no delay in tx, this buffer may always contain junk and never complete.
@@ -100,16 +100,16 @@ int messageTest(data& data, bool useLED = false) {
             }
         }
         if (millis() - start > timeout) {
-            uartSwitch(RADIO, 9600, SERIAL_8N1);
-            if(useLED) {
+            uartSwitch(data, RADIO, 9600, SERIAL_8N1);
+            if (useLED) {
                 digitalWrite(LED_BUILTIN, LOW);
             }
             return -2;  // timeout 2
         }
     }
 
-    uartSwitch(RADIO, 9600, SERIAL_8N1);    // must always happen
-    if(useLED) {
+    uartSwitch(data, RADIO, 9600, SERIAL_8N1);    // must always happen
+    if (useLED) {
         digitalWrite(LED_BUILTIN, LOW);
     }
     if (pass) {
