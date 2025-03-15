@@ -1,29 +1,35 @@
+import * as React from 'react';
 import { useState, useEffect } from 'react'
 
-import DeviceTable from './DeviceTable';
+import { DeviceTable, DeviceData } from './DeviceTable';
 
 const base_url = `${import.meta.env.VITE_API_URL}`
 
 
 function MainDash() {
 
+  const [data, setData] = React.useState<DeviceData[]>([]);
+
   async function fetchSensorData() {
     console.log(`Fetching device data from ${base_url}...`);
 
     try {
-      const response = await fetch(base_url + '/device_data', {
-        method: 'GET',
-        headers: {
-          
-        },
+      const response = await fetch(base_url + '/farm', {
+        method: 'GET'
       });
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Something went wrong");
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
-      // const data = await response.json();
-      // setResult(data.message);
+      const data = await response.json();
+
+      const formattedData: DeviceData[] = data.map((device: any, index: number) => ({
+        ...device,
+        rowId: index,
+        created_at: new Date(device.created_at)
+      }));
+
+      setData(formattedData);
     } catch (error) {
       console.error('Error fetching sensor data:', error);
     }
@@ -43,7 +49,7 @@ function MainDash() {
     <h1>Main Dashboard</h1>
 
       <div className="card">
-        <DeviceTable/>
+        <DeviceTable rows={data}/>
       </div> 
     </>
   )

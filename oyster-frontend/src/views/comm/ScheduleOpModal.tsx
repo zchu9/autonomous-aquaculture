@@ -14,42 +14,65 @@ import Button from '@mui/material/Button';
 import SendIcon from '@mui/icons-material/Send';
 import Checkbox from '@mui/material/Checkbox';
 import Stack from '@mui/material/Stack';
-
-
+import Chip from '@mui/material/Chip';
+import { styled } from '@mui/material/styles';
+import Paper from '@mui/material/Paper';
+import DeviceData from '../MainDash/DeviceTable'
 
 const base_url = `${import.meta.env.VITE_API_URL}`
 
-export default function ScheduleOpModal() {
+interface ScheduleModalProps {
+    closeFn: any;
+    devices: DeviceData[]
+}
+
+const ListItem = styled('li')(({ theme }) => ({
+    margin: theme.spacing(0.5),
+}));
+
+export default function ScheduleOpModal(props: ScheduleModalProps) {
 
     const [doSendNow, setDoSendNow] = React.useState<boolean>(false);
     const [dateIsValid, setDateIsValid] = React.useState<boolean>(false);
     const [isValidOpSelected, setIsValidOpSelected] = React.useState<boolean>(false);
     const [scheduleDate, setScheduleDate] = React.useState<Date>();
-    const [operation, setOperation] = React.useState<boolean>();
+    const [operation, setOperation] = React.useState<number>();
+
+    const [devices, setDevices] = React.useState<readonly DeviceData[]>(props.devices);
+
+    const handleDelete = (chipToDelete: DeviceData) => () => {
+        setDevices((chips) => chips.filter((chip) => chip._id !== chipToDelete._id));
+    };
 
 
-    async function testAPI() {
-        console.log(`Hitting ${base_url}/test_pub...`);
-    
-        try {
-          const response = await fetch(base_url + '/test_pub', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-          });
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || "Something went wrong");
-          }
-    
-          console.log("Successfully hit!");
-          // const data = await response.json();
-          // setResult(data.message);
+
+    async function handleConfirm() {
+        const ids = devices.map((device: DeviceData) => {
+            return device._id
+        });
+
+        try{
+            const response = await fetch(base_url + '/farm/cage', {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    ids: ids,
+                    date: scheduleDate,
+                    command: operation
+                })
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
         } catch (error) {
-          console.error('Error fetching sensor data:', error);
+            console.error('Error sending command:', error);
         }
+
+        props.closeFn();
     }
+
 
     const handleSendNowClicked = (event: React.ChangeEvent<HTMLInputElement>) => {
         setDoSendNow(event.target.checked);
@@ -70,7 +93,7 @@ export default function ScheduleOpModal() {
     const handleOperationChosen = (event: SelectChangeEvent, child?: object) => {
         var choice = event.target.value;
         if (choice != null) {
-            setOperation(choice == 1);
+            setOperation(choice);
             setIsValidOpSelected(true);
         } else {
             setIsValidOpSelected(false);
@@ -83,6 +106,31 @@ export default function ScheduleOpModal() {
             <ModalTemplate label="Schedule Bulk Operation">
 
                 <Stack spacing={2}>
+                    <h3>Selected Devices:</h3>
+
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            flexWrap: 'wrap',
+                            listStyle: 'none',
+                            p: 0.5,
+                            m: 0,
+                        }}
+                        component="ul"
+                    >
+                        {devices.map((data: DeviceData, idx: number) => {
+                            return (
+                            <ListItem key={idx}>
+                                <Chip
+                                    label={data._id}
+                                    onDelete={handleDelete(data)}
+                                />
+                            </ListItem>
+                            );
+                        })}
+                    </Box>
+
                     <h3>Choose Date/Time:</h3>
                     
                     <DateTimePicker 
@@ -95,8 +143,6 @@ export default function ScheduleOpModal() {
                         <h3>Send Now</h3>
                         <Checkbox
                             color="primary"
-                            // indeterminate={numSelected > 0 && numSelected < rowCount}
-                            // checked={rowCount > 0 && numSelected === rowCount}
                             onChange={handleSendNowClicked}
                             inputProps={{
                             'aria-label': 'schedule-now',
@@ -105,7 +151,7 @@ export default function ScheduleOpModal() {
                     </Box>
                     
 
-                    <h3>Choose Operation:</h3>
+                    <h3>Choose Operation:</h3>  
                     
                     <FormControl fullWidth>
                         <InputLabel id="operation-select-label">Operation</InputLabel>
@@ -113,11 +159,11 @@ export default function ScheduleOpModal() {
                             labelId="operation-select-label"
                             id="operation-select"
                             label="Operation"
-                            defaultValue={-1}
+                            defaultValue={''}
                             onChange={handleOperationChosen}
                             >
-                            <MenuItem value={0}>Up</MenuItem>
-                            <MenuItem value={1}>Down</MenuItem>
+                                <MenuItem value={1}>Up</MenuItem>
+                                <MenuItem value={0}>Down</MenuItem>
                         </Select>
                     </FormControl>
 
@@ -127,12 +173,7 @@ export default function ScheduleOpModal() {
                         variant="contained"
                         startIcon={<SendIcon/>}
                         disabled = {!((dateIsValid || doSendNow) && isValidOpSelected)}
-                        onClick = {
-                            () => {
-                                testAPI();
-                                
-                            }
-                        }>
+                        onClick = {handleConfirm}>
                             Send
                     </Button>
                 </Stack>
