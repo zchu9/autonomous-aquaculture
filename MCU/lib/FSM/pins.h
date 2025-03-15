@@ -5,3 +5,5 @@
 #define MUX_DISABLE_0 3    // RX
 #define MUX_DISABLE_1 4    // TX
 #define MUX_DISABLE_2 5    // Winch
+
+#define WINCH_ACTIVATE 6

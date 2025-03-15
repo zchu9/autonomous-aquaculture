@@ -38,7 +38,37 @@ void uartSwitch(data& d, device dev, long baud, uint16_t config) {
     }
 };
 
-void winchControl();
+void winchControl(data& d) {
+    unsigned long startTime = millis();
+    unsigned long timeout = 10000;
+    int index = 0;
+    int numOfWinches = 4;
+    for (int i = 0; i < numOfWinches; i++) {
+        if (d.liftFlag[i]) {
+            index = i;
+            break;
+        }
+    }
+
+    // check up/down from analogRead()
+    // if high
+        // index*2
+
+    // select winch
+    digitalWrite(MUX_DISABLE_2, HIGH);
+    digitalWrite(MUX_SEL_0, (index & 0x001));
+    digitalWrite(MUX_SEL_2, (index & 0x100)); // double check
+    digitalWrite(MUX_SEL_1, (index & 0x010));
+    digitalWrite(MUX_DISABLE_2, LOW);
+
+    while (millis() - startTime < timeout) {
+        // check sensor
+        // if (analogRead height) { stop if too high or low }
+            // activate winch fires relay;
+    }
+
+
+};
 
 #ifdef DEBUG
 int messageTest(data& data, bool useLED = false) {
