@@ -69,14 +69,14 @@ def handle_mqtt_message(client, userdata, message):
                     {"_id": ObjectId(farm_id)},
                     {"$set": {"status": "disconnected"}}
                 )
-        
+
             elif payload == "connected":
                 # Update farm status to connected in MongoDB
                 farm_collection.update_one(
                     {"_id": ObjectId(farm_id)},
                     {"$set": {"status": "connected"}}
                 )
-    
+
         elif "getActiveSensorData" in topic:
             farm_id = topic.split("/")[1]
             existing_data = sensor_active_data_collection.find_one({"farm_id": farm_id})
@@ -94,10 +94,15 @@ def handle_mqtt_message(client, userdata, message):
 
             data["created_at"] = get_eastern_time()
             sensor_active_data_collection.insert_one(data)
-
+            
+            farm_collection.update_one(
+                    {"_id": ObjectId(farm_id)},
+                    {"$set": {"status": "disconnected"}}
+                )
+            
             data_updated = True
             print("Sensor data updated succesfully")
-        
+
         elif "getActiveSystemLevels" in topic:
             farm_id = topic.split("/")[1]
             existing_data = system_active_levels_collection.find_one({"farm_id": farm_id})
@@ -110,10 +115,15 @@ def handle_mqtt_message(client, userdata, message):
                 }
                 system_archive_levels_collection.insert_one(archive_data)
                 system_active_levels_collection.delete_one({"_id": existing_data["_id"]})
-            
+
             data["created_at"] = get_eastern_time()
             system_active_levels_collection.insert_one(data)
 
+            farm_collection.update_one(
+                    {"_id": ObjectId(farm_id)},
+                    {"$set": {"status": "disconnected"}}
+                )
+            
             data_updated = True
             print("System level data updated successfully")
 
@@ -124,6 +134,7 @@ def handle_mqtt_message(client, userdata, message):
 @app.route("/")
 def default():
     return f"HIII on port {PORT_NUM}"
+
 
 @app.route("/test_pub", methods=['PUT', 'POST'])
 def test_pub():
@@ -139,6 +150,7 @@ def add_farm():
         return jsonify({"error": "Location is required"}), 400
 
     farm_data["cage_position"] = "up"
+    farm_data["status"] = "disconnected"
     farm_data["created_at"] = get_eastern_time()
 
     try:
@@ -175,13 +187,16 @@ def update_farm(id):
         result = farm_collection.update_one({"_id": farm_id}, {"$set": updated_data})
 
         if result.matched_count == 1:
-            return f"Farm {id} updated successfully", 200
+            return True, 200
+            # return f"Farm {id} updated successfully", 200
         else:
-            return f"Farm {id} is not in database", 404
+            return False, 404
+            # return f"Farm {id} is not in database", 404
 
     except Exception as e:
         logging.error("Failed to update farm: %s", e)
-        return "Error updating farm", 500
+        return False, 500
+        # return "Error updating farm", 500
 
 
 @app.route("/farm/<id>/info", methods=["GET"])
@@ -194,11 +209,13 @@ def get_farm(id):
             farm_data["_id"] = str(farm_data["_id"])
             return jsonify(farm_data), 200
         else:
-            return f"Farm {id} is not in database", 404
+            return False, 404
+            # return f"Farm {id} is not in database", 404
 
     except Exception as e:
         logging.error("Failed to get farm: %s", e)
-        return "Error getting farm", 500
+        return False, 500
+        # return "Error getting farm", 500
 
 
 @app.route("/farm", methods=["GET"])
@@ -207,17 +224,21 @@ def get_multiple_farms():
         farms_data = []
 
         for farm in farm_collection.find():
-            if farm:        
+            if farm:
+                farm["_id"] = str(farm["_id"])     
                 farms_data.append(str(farm))
 
         if not farms_data:
-            return "No farms found for the given IDs", 400
+            return False, 404
+            # return "No farms found for the given IDs", 400
 
         return jsonify(farms_data), 200
 
     except Exception as e:
         logging.error("Failed to get farms: %s", e)
-        return "Error getting farms", 500
+        return False, 500
+        # return "Error getting farms", 500
+
 
 @app.route("/farm/<id>/check_status", methods=["GET"])
 def get_farm_status(id):
@@ -229,11 +250,14 @@ def get_farm_status(id):
             farm_data["_id"] = str(farm_data["_id"])
             return jsonify({"status": farm_data["status"]}), 200
         else:
-            return f"Farm {id} is not in database", 404
+            return False, 404
+            # return f"Farm {id} is not in database", 404
 
     except Exception as e:
         logging.error("Failed to get farm status: %s", e)
-        return "Error getting farm status", 500
+        return False, 500
+        # return "Error getting farm status", 500
+
 
 """ Rotues dedicated to just sensor collections """
 @app.route("/farm/<id>/getActiveSensorData", methods=["GET"])
@@ -258,10 +282,12 @@ def get_active_sensor_data(id):
             active_data["farm_id"] = str(active_data["farm_id"])
             return jsonify(active_data), 200
         else:
-            return "No active sensor data found", 404
+            return False, 404
+            # return "No active sensor data found", 404
     except Exception as e:
         logging.error("Failed to get active sensor data: %s", e)
-        return "Error getting active sensor data", 500
+        return False, 500
+        # return "Error getting active sensor data", 500
 
 
 @app.route("/farm/<id>/getArchivedSensorData", methods=["GET"])
@@ -289,11 +315,13 @@ def get_archived_sensor_data(id):
         if archived_list:
             return jsonify(archived_list), 200
         else:
-            return "No archived sensor data found for the given dates", 404
+            return False, 404
+            # return "No archived sensor data found for the given dates", 404
 
     except Exception as e:
         logging.error("Failed to get archived sensor data: %s", e)
-        return "Error getting archived sensor data", 500
+        return False, 500
+        # return "Error getting archived sensor data", 500
 
 
 """ Rotues dedicated to just system level collections """
@@ -317,10 +345,12 @@ def get_active_system_levels(id):
             active_data["farm_id"] = str(active_data["farm_id"])
             return jsonify(active_data), 200
         else:
-            return "No active system levels data found", 404
+            return False, 404
+            # return "No active system levels data found", 404
     except Exception as e:
         logging.error("Failed to get active system levels: %s", e)
-        return "Error getting active system levels data", 500
+        return False, 500
+        # return "Error getting active system levels data", 500
 
 
 @app.route("/farm/<id>/getArchivedSystemLevels", methods=["GET"])
@@ -349,11 +379,13 @@ def get_archived_system_levels(id):
         if archived_list:
             return jsonify(archived_list), 200
         else:
-            return "No archived system levels data found for the given dates", 404
+            return False, 404
+            # return "No archived system levels data found for the given dates", 404
 
     except Exception as e:
         logging.error("Failed to get archived system levels: %s", e)
-        return "Error getting archived system levels", 500
+        return False, 500
+        # return "Error getting archived system levels", 500
 
 
 """ Rotues dedicated to just lift schedule collections """
@@ -368,14 +400,17 @@ def farm_lower_cages(id):
     mqtt.publish(f'farm/{id}/lowerCages', 'lower')
     return f"Requested to lower farm {id} cages"
 
+
 @app.route("/sensor_data/<id>", methods=['GET'])
 def get_sensor_data(id):
     return f"Here's your data"
+
 
 @app.route('/device_data')
 @app.route("/device_data/<id>", methods=['GET'])
 def get_device_data(id=None):
     return f"Here's your data"
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=PORT_NUM)
