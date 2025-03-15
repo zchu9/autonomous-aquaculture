@@ -1,11 +1,10 @@
 import paho.mqtt.client as mqtt
 import serial
 import time
+import json
 
-MQTT_BROKER = "172.29.45.144" 
+MQTT_BROKER = "" 
 MQTT_PORT = 1883 
-MQTT_SUB_TOPIC = "farm/67c8dfef07d0f8fc2fb6e2ca/status" #change
-MQTT_PUB_TOPIC = "farm/67c8dfef07d0f8fc2fb6e2ca/status" #change
 LORA_PORT = 'COM7' #change if hooked directly to serial rather than via the USB-to-UART adapter
 BAUD_RATE = 9600
 PACKET_SIZE = 100 #fine tune latter
@@ -16,9 +15,9 @@ RETRY_LIMIT = 3 #possibly increase; possibly scrap
 
 total_packets = -1
 received_packets = ["" for _ in range(MAX_PACKETS)]
+mqtt_task_list = []
 
 lora = serial.Serial(LORA_PORT, BAUD_RATE, timeout=1)
-time.sleep(1)
 
 def send_command(command):
     lora.write((command + "\r\n").encode('utf-8'))
@@ -80,10 +79,12 @@ def wait_for_ack(expected_id):
 
 def on_message(client, userdata, msg):
     message = msg.payload.decode("utf-8")
+    for x in message:
+        print(x)
     print(f"Received MQTT message: {message}")
     #create a function to get the farmID from the JSON and use a map of some sort to map farmID to LoRa Address so that the data message can be sent to the right farm
     #or there might be individual topics for each farm, it's still a bit hazy to me
-    send_fragmented_message(message)
+    mqtt_task_list.append(message)
 
 def process_received_data(received):
     global total_packets
@@ -117,20 +118,26 @@ def reconstruct_message():
     full_message = "".join(received_packets[:total_packets])
     print(f"Final Reconstructed Message: {full_message}")
     #Use the reconstructed JSON to find out what topic the message needs to be publised to.
-    #mqtt_client.publish(MQTT_PUB_TOPIC, full_message)
+    data = json.loads(full_message)
+    mqtt_client.publish("/sensor_data/, full_message")
+    mqtt_client.publish("/device_data/, full_message")
 
-#mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "logan")
-#mqtt_client.on_connect = lambda client, userdata, flags, rc, properties: client.subscribe(MQTT_SUB_TOPIC)
-#mqtt_client.on_message = on_message
-#mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
-#mqtt_client.loop_start()
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "Raspberry_Pi")
+mqtt_client.on_connect = lambda client, userdata, flags, rc, properties: client.subscribe("farm/+/cage")
+mqtt_client.on_message = on_message
+mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
+mqtt_client.loop_start()
 
 buffer = ""
 while True:
-    if lora.in_waiting:
-        char = lora.read().decode("utf-8")
-        if char == '\n':
-            process_received_data(buffer.strip())
-            buffer = ""
-        else:
-            buffer += char
+    if (mqtt_task_list):
+        send_fragmented_message(mqtt_task_list[0])
+        mqtt_task_list.remove(mqtt_task_list[0])
+    else:
+        if lora.in_waiting:
+            char = lora.read().decode("utf-8")
+            if char == '\n':
+                process_received_data(buffer.strip())
+                buffer = ""
+            else:
+                buffer += char
