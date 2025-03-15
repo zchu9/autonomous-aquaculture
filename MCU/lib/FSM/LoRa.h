@@ -88,7 +88,42 @@ void sendFragment(int packetID, const char *fragment)
     Serial1.println(command);
 }
 
-bool waitForACK(int expectedID);
+bool waitForACK(int expectedID)
+{
+    unsigned long startTime = millis();
+    char buffer[50];
+    int index = 0;
+    while (millis() - startTime < ACK_TIMEOUT)
+    {
+        if (Serial1.available())
+        {
+            char c = Serial1.read();
+            if (c == '\n' || index >= sizeof(buffer) - 1)
+            {
+                buffer[index] = '\0';
+                Serial.print("Received buffer: ");
+                Serial.println(buffer);
+
+                if (strstr(buffer, "ACK:") != NULL)
+                {
+                    int ackID = atoi(strstr(buffer, "ACK:") + 4);
+                    if (ackID == expectedID)
+                    {
+                        Serial.print("Received ACK for packet ");
+                        Serial.println(expectedID);
+                        return true;
+                    }
+                }
+                index = 0;
+            }
+            else
+            {
+                buffer[index++] = c;
+            }
+        }
+    }
+    return false;
+}
 
 void loop()
 {
@@ -109,10 +144,114 @@ void loop()
     }
 }
 
-void processReceivedData(char *received);
+void processReceivedData(char *received)
+{
+    // Debug info
+    Serial.print("Processing: ");
+    Serial.println(received);
 
-void sendACK(int packetID);
+    if (strncmp(received, "+RCV=", 5) != 0)
+    {
+        Serial.println("Invalid format");
+        return;
+    }
 
-bool allPacketsReceived();
+    // Extract packet information
+    char *token = strtok(received + 5, ","); // Skip +RCV=
+    if (!token)
+        return;
+    token = strtok(NULL, ","); // Skip sender address
+    if (!token)
+        return;
+    token = strtok(NULL, ","); // Skip message length
+    if (!token)
+        return;
 
-void reconstructMessage();
+    int packetID = atoi(token); // Get the packet ID
+    token = strtok(NULL, ",");
+    if (!token)
+        return;
+    totalPackets = atoi(token); // Get the total number of packets
+
+    token = strtok(NULL, ""); // Get the actual data
+    if (!token)
+        return;
+
+    // Remove signal strength info (after the last two commas)
+    char *lastComma = strrchr(token, ',');
+    if (lastComma)
+    {
+        *lastComma = '\0';
+        char *secondLastComma = strrchr(token, ',');
+        if (secondLastComma)
+        {
+            *secondLastComma = '\0';
+        }
+    }
+
+    // Store the received packet fragment
+    strncpy(receivedPackets[packetID], token, BUFFER_SIZE);
+    receivedPackets[packetID][BUFFER_SIZE - 1] = '\0';
+
+    // Debug info
+    Serial.print("Storing Packet ");
+    Serial.print(packetID + 1);
+    Serial.print(" out of ");
+    Serial.print(totalPackets);
+    Serial.print(": ");
+    Serial.println(receivedPackets[packetID]);
+
+    // Send ACK for the received packet
+    sendACK(packetID);
+
+    // If all packets have been received, reconstruct the message
+    if (allPacketsReceived())
+    {
+        Serial.println("Complete message received:");
+        reconstructMessage();
+    }
+}
+
+void sendACK(int packetID)
+{
+    // Create the ACK message for the received packet
+    char ackMessage[20];
+    snprintf(ackMessage, sizeof(ackMessage), "ACK:%d", packetID);
+    char ackCommand[BUFFER_SIZE];
+    snprintf(ackCommand, sizeof(ackCommand), "AT+SEND=%s,%d,%s", TARGET_ADDRESS, (int)strlen(ackMessage), ackMessage);
+
+    // Send the ACK command to the sender
+    Serial1.println(ackCommand);
+    Serial.print("Sending ACK for packet ");
+    Serial.println(packetID);
+}
+
+bool allPacketsReceived()
+{
+    if (totalPackets == -1)
+        return false;
+    for (int i = 0; i < totalPackets; i++)
+    {
+        if (receivedPackets[i][0] == '\0')
+            return false;
+    }
+    return true;
+}
+
+void reconstructMessage()
+{
+    // Debug stuff
+    Serial.println("Reassembling message...");
+    Serial.print("Final Reconstructed Message: ");
+    for (int i = 0; i < totalPackets; i++)
+    {
+        if (receivedPackets[i][0] == '\0')
+        {
+            Serial.print("Missing packet: ");
+            Serial.println(i);
+            return;
+        }
+        Serial.print(receivedPackets[i]);
+    }
+    Serial.println();
+}

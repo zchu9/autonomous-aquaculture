@@ -5,7 +5,8 @@
  * @brief
  *
  */
-void FSM(data& d) {
+void FSM(data &d)
+{
     sleep();
     // Serial.println("sleep dont work");
     checkPowerHandler(d);
@@ -22,14 +23,15 @@ void FSM(data& d) {
  *
  * @param d the data struct that will be passed from the main function.
  */
-void initializeStartup(data& d) {
+void initializeStartup(data &d)
+{
 #if DEBUG
     initializeDebug();
 #endif
     // should probably be a init data function.
-    d.liftFlag = 0;
-    d.lowerFlag = 0;
-    // initialize the data struct
+    d.liftFlag[0] = 0;
+    // d.lowerFlag = 0;
+    //  initialize the data struct
     d.power_placeholder = 0;
     // d.height = getHeight();
     memset(d.img, '\0', d.img_size);
@@ -42,7 +44,8 @@ void initializeStartup(data& d) {
  * @brief Initializes variables to be used in the (Low Power/No Connection) Mode
  *
  */
-void initializeLPMandNCM(data& d) {
+void initializeLPMandNCM(data &d)
+{
     // initialize: Low Power, No Connection, RF Mode
     d.state = LOW_POWER_NO_CONNECTION;
 
@@ -60,7 +63,8 @@ void initializeLPMandNCM(data& d) {
  * The LPM should be set to 0\n
  * check power should be initialized
  */
-void initializeLPM(data& d) {
+void initializeLPM(data &d)
+{
     d.state = LOW_POWER;
 }
 
@@ -70,7 +74,8 @@ void initializeLPM(data& d) {
  * If NCM was 1, then the "reconnected" should be initialized already\n
  * TODO: initializeReconnection() is undefined
  */
-void initializeNCM(data& d) {
+void initializeNCM(data &d)
+{
     d.state = NO_CONNECTION;
 }
 
@@ -82,12 +87,14 @@ void initializeNCM(data& d) {
  * if NCM was 1, then a "connected" initialization might be needed\n
  * TODO: Come up with a better name for the "connected" initialization
  */
-void initializeNormalFSM(data& d) {
+void initializeNormalFSM(data &d)
+{
     // NCM -> Normal
     d.state = NORMAL;
 }
 
-void sleep() {
+void sleep()
+{
     // Sleep until an interrupt occurs
     // asm - tells compiler this is inline assembly
     // __volatile__ - tells compiler this code has side effects that should not be optimized away
@@ -95,7 +102,8 @@ void sleep() {
     //__asm__ __volatile__("wfi");
 }
 
-void checkPowerHandler(data& d) {
+void checkPowerHandler(data &d)
+{
     if (getPowerFlag() == 1)
     {
 #if DEBUG
@@ -108,7 +116,8 @@ void checkPowerHandler(data& d) {
     }
 }
 
-void commsHandler(data& d) {
+void commsHandler(data &d)
+{
     if (getCommsFlag() == 1)
     {
 #if DEBUG
@@ -129,19 +138,22 @@ void commsHandler(data& d) {
     }
 }
 
-void RFDisconnectedCase(data& d) {
+void RFDisconnectedCase(data &d)
+{
 #if DEBUG
     Serial.println("RF Disconnected");
 #endif
 }
 
-void RFConnectedCase(data& d) {
+void RFConnectedCase(data &d)
+{
 #if DEBUG
     Serial.println("RF Connected");
 #endif
 }
 
-void getIntoLowPowerMode(data& d) {
+void getIntoLowPowerMode(data &d)
+{
     if (d.state == NORMAL)
     {
         d.state = LOW_POWER;
@@ -151,7 +163,8 @@ void getIntoLowPowerMode(data& d) {
         d.state = LOW_POWER_NO_CONNECTION;
     }
 };
-void getOutOfLowPowerMode(data& d) {
+void getOutOfLowPowerMode(data &d)
+{
     if (d.state == LOW_POWER_NO_CONNECTION)
     {
         d.state = NO_CONNECTION;
@@ -162,7 +175,8 @@ void getOutOfLowPowerMode(data& d) {
     }
 }
 
-void powerStateChange(data& d) {
+void powerStateChange(data &d)
+{
     bool already_in_lpm = d.state == LOW_POWER || d.state == LOW_POWER_NO_CONNECTION;
     if (d.power_placeholder < POWER_THRESHOLD)
     {
@@ -184,7 +198,8 @@ void powerStateChange(data& d) {
 /**
  * @brief initialize serial communication
  */
-void initializeDebug() {
+void initializeDebug()
+{
     Serial.begin(9600);
     while (!Serial)
         ;
@@ -195,7 +210,8 @@ void initializeDebug() {
 ////////////////////////////////////////////////////////////////////////////
 // Zach's House
 ////////////////////////////////////////////////////////////////////////////
-double checkPower(data& d) {
+double checkPower(data &d)
+{
     double ret = messageTest(d);
     return ret;
 }
