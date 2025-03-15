@@ -1,10 +1,9 @@
 #include <Arduino.h>
-#include <ArduinoJson.h>
 
 #define TARGET_ADDRESS "0"
 #define PACKET_SIZE 100
 //random line I was using to test prior to using json
-//#define MESSAGE "behes rhwerhat haeth et hs rth a rh at h ateh aet h awrgawfWRH  rhathrsths thaerheh dhj dohnsoiajtiphj airjhioejtiph aiperjhiopejrih aiperjhipanh aiperjhipaerh aiprjhipjaiprnawpitn arphjpierjhn aprjhiphj"
+#define MESSAGE "behes rhwerhat haeth et hs rth a rh at h ateh aet h awrgawfWRH  rhathrsths thaerheh dhj dohnsoiajtiphj airjhioejtiph aiperjhiopejrih aiperjhipanh aiperjhipaerh aiprjhipjaiprnawpitn arphjpierjhn aprjhiphj"
 //possibly increase
 #define ACK_TIMEOUT 10000
 //possibly increase
@@ -21,9 +20,6 @@ char receivedPackets[MAX_PACKETS][BUFFER_SIZE];
 int receivedTotalPackets = -1;
 char loraBuffer[BUFFER_SIZE];
 int bufferIndex = 0;
-
-//possibly increase
-DynamicJsonDocument doc(1024);
 
 void setup() {
     Serial.begin(19200);
@@ -44,14 +40,9 @@ void setup() {
     Serial.println("Transceiver setup complete!!! :D");
     delay(5000);
 
-    doc["field1"] = "1";
-    doc["field2"] = "63.5";
-    doc["field3"] = 1001010101010100110010101010101010101010101010101001010101010101001010101010101010010101010101010101010101010100101010101010101;  
-    char jsonString[512];
-    serializeJson(doc, jsonString);
-    totalPackets = (strlen(jsonString) + PACKET_SIZE - 1) / PACKET_SIZE;
+    totalPackets = (strlen(message) + PACKET_SIZE - 1) / PACKET_SIZE;
     //Until I integrate with Daniel I've just been commenting or uncommenting this line to choose between transmit and reciept. 
-    //sendPackets(jsonString); 
+    //sendPackets(message); 
 }
 
 void sendPackets() {
