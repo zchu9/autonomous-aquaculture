@@ -3,11 +3,16 @@
 
 #define TARGET_ADDRESS "0"
 #define PACKET_SIZE 100
+//random line I was using to test prior to using json
 //#define MESSAGE "behes rhwerhat haeth et hs rth a rh at h ateh aet h awrgawfWRH  rhathrsths thaerheh dhj dohnsoiajtiphj airjhioejtiph aiperjhiopejrih aiperjhipanh aiperjhipaerh aiprjhipjaiprnawpitn arphjpierjhn aprjhiphj"
+//possibly increase
 #define ACK_TIMEOUT 10000
+//possibly increase
 #define RETRY_LIMIT 3
+//arduino memory constraint
 #define MAX_PACKETS 10
-#define BUFFER_SIZE 240
+//LoRa constraint
+#define BUFFER_SIZE 240 
 
 char message[] = MESSAGE;
 int currentPacket = 0;
@@ -17,6 +22,7 @@ int receivedTotalPackets = -1;
 char loraBuffer[BUFFER_SIZE];
 int bufferIndex = 0;
 
+//possibly increase
 DynamicJsonDocument doc(1024);
 
 void setup() {
