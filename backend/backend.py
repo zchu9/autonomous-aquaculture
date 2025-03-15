@@ -94,12 +94,12 @@ def handle_mqtt_message(client, userdata, message):
 
             data["created_at"] = get_eastern_time()
             sensor_active_data_collection.insert_one(data)
-            
+
             farm_collection.update_one(
                     {"_id": ObjectId(farm_id)},
                     {"$set": {"status": "disconnected"}}
                 )
-            
+
             data_updated = True
             print("Sensor data updated succesfully")
 
@@ -152,7 +152,11 @@ def add_farm():
     farm_data["cage_position"] = "up"
     farm_data["status"] = "disconnected"
     farm_data["created_at"] = get_eastern_time()
-
+    
+    # Create sensor and system level objects for the new farm
+    sensor_active_data_collection.insert_one({"farm_id": farm_data["_id"]})
+    system_active_levels_collection.insert_one({"farm_id": farm_data["_id"]})
+       
     try:
         result = farm_collection.insert_one(farm_data)
         new_farm_id = result.inserted_id
@@ -229,7 +233,7 @@ def get_multiple_farms():
 
         for farm in farm_collection.find():
             if farm:
-                farm["_id"] = str(farm["_id"])     
+                farm["_id"] = str(farm["_id"])
                 farms_data.append(str(farm))
 
         if not farms_data:
