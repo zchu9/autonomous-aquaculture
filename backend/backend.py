@@ -156,10 +156,11 @@ def add_farm():
     try:
         result = farm_collection.insert_one(farm_data)
         new_farm_id = result.inserted_id
-        return jsonify({"_id": str(new_farm_id)}), 201 
+        return jsonify({"_id": str(new_farm_id)}), 201
     except Exception as e:
         logging.error("Failed to add farm: %s", e)
-        return "Error adding farm", 500
+        return False, 500
+        # return "Error adding farm", 500
 
 
 @app.route("/farm/<id>/delete", methods=["DELETE"])
@@ -169,13 +170,16 @@ def delete_farm(id):
         result = farm_collection.delete_one({"_id": farm_id})
 
         if result.deleted_count > 0:
-            return f"Farm {id} deleted successfully", 200
+            return True, 200
+            # return f"Farm {id} deleted successfully", 200
         else:
-            return f"Farm {id} is not in database", 404
+            return False, 404
+            # return f"Farm {id} is not in database", 404
 
     except Exception as e:
         logging.error("Failed to delete farm: %s", e)
-        return "Error deleting farm", 500 
+        return False, 500
+        # return "Error deleting farm", 500
 
 
 @app.route("/farm/<id>/update", methods=["PUT"])
@@ -269,7 +273,7 @@ def get_active_sensor_data(id):
     mqtt.publish(f'farm/{id}/getActiveSensorData', 'poll')
 
     while not data_updated:
-        time.sleep(0.1) # Sleeps for 100 ms before checking if flag is changed
+        time.sleep(0.1)  # Sleeps for 100 ms before checking if flag is changed
 
     # Get the most recent sensor data from active sensor collection
     try:
