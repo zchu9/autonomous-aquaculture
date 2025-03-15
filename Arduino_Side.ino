@@ -42,7 +42,7 @@ void setup() {
 
     totalPackets = (strlen(message) + PACKET_SIZE - 1) / PACKET_SIZE;
     //Until I integrate with Daniel I've just been commenting or uncommenting this line to choose between transmit and reciept. 
-    //sendPackets(message); 
+    //sendPackets(); 
 }
 
 void sendPackets() {
