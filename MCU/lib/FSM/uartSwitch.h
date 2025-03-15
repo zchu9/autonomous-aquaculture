@@ -41,9 +41,9 @@ void uartSwitch(data& d, device dev, long baud, uint16_t config) {
 void winchControl(data& d) {
     unsigned long startTime = millis();
     unsigned long timeout = 10000;
-    int index = 0;
-    int numOfWinches = 4;
-    for (int i = 0; i < numOfWinches; i++) {
+    uint8_t index = 0;
+    uint8_t numOfWinches = 4;
+    for (uint8_t i = 0; i < numOfWinches; i++) {
         if (d.liftFlag[i]) {
             index = i;
             break;
