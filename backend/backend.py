@@ -358,25 +358,17 @@ def get_archived_system_levels(id):
 
 
 """ Rotues dedicated to just lift schedule collections """
-@app.route("/farm/<id>/liftCages", methods=['PUT', 'POST'])
-def farm_lift_cages(id):
-    mqtt.publish(f'farm/{id}/liftCages', 'lift')
-    return f"Requested to lift farm {id} cages"
+@app.route("/farm/cage", methods=['PUT', 'POST'])
+def farm_lift_cages():
+    # TODO: Error checking
+    commands = request.json
 
+    for id in commands['ids']:
+        cmd = {"command": commands['command']}
+        mqtt.publish(f'farm/{id}/cage', json.dumps(cmd))
 
-@app.route("/farm/<id>/lowerCages", methods=['PUT', 'POST'])
-def farm_lower_cages(id):
-    mqtt.publish(f'farm/{id}/lowerCages', 'lower')
-    return f"Requested to lower farm {id} cages"
+    return f"Requested to thing"
 
-@app.route("/sensor_data/<id>", methods=['GET'])
-def get_sensor_data(id):
-    return f"Here's your data"
-
-@app.route('/device_data')
-@app.route("/device_data/<id>", methods=['GET'])
-def get_device_data(id=None):
-    return f"Here's your data"
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=PORT_NUM)

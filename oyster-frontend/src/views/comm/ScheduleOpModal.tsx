@@ -36,31 +36,31 @@ export default function ScheduleOpModal(props: ScheduleModalProps) {
     const [dateIsValid, setDateIsValid] = React.useState<boolean>(false);
     const [isValidOpSelected, setIsValidOpSelected] = React.useState<boolean>(false);
     const [scheduleDate, setScheduleDate] = React.useState<Date>();
-    const [operation, setOperation] = React.useState<boolean>();
+    const [operation, setOperation] = React.useState<number>();
 
     const [devices, setDevices] = React.useState<readonly DeviceData[]>(props.devices);
 
-    const handleDelete = (chipToDelete: Devices) => () => {
-        setDevices((chips) => chips.filter((chip) => chip.key !== chipToDelete.key));
+    const handleDelete = (chipToDelete: DeviceData) => () => {
+        setDevices((chips) => chips.filter((chip) => chip._id !== chipToDelete._id));
     };
 
 
 
     async function handleConfirm() {
-        const api_route = (operation) ? "/lowerCages" : "/liftCages"
         const ids = devices.map((device: DeviceData) => {
             return device._id
         });
 
         try{
-            const response = await fetch(base_url + api_route, {
+            const response = await fetch(base_url + '/farm/cage', {
                 method: 'POST',
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
                     ids: ids,
-                    date: scheduleDate
+                    date: scheduleDate,
+                    command: operation
                 })
             });
             if (!response.ok) {
@@ -73,26 +73,6 @@ export default function ScheduleOpModal(props: ScheduleModalProps) {
         props.closeFn();
     }
 
-    async function testAPI() {
-        console.log(`Hitting ${base_url}/test_pub...`);
-    
-        try {
-          const response = await fetch(base_url + '/test_pub', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-          });
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || "Something went wrong");
-          }
-    
-          console.log("Successfully hit!");
-        } catch (error) {
-          console.error('Error fetching sensor data:', error);
-        }
-    }
 
     const handleSendNowClicked = (event: React.ChangeEvent<HTMLInputElement>) => {
         setDoSendNow(event.target.checked);
@@ -113,7 +93,7 @@ export default function ScheduleOpModal(props: ScheduleModalProps) {
     const handleOperationChosen = (event: SelectChangeEvent, child?: object) => {
         var choice = event.target.value;
         if (choice != null) {
-            setOperation(choice == 1);
+            setOperation(choice);
             setIsValidOpSelected(true);
         } else {
             setIsValidOpSelected(false);
@@ -139,7 +119,7 @@ export default function ScheduleOpModal(props: ScheduleModalProps) {
                         }}
                         component="ul"
                     >
-                        {devices.map((data, idx) => {
+                        {devices.map((data: DeviceData, idx: number) => {
                             return (
                             <ListItem key={idx}>
                                 <Chip
@@ -182,8 +162,8 @@ export default function ScheduleOpModal(props: ScheduleModalProps) {
                             defaultValue={''}
                             onChange={handleOperationChosen}
                             >
-                                <MenuItem value={0}>Up</MenuItem>
-                                <MenuItem value={1}>Down</MenuItem>
+                                <MenuItem value={1}>Up</MenuItem>
+                                <MenuItem value={0}>Down</MenuItem>
                         </Select>
                     </FormControl>
 
