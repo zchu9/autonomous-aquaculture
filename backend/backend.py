@@ -149,13 +149,17 @@ def add_farm():
     if 'location' not in farm_data:
         return jsonify({"error": "Location is required"}), 400
 
-    farm_data["cage_position"] = "up"
-    farm_data["status"] = "disconnected"
+    farm_data["cage_position"] = True
+    farm_data["status"] = False
     farm_data["created_at"] = get_eastern_time()
-    
+
     # Create sensor and system level objects for the new farm
-    sensor_active_data_collection.insert_one({"farm_id": farm_data["_id"]})
-    system_active_levels_collection.insert_one({"farm_id": farm_data["_id"]})
+    try:
+        sensor_active_data_collection.insert_one({"farm_id": farm_data["_id"]})
+        system_active_levels_collection.insert_one({"farm_id": farm_data["_id"]})
+    except Exception as e:
+        logging.error("Failed to create sensor and system level objects: %s", e)
+        return False, 500
        
     try:
         result = farm_collection.insert_one(farm_data)
@@ -233,7 +237,7 @@ def get_multiple_farms():
 
         for farm in farm_collection.find():
             if farm:     
-                farm["_id"] = str(farm["_id"])   
+                farm["_id"] = str(farm["_id"])
                 farms_data.append(farm)
 
         if not farms_data:
