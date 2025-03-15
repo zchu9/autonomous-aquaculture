@@ -12,9 +12,9 @@
 #define SWITCH_DELAY 1500   // a general timer to allow the buffer to fill (if needed) and prevent blocking.
 
 void uartSwitch(data& d, device dev, long baud, uint16_t config) {
-    if (d.liftFlag || d.lowerFlag) {
-        return; // don't interfere with running op.
-    }
+    // if (d.liftFlag || d.lowerFlag) {
+    //     return; // don't interfere with running op.
+    // }
 
     if (d.currentDevice != dev) {   // if the line is active, do nothing.
         // disable the mux, select new lines.
@@ -41,8 +41,9 @@ void uartSwitch(data& d, device dev, long baud, uint16_t config) {
 void winchControl(data& d) {
     unsigned long startTime = millis();
     unsigned long timeout = 10000;
-    uint8_t index = 0;
+    uint8_t index = -1;
     uint8_t numOfWinches = 4;
+
     for (uint8_t i = 0; i < numOfWinches; i++) {
         if (d.liftFlag[i]) {
             index = i;
@@ -50,21 +51,27 @@ void winchControl(data& d) {
         }
     }
 
+    if(index == -1) {
+        return; // oops
+    }
+
     // check up/down from analogRead()
     // if high
-        // index*2
+        // index+numberofwinches
 
     // select winch
     digitalWrite(MUX_DISABLE_2, HIGH);
     digitalWrite(MUX_SEL_0, (index & 0x001));
-    digitalWrite(MUX_SEL_2, (index & 0x100)); // double check
     digitalWrite(MUX_SEL_1, (index & 0x010));
+    digitalWrite(MUX_SEL_2, (index & 0x100)); // double check
     digitalWrite(MUX_DISABLE_2, LOW);
 
     while (millis() - startTime < timeout) {
         // check sensor
         // if (analogRead height) { stop if too high or low }
             // activate winch fires relay;
+            digitalWrite(WINCH_ACTIVATE, HIGH);
+
     }
 
 
