@@ -3,9 +3,6 @@ Content-Type: application/json
 
 {
     "location": "somewhere",
-    "cage_position": "up",
-    "created_at": "today",
-    "status": "connected"
 }
 
 ###

@@ -21,7 +21,6 @@ logging.basicConfig(level=logging.DEBUG)
 MQTT_HOST_NAME = 'mqtt'
 MQTT_PORT_NUM = 1883
 PORT_NUM = 3000
-data_updated = False
 
 app = Flask(__name__)
 CORS(app, origin=["http://localhost:5173"])
@@ -97,10 +96,9 @@ def handle_mqtt_message(client, userdata, message):
 
             farm_collection.update_one(
                     {"_id": ObjectId(farm_id)},
-                    {"$set": {"status": "disconnected"}}
+                    {"$set": {"status": True}}
                 )
 
-            data_updated = True
             print("Sensor data updated succesfully")
 
         elif "getActiveSystemLevels" in topic:
@@ -153,17 +151,18 @@ def add_farm():
     farm_data["status"] = False
     farm_data["created_at"] = get_eastern_time()
 
-    # Create sensor and system level objects for the new farm
-    try:
-        sensor_active_data_collection.insert_one({"farm_id": farm_data["_id"]})
-        system_active_levels_collection.insert_one({"farm_id": farm_data["_id"]})
-    except Exception as e:
-        logging.error("Failed to create sensor and system level objects: %s", e)
-        return "Error creating sensor and system level objects", 500
-       
     try:
         result = farm_collection.insert_one(farm_data)
         new_farm_id = result.inserted_id
+
+        # Create sensor and system level objects for the new farm
+        try:
+            sensor_active_data_collection.insert_one({"farm_id": farm_data["_id"]})
+            system_active_levels_collection.insert_one({"farm_id": farm_data["_id"]})
+        except Exception as e:
+            logging.error("Failed to create sensor and system level objects: %s", e)
+            return "Error creating sensor and system level objects", 500
+
         return jsonify({"_id": str(new_farm_id)}), 201
     except Exception as e:
         logging.error("Failed to add farm: %s", e)
@@ -227,7 +226,7 @@ def get_multiple_farms():
         farms_data = []
 
         for farm in farm_collection.find():
-            if farm:     
+            if farm:
                 farm["_id"] = str(farm["_id"])
                 farms_data.append(farm)
 
@@ -261,14 +260,6 @@ def get_farm_status(id):
 """ Rotues dedicated to just sensor collections """
 @app.route("/farm/<id>/getActiveSensorData", methods=["GET"])
 def get_active_sensor_data(id):
-    global data_updated
-    data_updated = False
-
-    # Polls sensor data from specified farm
-    mqtt.publish(f'farm/{id}/getActiveSensorData', 'poll')
-
-    while not data_updated:
-        time.sleep(0.1)  # Sleeps for 100 ms before checking if flag is changed
 
     # Get the most recent sensor data from active sensor collection
     try:
@@ -322,13 +313,6 @@ def get_archived_sensor_data(id):
 """ Rotues dedicated to just system level collections """
 @app.route("/farm/<id>/getActiveSystemLevels", methods=["GET"])
 def get_active_system_levels(id):
-    global data_updated
-    data_updated = False
-
-    mqtt.publish(f'farm/{id}/getActiveSystemLevels', 'poll')
-
-    while not data_updated:
-        time.sleep(0.1)
 
     # Get the most recent system level information from active system level collection
     try:
