@@ -21,7 +21,9 @@ import { visuallyHidden } from '@mui/utils';
 import { Link } from '@mui/material';
 
 
-import Modal from '@mui/material/Modal';
+import Modal from '@mui/joy/Modal';
+import ModalClose from '@mui/joy/ModalClose';
+import ModalDialog from '@mui/joy/ModalDialog';
 
 
 import Button from '@mui/material/Button';
@@ -38,27 +40,15 @@ enum CagePosition {
 }
   
 
-interface DeviceData {
-    name: string,
-    uuid: string,
-    rowId: number,
-    created_on_date: Date,
-    is_connected: boolean,
-    cage_status: CagePosition,
-    last_update_date: Date
+export interface DeviceData {
+    // name: string,
+    _id: string,
+    location: string,
+    status: string,
+    cage_position: string,
+    created_at: Date,
+    rowId: number
 }
-
-function createData(
-    name: string,
-    uuid: string,
-    rowId: number,
-    created_on_date: Date,
-    is_connected: boolean,
-    cage_status: CagePosition,
-    last_update_date: Date
-  ): DeviceData {
-    return { name, uuid, rowId, created_on_date, is_connected, cage_status, last_update_date };
-  }
 
 interface HeadCell {
     id: keyof DeviceData;
@@ -69,49 +59,35 @@ interface HeadCell {
 
 const headCells: readonly HeadCell[] = [
   {
-    id: 'name',
-    numeric: false,
-    disablePadding: true,
-    label: 'Device Name',
-  },
-  {
-    id: 'uuid',
+    id: '_id',
     numeric: false,
     disablePadding: false,
     label: 'UUID',
   },
   {
-    id: 'created_on_date',
+    id: 'status',
+    numeric: false,
+    disablePadding: false,
+    label: 'Connection Status',
+  },
+  {
+    id: 'location',
+    numeric: false,
+    disablePadding: false,
+    label: 'Location',
+  },
+  {
+    id: 'cage_position',
+    numeric: false,
+    disablePadding: false,
+    label: 'Cage Position',
+  },
+  {
+    id: 'created_at',
     numeric: false,
     disablePadding: false,
     label: 'Created On',
-  },
-  {
-    id: 'is_connected',
-    numeric: false,
-    disablePadding: false,
-    label: 'Device Status',
-  },
-  {
-    id: 'cage_status',
-    numeric: false,
-    disablePadding: false,
-    label: 'Cage Status',
-  },
-  {
-    id: 'last_update_date',
-    numeric: false,
-    disablePadding: false,
-    label: 'Status Last Updated',
-  },
-];
-
-const rows = [
-  createData('Device 1', 'aaaaaaaa', 1, new Date(Date.UTC(2025, 0, 20, 11, 52, 0)), true, CagePosition.Down, new Date()),
-  createData('Device 2', 'bbbbbbbb', 2, new Date(Date.UTC(2025, 0, 21, 11, 52, 0)), true, CagePosition.Up, new Date()),
-  createData('Device 3', 'cccccccc', 3, new Date(Date.UTC(2025, 0, 22, 11, 52, 0)), false, CagePosition.Down, new Date()),
-  createData('Device 4', 'dddddddd', 4, new Date(Date.UTC(2025, 0, 23, 11, 52, 0)), true, CagePosition.Down, new Date()),
-  createData('Device 5', 'eeeeeeee', 5, new Date(Date.UTC(2025, 0, 24, 11, 52, 0)), false, CagePosition.Down, new Date()),
+  }
 ];
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
@@ -130,8 +106,8 @@ function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
     order: Order,
     orderBy: Key,
   ): (
-    a: { [key in Key]: number | string },
-    b: { [key in Key]: number | string },
+    a: { [key in Key]: number | string | Date },
+    b: { [key in Key]: number | string | Date },
   ) => number {
     return order === 'desc'
       ? (a, b) => descendingComparator(a, b, orderBy)
@@ -196,7 +172,9 @@ interface EnhancedTableProps {
   }
   interface EnhancedTableToolbarProps {
     numSelected: number;
+    selectedDevices: DeviceData[];
   }
+
   function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
     const { numSelected } = props;
 
@@ -249,7 +227,11 @@ interface EnhancedTableProps {
             aria-labelledby="modal-modal-title"
             aria-describedby="modal-modal-description"
         >
-            <div><AddDeviceModal/></div>
+          <ModalDialog>
+            <ModalClose/>
+            <AddDeviceModal closeFn={handleDeviceModalClose}/>
+          </ModalDialog>
+            
         </Modal>
 
         <Box sx={{p: 0.5}}/>
@@ -269,7 +251,10 @@ interface EnhancedTableProps {
             aria-labelledby="modal-modal-title"
             aria-describedby="modal-modal-description"
         >
-            <div><ScheduleOpModal/></div>
+          <ModalDialog>
+            <ModalClose/>
+            <ScheduleOpModal closeFn={handleScheduleModalClose} devices={props.selectedDevices}/>
+          </ModalDialog>
         </Modal>
 
 
@@ -304,9 +289,15 @@ interface EnhancedTableProps {
       </Toolbar>
     );
   }
-  export default function DeviceTable() {
+
+
+  interface DeviceTableProps {
+    rows: DeviceData[]
+  }
+
+  export function DeviceTable(props: DeviceTableProps) {
     const [order, setOrder] = React.useState<Order>('asc');
-    const [orderBy, setOrderBy] = React.useState<keyof DeviceData>('name');
+    const [orderBy, setOrderBy] = React.useState<keyof DeviceData>('_id');
     const [selected, setSelected] = React.useState<readonly number[]>([]);
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(5);
@@ -322,7 +313,7 @@ interface EnhancedTableProps {
   
     const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
       if (event.target.checked) {
-        const newSelected = rows.map((n) => n.rowId);
+        const newSelected = props.rows.map((n) => n.rowId);
         setSelected(newSelected);
         return;
       }
@@ -359,20 +350,23 @@ interface EnhancedTableProps {
   
     // Avoid a layout jump when reaching the last page with empty rows.
     const emptyRows =
-      page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
+      page > 0 ? Math.max(0, (1 + page) * rowsPerPage - props.rows.length) : 0;
   
+
     const visibleRows = React.useMemo(
       () =>
-        [...rows]
+        [...(props.rows || [])]
           .sort(getComparator(order, orderBy))
           .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
-      [order, orderBy, page, rowsPerPage],
-    );
+      [props.rows, order, orderBy, page, rowsPerPage]
+    )
   
     return (
       <Box sx={{ width: '100%' }}>
         <Paper sx={{ width: '100%', mb: 2 }}>
-          <EnhancedTableToolbar numSelected={selected.length} />
+          <EnhancedTableToolbar numSelected={selected.length} selectedDevices={selected.map((idx) => {
+            return props.rows[idx];
+          })}/>
           <TableContainer>
             <Table
               sx={{ minWidth: 750 }}
@@ -384,7 +378,7 @@ interface EnhancedTableProps {
                 orderBy={orderBy}
                 onSelectAllClick={handleSelectAllClick}
                 onRequestSort={handleRequestSort}
-                rowCount={rows.length}
+                rowCount={props.rows.length}
               />
               <TableBody>
                 {visibleRows.map((row, index) => {
@@ -394,11 +388,11 @@ interface EnhancedTableProps {
                   return (
                     <TableRow
                       hover
-                      onClick={(event) => handleClick(event, row.rowId)}
+                      onClick={(event: any) => handleClick(event, row.rowId)}
                       role="checkbox"
                       aria-checked={isItemSelected}
                       tabIndex={-1}
-                      key={row.uuid}
+                      key={row._id}
                       selected={isItemSelected}
                       sx={{ cursor: 'pointer' }}
                     >
@@ -421,16 +415,16 @@ interface EnhancedTableProps {
                           component={RouterLink}
                           to={{
                             pathname: `/farm`,
-                            search: `?id=${row.uuid}`
-                          }}>
-                          {row.name}
+                            search: `?id=${row._id}`
+                          }}
+                        >
+                          {row._id}
                         </Link>
                       </TableCell>
-                      <TableCell align="right">{row.uuid}</TableCell>
-                      <TableCell align="right">{row.created_on_date.toLocaleString()}</TableCell>
-                      <TableCell align="right">{row.is_connected ? "Connected" : "Disconnected"}</TableCell>
-                      <TableCell align="right">{row.is_connected ? (row.cage_status == 1 ? "Up" : "Down") : "Disconnected"}</TableCell>
-                      <TableCell align="right">{row.last_update_date.toLocaleString()}</TableCell>
+                      <TableCell align="right">{row.status}</TableCell>
+                      <TableCell align="right">{row.location}</TableCell>
+                      <TableCell align="right">{row.cage_position}</TableCell>
+                      <TableCell align="right">{row.created_at.toLocaleString()}</TableCell>
                     </TableRow>
                   );
                 })}
@@ -446,7 +440,7 @@ interface EnhancedTableProps {
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
-            count={rows.length}
+            count={props.rows.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}

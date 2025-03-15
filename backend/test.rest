@@ -10,11 +10,11 @@ Content-Type: application/json
 
 ###
 
-PUT http://localhost:3000/farm/67c8dfef07d0f8fc2fb6e2ca/update
+PUT http://localhost:3000/farm/67c8dfe807d0f8fc2fb6e2c9/update
 Content-Type: application/json
 
 {
-    "status": "connected"
+    "status": "Disconnected"
 }
 
 ###
@@ -47,6 +47,14 @@ Content-Type: application/json
 ###
 
 GET http://localhost:3000/farm
+Content-Type: application/json
+
+{
+
+}
+
+###
+DELETE  http://localhost:3000/farm/67d5d7bd46aaceff4e1be9f6/delete
 Content-Type: application/json
 
 {
