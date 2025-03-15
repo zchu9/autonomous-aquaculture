@@ -1,10 +1,9 @@
 
+import * as React from 'react';
 import ModalTemplate from '../comm/ModalTemplate'
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-
-import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 
 const base_url = `${import.meta.env.VITE_API_URL}`
 
@@ -13,6 +12,8 @@ interface AddDeviceModalProps {
 }
 
 export default function AddDeviceModal(props: AddDeviceModalProps) {
+
+    
 
     async function createDevice() {
         console.log("Adding new device");
@@ -40,20 +41,12 @@ export default function AddDeviceModal(props: AddDeviceModalProps) {
     return (
         <>
             <ModalTemplate label="Add new Device">
-                {/* <Typography id="modal-modal-title" variant="h6" component="h2">
-                    Text in a modal
-                </Typography>
-                <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-                    Duis mollis, est non commodo luctus, nisi erat porttitor ligula.
-                </Typography> */}
                 <Stack spacing={2}>
                     <Button
                         variant="contained"
-                        // disabled = {!((dateIsValid || doSendNow) && isValidOpSelected)}
                         onClick = {
                             () => {
                                 createDevice()
-                                // testAPI();
                                 props.closeFn()
                             }
                         }>

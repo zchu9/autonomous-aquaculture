@@ -52,3 +52,11 @@ Content-Type: application/json
 {
 
 }
+
+###
+DELETE  http://localhost:3000/farm/67d5d7bd46aaceff4e1be9f6/delete
+Content-Type: application/json
+
+{
+
+}

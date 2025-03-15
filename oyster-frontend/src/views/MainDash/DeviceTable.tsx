@@ -21,7 +21,9 @@ import { visuallyHidden } from '@mui/utils';
 import { Link } from '@mui/material';
 
 
-import Modal from '@mui/material/Modal';
+import Modal from '@mui/joy/Modal';
+import ModalClose from '@mui/joy/ModalClose';
+import ModalDialog from '@mui/joy/ModalDialog';
 
 
 import Button from '@mui/material/Button';
@@ -170,7 +172,9 @@ interface EnhancedTableProps {
   }
   interface EnhancedTableToolbarProps {
     numSelected: number;
+    selectedDevices: DeviceData[];
   }
+
   function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
     const { numSelected } = props;
 
@@ -223,7 +227,11 @@ interface EnhancedTableProps {
             aria-labelledby="modal-modal-title"
             aria-describedby="modal-modal-description"
         >
-            <div><AddDeviceModal closeFn={handleDeviceModalClose}/></div>
+          <ModalDialog>
+            <ModalClose/>
+            <AddDeviceModal closeFn={handleDeviceModalClose}/>
+          </ModalDialog>
+            
         </Modal>
 
         <Box sx={{p: 0.5}}/>
@@ -243,7 +251,10 @@ interface EnhancedTableProps {
             aria-labelledby="modal-modal-title"
             aria-describedby="modal-modal-description"
         >
-            <div><ScheduleOpModal closeFn={handleScheduleModalClose}/></div>
+          <ModalDialog>
+            <ModalClose/>
+            <ScheduleOpModal closeFn={handleScheduleModalClose} devices={props.selectedDevices}/>
+          </ModalDialog>
         </Modal>
 
 
@@ -353,7 +364,9 @@ interface EnhancedTableProps {
     return (
       <Box sx={{ width: '100%' }}>
         <Paper sx={{ width: '100%', mb: 2 }}>
-          <EnhancedTableToolbar numSelected={selected.length} />
+          <EnhancedTableToolbar numSelected={selected.length} selectedDevices={selected.map((idx) => {
+            return props.rows[idx];
+          })}/>
           <TableContainer>
             <Table
               sx={{ minWidth: 750 }}

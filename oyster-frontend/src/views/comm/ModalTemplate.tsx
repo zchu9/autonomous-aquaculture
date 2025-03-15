@@ -1,4 +1,3 @@
-import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { ReactElement } from 'react';
@@ -24,7 +23,7 @@ const style = {
 export default function AddDeviceModal(props: ModalTemplateProps) {
     return (
         <>
-            <Box sx={style}>
+            <Box>
                 <h2> {props.label}</h2>
                 {props.children}
             </Box>

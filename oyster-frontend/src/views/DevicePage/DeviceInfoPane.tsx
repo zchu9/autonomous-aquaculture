@@ -29,7 +29,7 @@ const InfoPane = styled(Paper)(({ theme }) => ({
     // ...theme.typography.body2,
   }));
 
-const InfoPaneRow = styled(Box)(({ them }) => ({
+const InfoPaneRow = styled(Box)(({ theme }) => ({
     textAlign: 'left',
 }))
 
@@ -46,7 +46,6 @@ export function DeviceInfoPane(props: DeviceInfoPaneProps) {
     }
 
     const { _id, status, cage_position, created_at } = props.deviceInfo || {};
-    console.log(created_at)
     const formattedDate = created_at ? new Date(created_at) : null;
     const createdAtString = formattedDate && !isNaN(formattedDate.getTime())
         ? formattedDate.toLocaleString()
@@ -76,8 +75,6 @@ export function DeviceInfoPane(props: DeviceInfoPaneProps) {
                 </Grid>
 
                 <InfoPaneRow>
-                    {/* Created On: {deviceInfo.created_at.toString()} */}
-                    {/* Created On: {props.deviceInfo.created_at.toString()} */}
                     Created On: {createdAtString}
                 </InfoPaneRow>
 
