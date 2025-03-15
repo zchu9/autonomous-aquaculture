@@ -13,245 +13,69 @@
 // LoRa constraint
 #define BUFFER_SIZE 240
 
-char message[] = MESSAGE;
-int currentPacket = 0;
-int totalPackets;
-char receivedPackets[MAX_PACKETS][BUFFER_SIZE];
-int receivedTotalPackets = -1;
-char loraBuffer[BUFFER_SIZE];
-int bufferIndex = 0;
+char message[] = MESSAGE;                       //
+int currentPacket = 0;                          // the current packet being sent
+int totalPackets;                               // the calculated number of packets from the message length
+char receivedPackets[MAX_PACKETS][BUFFER_SIZE]; // array to store the received packets
+int receivedTotalPackets = -1;                  // the total number of packets received
+char loraBuffer[BUFFER_SIZE];                   // buffer to store the received data
+int bufferIndex = 0;                            // index for the loraBuffer
 
-void setupLoRa()
-{
-    Serial1.begin(9600);
-    delay(100);
-    Serial1.println("AT+IPR=9600");
-    delay(100);
-    Serial1.println("AT+CRFOP=3");
-    delay(100);
-    Serial1.println("AT+NETWORKID=6");
-    delay(100);
-    Serial1.println("AT+BAND=915000000");
-    delay(100);
-    Serial1.println("AT+PARAMETER=9,7,1,12");
-    delay(100);
-    Serial1.println("AT+ADDRESS=1");
-    delay(2000);
-    Serial.println("Transceiver setup complete!!! :D");
-    delay(5000);
+/**
+ * @brief Starts Serial1 and configures the LoRa transceiver with the necessary settings.\n
+ *
+ */
+void setupLoRa();
 
-    totalPackets = (strlen(message) + PACKET_SIZE - 1) / PACKET_SIZE;
-    // Until I integrate with Daniel I've just been commenting or uncommenting this line to choose between transmit and reciept.
-    // sendPackets();
-}
+/**
+ * @brief sends the message in fragments to the serial (LoRa module)\n
+ *
+ */
+void sendPackets();
+/**
+ * @brief sends a fragment of a message to the serial (LoRa module)
+ *
+ * @param packetID is the packet number
+ * @param fragment is the string fragment in the current packet
+ */
+void sendFragment(int packetID, const char *fragment);
 
-void sendPackets()
-{
-    char fragment[PACKET_SIZE + 1];
-    for (int i = 0; i < totalPackets; i++)
-    {
-        int startIdx = i * PACKET_SIZE;
-        int length = min(PACKET_SIZE, (int)strlen(message) - startIdx);
-        strncpy(fragment, message + startIdx, length);
-        fragment[length] = '\0';
+/**
+ * @brief Function reports when the Acknowledgment is received from the message recipient.
+ *
+ * @param expectedID the ID expected as an aknowledgment
+ * @return true if the message is successfully sent
+ * @return false if the message is not successfully sent or if the aknowledgment is not successfully received
+ */
+bool waitForACK(int expectedID);
 
-        int retries = 0;
-        while (retries < RETRY_LIMIT)
-        {
-            sendFragment(i, fragment);
-            if (waitForACK(i))
-            {
-                break;
-            }
-            retries++;
-        }
+void receiveMsg();
 
-        if (retries == RETRY_LIMIT)
-        {
-            Serial.print("Failed to receive ACK for packet ");
-            Serial.println(i);
-        }
-    }
-    Serial.println("Message sent");
-}
+/**
+ * @brief Processes the received data from the LoRa module.\n
+ *        It extracts the packet information, stores it, and sends an acknowledgment.\n
+ *        If all packets are received, it reconstructs the complete message.
+ *
+ * @param received is the string received from the LoRa module in json format
+ */
+void processReceivedData(char *received);
+/**
+ * @brief Sends an acknowledgment for the received packet to the sender.\n
+ *        The acknowledgment is sent in the format "ACK:<packetID>".
+ *
+ * @param packetID is the packet number being acknowledged
+ */
+void sendACK(int packetID);
 
-void sendFragment(int packetID, const char *fragment)
-{
-    char packet[PACKET_SIZE + 20];
-    snprintf(packet, sizeof(packet), "%d,%d,%s", packetID, totalPackets, fragment);
-
-    char command[PACKET_SIZE + 40];
-    snprintf(command, sizeof(command), "AT+SEND=%s,%d,%s", TARGET_ADDRESS, (int)strlen(packet), packet);
-
-    Serial.print("Sending: ");
-    Serial.println(packet);
-    Serial1.println(command);
-}
-
-bool waitForACK(int expectedID)
-{
-    unsigned long startTime = millis();
-    char buffer[50];
-    int index = 0;
-    while (millis() - startTime < ACK_TIMEOUT)
-    {
-        if (Serial1.available())
-        {
-            char c = Serial1.read();
-            if (c == '\n' || index >= sizeof(buffer) - 1)
-            {
-                buffer[index] = '\0';
-                Serial.print("Received buffer: ");
-                Serial.println(buffer);
-
-                if (strstr(buffer, "ACK:") != NULL)
-                {
-                    int ackID = atoi(strstr(buffer, "ACK:") + 4);
-                    if (ackID == expectedID)
-                    {
-                        Serial.print("Received ACK for packet ");
-                        Serial.println(expectedID);
-                        return true;
-                    }
-                }
-                index = 0;
-            }
-            else
-            {
-                buffer[index++] = c;
-            }
-        }
-    }
-    return false;
-}
-
-void loop()
-{
-    while (Serial1.available())
-    {
-        char c = Serial1.read();
-        if (c == '\n' || bufferIndex >= BUFFER_SIZE - 1)
-        {
-            loraBuffer[bufferIndex] = '\0';
-            Serial.println(loraBuffer);
-            processReceivedData(loraBuffer);
-            bufferIndex = 0;
-        }
-        else
-        {
-            loraBuffer[bufferIndex++] = c;
-        }
-    }
-}
-
-void processReceivedData(char *received)
-{
-    // Debug info
-    Serial.print("Processing: ");
-    Serial.println(received);
-
-    if (strncmp(received, "+RCV=", 5) != 0)
-    {
-        Serial.println("Invalid format");
-        return;
-    }
-
-    // Extract packet information
-    char *token = strtok(received + 5, ","); // Skip +RCV=
-    if (!token)
-        return;
-    token = strtok(NULL, ","); // Skip sender address
-    if (!token)
-        return;
-    token = strtok(NULL, ","); // Skip message length
-    if (!token)
-        return;
-
-    int packetID = atoi(token); // Get the packet ID
-    token = strtok(NULL, ",");
-    if (!token)
-        return;
-    totalPackets = atoi(token); // Get the total number of packets
-
-    token = strtok(NULL, ""); // Get the actual data
-    if (!token)
-        return;
-
-    // Remove signal strength info (after the last two commas)
-    char *lastComma = strrchr(token, ',');
-    if (lastComma)
-    {
-        *lastComma = '\0';
-        char *secondLastComma = strrchr(token, ',');
-        if (secondLastComma)
-        {
-            *secondLastComma = '\0';
-        }
-    }
-
-    // Store the received packet fragment
-    strncpy(receivedPackets[packetID], token, BUFFER_SIZE);
-    receivedPackets[packetID][BUFFER_SIZE - 1] = '\0';
-
-    // Debug info
-    Serial.print("Storing Packet ");
-    Serial.print(packetID + 1);
-    Serial.print(" out of ");
-    Serial.print(totalPackets);
-    Serial.print(": ");
-    Serial.println(receivedPackets[packetID]);
-
-    // Send ACK for the received packet
-    sendACK(packetID);
-
-    // If all packets have been received, reconstruct the message
-    if (allPacketsReceived())
-    {
-        Serial.println("Complete message received:");
-        reconstructMessage();
-    }
-}
-
-void sendACK(int packetID)
-{
-    // Create the ACK message for the received packet
-    char ackMessage[20];
-    snprintf(ackMessage, sizeof(ackMessage), "ACK:%d", packetID);
-    char ackCommand[BUFFER_SIZE];
-    snprintf(ackCommand, sizeof(ackCommand), "AT+SEND=%s,%d,%s", TARGET_ADDRESS, (int)strlen(ackMessage), ackMessage);
-
-    // Send the ACK command to the sender
-    Serial1.println(ackCommand);
-    Serial.print("Sending ACK for packet ");
-    Serial.println(packetID);
-}
-
-bool allPacketsReceived()
-{
-    if (totalPackets == -1)
-        return false;
-    for (int i = 0; i < totalPackets; i++)
-    {
-        if (receivedPackets[i][0] == '\0')
-            return false;
-    }
-    return true;
-}
-
-void reconstructMessage()
-{
-    // Debug stuff
-    Serial.println("Reassembling message...");
-    Serial.print("Final Reconstructed Message: ");
-    for (int i = 0; i < totalPackets; i++)
-    {
-        if (receivedPackets[i][0] == '\0')
-        {
-            Serial.print("Missing packet: ");
-            Serial.println(i);
-            return;
-        }
-        Serial.print(receivedPackets[i]);
-    }
-    Serial.println();
-}
+/**
+ * @brief Ensures that we received each of the message fragments from the sender.\n
+ *
+ * @return true if all packets have been received
+ * @return false if not all packets have been received or if the total number of packets is -1
+ */
+bool allPacketsReceived();
+/**
+ * @brief reconstructs the complete message from the received packets.\n
+ *
+ */
+void reconstructMessage();
