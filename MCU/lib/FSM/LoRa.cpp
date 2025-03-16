@@ -114,23 +114,19 @@ bool waitForACK(int expectedID)
 void receiveMsg(JsonDocument &doc)
 {
 
-    if (Serial1.available() > 10)
+    while (Serial1.available())
     {
-
-        while (Serial1.available())
+        char c = Serial1.read();
+        if (c == '\n' || bufferIndex >= BUFFER_SIZE - 1)
         {
-            char c = Serial1.read();
-            if (c == '\n' || bufferIndex >= BUFFER_SIZE - 1)
-            {
-                loraBuffer[bufferIndex] = '\0';
-                Serial.println(loraBuffer);
-                processReceivedData(loraBuffer, doc);
-                bufferIndex = 0;
-            }
-            else
-            {
-                loraBuffer[bufferIndex++] = c;
-            }
+            loraBuffer[bufferIndex] = '\0';
+            Serial.println(loraBuffer);
+            processReceivedData(loraBuffer, doc);
+            bufferIndex = 0;
+        }
+        else
+        {
+            loraBuffer[bufferIndex++] = c;
         }
     }
 }
@@ -247,5 +243,18 @@ void reconstructMessage(JsonDocument &doc)
         Serial.print(receivedPackets[i]);
     }
 
-    deserializeJson(doc, finalMsg.c_str());
+    DeserializationError error = deserializeJson(doc, finalMsg.c_str());
+    if (error)
+    {
+        Serial.print("Deserialization failed: ");
+        Serial.println(error.c_str());
+    }
+    else
+    {
+        Serial.println("Deserialization successful");
+        // Debug info
+        Serial.print("Received JSON: ");
+        serializeJson(doc, Serial);
+        Serial.println();
+    }
 }

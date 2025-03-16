@@ -7,6 +7,8 @@
  */
 void FSM(data &d)
 {
+    // this should be in the comms handler.
+    receiveMsg(d.doc);
     checkPowerHandler(d);
     commsHandler(d);
     // emergencyLiftHandler(d);
@@ -31,6 +33,7 @@ void initializeStartup(data &d)
     initializeLPMandNCM(d);
 #endif
     // should probably be a init data function.
+    setupLoRa();
     d.liftFlag[0] = 0;
     // d.lowerFlag = 0;
     //  initialize the data struct
@@ -157,7 +160,7 @@ void RFConnectedCase(data &d)
     Serial.println("RF Connected");
 #endif
 
-    receiveMsg(d.doc);
+    // receiveMsg(d.doc);
     runCommands(d);
 }
 
