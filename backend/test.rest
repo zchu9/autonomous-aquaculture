@@ -2,7 +2,7 @@ POST http://localhost:3000/addFarm
 Content-Type: application/json
 
 {
-    "location": "somewhere",
+    "location": "somewhere"
 }
 
 ###
@@ -51,7 +51,7 @@ Content-Type: application/json
 }
 
 ###
-DELETE  http://localhost:3000/farm/67d5d7bd46aaceff4e1be9f6/delete
+DELETE  http://localhost:3000/farm/67cce2dc9a376fcd20de416e/delete
 Content-Type: application/json
 
 {
