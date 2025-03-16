@@ -145,6 +145,17 @@ void RFDisconnectedCase(data &d)
 #endif
 }
 
+/**
+ * @brief Ideally The function of this code is:
+ *  Try and receive message
+ *      if received
+ *          do the commands
+ *      if not received
+ *          throw error
+ * TODO: THIS CODE HAS A BLOCKING LOOP THAT COULD GO ON FOREVER. ADD WDT
+ *
+ * @param d
+ */
 void RFConnectedCase(data &d)
 {
 #if DEBUG
@@ -152,6 +163,21 @@ void RFConnectedCase(data &d)
 #endif
 
     receiveMsg(d.doc);
+    runCommands(d.doc);
+}
+
+int runCommands(JsonDocument &doc)
+{
+    if (doc.isNull())
+    {
+        Serial.println("No valid JSON received");
+        return -1;
+    }
+    if (doc["command"] == "1")
+    {
+        //lift();
+        }
+    return 0;
 }
 
 void getIntoLowPowerMode(data &d)

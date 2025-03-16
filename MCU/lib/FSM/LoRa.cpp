@@ -1,4 +1,12 @@
 #include "LoRa.h"
+char message[] = MESSAGE;                       //
+int currentPacket = 0;                          // the current packet being sent
+int totalPackets;                               // the calculated number of packets from the message length
+char receivedPackets[MAX_PACKETS][BUFFER_SIZE]; // array to store the received packets
+int receivedTotalPackets = -1;                  // the total number of packets received
+char loraBuffer[BUFFER_SIZE];                   // buffer to store the received data
+int bufferIndex = 0;                            // index for the loraBuffer
+
 void setupLoRa()
 {
     Serial1.begin(9600);
@@ -76,7 +84,7 @@ bool waitForACK(int expectedID)
         if (Serial1.available())
         {
             char c = Serial1.read();
-            if (c == '\n' || index >= sizeof(buffer) - 1)
+            if (c == '\n' || index >= (int)sizeof(buffer) - 1)
             {
                 buffer[index] = '\0';
                 Serial.print("Received buffer: ");

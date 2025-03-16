@@ -16,14 +16,6 @@
 // LoRa constraint
 #define BUFFER_SIZE 240
 
-char message[] = MESSAGE;                       //
-int currentPacket = 0;                          // the current packet being sent
-int totalPackets;                               // the calculated number of packets from the message length
-char receivedPackets[MAX_PACKETS][BUFFER_SIZE]; // array to store the received packets
-int receivedTotalPackets = -1;                  // the total number of packets received
-char loraBuffer[BUFFER_SIZE];                   // buffer to store the received data
-int bufferIndex = 0;                            // index for the loraBuffer
-
 /**
  * @brief Starts Serial1 and configures the LoRa transceiver with the necessary settings.\n
  *
@@ -52,6 +44,13 @@ void sendFragment(int packetID, const char *fragment);
  */
 bool waitForACK(int expectedID);
 
+/**
+ * @brief This tries to recieve the message for infinity years as of right now.\n
+ *        TODO: TIMER THAT DROPS THE MESSAGE
+ * TODO: ERROR CHECKING??
+ *
+ * @param doc the json doc object to be updated.
+ */
 void receiveMsg(JsonDocument &doc);
 
 /**
