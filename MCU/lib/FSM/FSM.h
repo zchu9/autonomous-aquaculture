@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include "interrupts.h"
+#include "LoRa.h"
 
 #define DEBUG true
 

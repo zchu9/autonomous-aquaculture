@@ -103,21 +103,26 @@ bool waitForACK(int expectedID)
     return false;
 }
 
-void loop()
+void receiveMsg()
 {
-    while (Serial1.available())
+
+    if (Serial1.available() > 10)
     {
-        char c = Serial1.read();
-        if (c == '\n' || bufferIndex >= BUFFER_SIZE - 1)
+
+        while (Serial1.available())
         {
-            loraBuffer[bufferIndex] = '\0';
-            Serial.println(loraBuffer);
-            processReceivedData(loraBuffer);
-            bufferIndex = 0;
-        }
-        else
-        {
-            loraBuffer[bufferIndex++] = c;
+            char c = Serial1.read();
+            if (c == '\n' || bufferIndex >= BUFFER_SIZE - 1)
+            {
+                loraBuffer[bufferIndex] = '\0';
+                Serial.println(loraBuffer);
+                processReceivedData(loraBuffer);
+                bufferIndex = 0;
+            }
+            else
+            {
+                loraBuffer[bufferIndex++] = c;
+            }
         }
     }
 }
@@ -216,8 +221,9 @@ bool allPacketsReceived()
     return true;
 }
 
-void reconstructMessage()
+std::string reconstructMessage()
 {
+    std::string finalMsg; // Initialize to empty string
     // Debug stuff
     Serial.println("Reassembling message...");
     Serial.print("Final Reconstructed Message: ");
@@ -229,7 +235,8 @@ void reconstructMessage()
             Serial.println(i);
             return;
         }
+        finalMsg += receivedPackets[i];
         Serial.print(receivedPackets[i]);
     }
-    Serial.println();
+    return finalMsg;
 }

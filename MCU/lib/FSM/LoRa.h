@@ -1,5 +1,5 @@
 #include <Arduino.h>
-
+#include <string>
 #define TARGET_ADDRESS "0"
 #define PACKET_SIZE 100
 // random line I was using to test prior to using json
@@ -78,4 +78,4 @@ bool allPacketsReceived();
  * @brief reconstructs the complete message from the received packets.\n
  *
  */
-void reconstructMessage();
+std::string reconstructMessage();
