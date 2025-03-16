@@ -1,6 +1,5 @@
 import * as React from "react";
 import Box from "@mui/material/Box";
-import Checkbox from "@mui/material/Checkbox";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -8,17 +7,11 @@ import TableContainer from "@mui/material/TableContainer";
 import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
-import { Link as RouterLink } from "react-router-dom";
-import { Link } from "@mui/material";
-
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import Button from "@mui/material/Button";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
 
 import DeviceData from "../comm/DeviceDataInterface";
 import { EnhancedTableHead, Order } from "./EnhancedTableHead";
 import EnhancedTableToolbar from "./EnhancedTableToolbar";
+import DeviceTableRow from "./DeviceTableRow";
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -52,16 +45,6 @@ export default function DeviceTable(props: DeviceTableProps) {
   const [selected, setSelected] = React.useState<readonly number[]>([]);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
-
-  const handleMoreClicked = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMoreClosed = () => {
-    setAnchorEl(null);
-  };
 
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
@@ -149,80 +132,17 @@ export default function DeviceTable(props: DeviceTableProps) {
                 const labelId = `enhanced-table-checkbox-${index}`;
 
                 return (
-                  <TableRow
-                    hover
-                    onClick={(event: any) => handleClick(event, row.rowId)}
-                    role="checkbox"
-                    aria-checked={isItemSelected}
-                    tabIndex={-1}
-                    key={row._id}
-                    selected={isItemSelected}
-                    sx={{ cursor: "pointer" }}
-                  >
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        color="primary"
-                        checked={isItemSelected}
-                        inputProps={{
-                          "aria-labelledby": labelId,
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell
-                      component="th"
-                      id={labelId}
-                      scope="row"
-                      padding="none"
-                    >
-                      <Link
-                        component={RouterLink}
-                        to={{
-                          pathname: `/farm`,
-                          search: `?id=${row._id}`,
-                        }}
-                      >
-                        {row._id}
-                      </Link>
-                    </TableCell>
-                    <TableCell align="right">
-                      {row.status ? "Connected" : "Disconnected"}
-                    </TableCell>
-                    <TableCell align="right">{row.location}</TableCell>
-                    <TableCell align="right">
-                      {row.status ? (row.cage_position ? "Up" : "Down") : "-"}
-                    </TableCell>
-                    <TableCell align="right">
-                      {row.created_at.toLocaleString()}
-                    </TableCell>
-                    <TableCell align="right">
-                      <Button
-                        id="basic-button"
-                        aria-controls={open ? "basic-menu" : undefined}
-                        aria-haspopup="true"
-                        aria-expanded={open ? "true" : undefined}
-                        onClick={handleMoreClicked}
-                        startIcon={<MoreVertIcon />}
-                      />
-                    </TableCell>
-                    <Menu
-                      id="basic-menu"
-                      anchorEl={anchorEl}
-                      open={open}
-                      onClose={handleMoreClosed}
-                      MenuListProps={{
-                        "aria-labelledby": "basic-button",
-                      }}
-                    >
-                      <MenuItem onClick={handleMoreClosed}>Profile</MenuItem>
-                      <MenuItem onClick={handleMoreClosed}>My account</MenuItem>
-                      <MenuItem onClick={handleMoreClosed}>Logout</MenuItem>
-                    </Menu>
-                  </TableRow>
+                  <DeviceTableRow
+                    device={row}
+                    isItemSelected={isItemSelected}
+                    labelId={labelId}
+                    handleClick={handleClick}
+                  />
                 );
               })}
               {emptyRows > 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} />
+                  <TableCell colSpan={7} />
                 </TableRow>
               )}
             </TableBody>
