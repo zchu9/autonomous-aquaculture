@@ -130,7 +130,7 @@ void commsHandler(data &d)
         if (ncm)
         {
             // attempt to reconnect
-            //RFDisconnectedCase(d);
+            // RFDisconnectedCase(d);
         }
         else
         {
@@ -279,8 +279,8 @@ void winchControl(data &d)
         // activate winch fires relay;
         digitalWrite(WINCH_ACTIVATE, HIGH);
     }
-    digitalWrite(WINCH_ACTIVATE, LOW);  // turn off
-    d.liftFlag[i] = !d.liftFlag[i];
+    digitalWrite(WINCH_ACTIVATE, LOW); // turn off
+    d.liftFlag[index] = !d.liftFlag[index];
 };
 
 /*
