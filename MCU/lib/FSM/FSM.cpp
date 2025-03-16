@@ -7,8 +7,6 @@
  */
 void FSM(data &d)
 {
-    sleep();
-    // Serial.println("sleep dont work");
     checkPowerHandler(d);
     commsHandler(d);
     // emergencyLiftHandler(d);
@@ -27,6 +25,10 @@ void initializeStartup(data &d)
 {
 #if DEBUG
     initializeDebug();
+    initializeNormalFSM(d);
+    Serial.println("Hard Coded into normal mode");
+#else
+    initializeLPMandNCM(d);
 #endif
     // should probably be a init data function.
     d.liftFlag[0] = 0;
@@ -37,7 +39,7 @@ void initializeStartup(data &d)
     memset(d.img, '\0', d.img_size);
     // d.whatever = "Nice data Zachary"; it is nice thank you everyone always says how nice it is, i didn't say that but everyone is saying its very very nice data, not like that nasty data some other poeple are bringing in here with its crime and all that
     // initializes the check power interrupt the comms handler, and the emergency lift lowering timer interrupt
-    initializeLPMandNCM(d);
+    // initializeLPMandNCM(d);
 }
 
 /**
@@ -128,7 +130,7 @@ void commsHandler(data &d)
         if (ncm)
         {
             // attempt to reconnect
-            RFDisconnectedCase(d);
+            //RFDisconnectedCase(d);
         }
         else
         {
@@ -136,13 +138,6 @@ void commsHandler(data &d)
             RFConnectedCase(d);
         }
     }
-}
-
-void RFDisconnectedCase(data &d)
-{
-#if DEBUG
-    Serial.println("RF Disconnected");
-#endif
 }
 
 /**

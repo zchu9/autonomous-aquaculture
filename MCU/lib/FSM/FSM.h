@@ -75,7 +75,8 @@ void powerStateChange(data &d);
 // comms helpers
 void RFConnectedCase(data &d);
 /**
- * @brief TODO: This doesnt exist yet.
+ * @brief TODO: Disconnected state will occur when the device fails to recieve a transmission within
+ * SIGN_OF_LIFE_TIMEOUT.\n
  *
  * @param d
  */
