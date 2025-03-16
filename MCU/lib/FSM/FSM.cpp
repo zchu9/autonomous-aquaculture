@@ -173,6 +173,7 @@ int runCommands(data &d)
     }
     if (d.doc["command"] == 1)
     {
+        d.liftFlag[0] = 1;
         winchControl(d);
         Serial.println("Lift command received");
     }
