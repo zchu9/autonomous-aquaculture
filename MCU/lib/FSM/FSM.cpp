@@ -243,7 +243,7 @@ double checkPower(data &d)
 void winchControl(data &d)
 {
     unsigned long startTime = millis();
-    unsigned long timeout = 10000;
+    unsigned long timeout = 5000;
     uint8_t index = -1;
     uint8_t numOfWinches = 4;
 
@@ -279,6 +279,8 @@ void winchControl(data &d)
         // activate winch fires relay;
         digitalWrite(WINCH_ACTIVATE, HIGH);
     }
+    digitalWrite(WINCH_ACTIVATE, LOW);  // turn off
+    d.liftFlag[i] = !d.liftFlag[i];
 };
 
 /*
