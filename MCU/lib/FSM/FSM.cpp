@@ -11,7 +11,7 @@ void FSM(data &d)
     receiveMsg(d.doc);
     checkPowerHandler(d);
     commsHandler(d);
-    // emergencyLiftHandler(d);
+    //  emergencyLiftHandler(d);
 }
 
 /**
@@ -115,9 +115,9 @@ void checkPowerHandler(data &d)
         Serial.println("Power check function");
 #endif
         setPowerFlag(false);
-        checkPower(d);
-        // d.power_placeholder = 100; // checkPower();
-        powerStateChange(d);
+        // checkPower(d);
+        //  d.power_placeholder = 100; // checkPower();
+        //  powerStateChange(d);
     }
 }
 
@@ -171,11 +171,13 @@ int runCommands(data &d)
         Serial.println("No valid JSON received");
         return -1;
     }
-    if (d.doc["command"] == "1")
+    if (d.doc["command"] == 1)
     {
         winchControl(d);
         Serial.println("Lift command received");
     }
+    // clear the json doc
+    d.doc.clear();
     return 0;
 }
 
