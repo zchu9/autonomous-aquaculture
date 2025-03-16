@@ -163,20 +163,21 @@ void RFConnectedCase(data &d)
 #endif
 
     receiveMsg(d.doc);
-    runCommands(d.doc);
+    runCommands(d);
 }
 
-int runCommands(JsonDocument &doc)
+int runCommands(data &d)
 {
-    if (doc.isNull())
+    if (d.doc.isNull())
     {
         Serial.println("No valid JSON received");
         return -1;
     }
-    if (doc["command"] == "1")
+    if (d.doc["command"] == "1")
     {
-        //lift();
-        }
+        winchControl(d);
+        Serial.println("Lift command received");
+    }
     return 0;
 }
 
@@ -243,6 +244,47 @@ double checkPower(data &d)
     double ret = messageTest(d);
     return ret;
 }
+
+void winchControl(data &d)
+{
+    unsigned long startTime = millis();
+    unsigned long timeout = 10000;
+    uint8_t index = -1;
+    uint8_t numOfWinches = 4;
+
+    for (uint8_t i = 0; i < numOfWinches; i++)
+    {
+        if (d.liftFlag[i])
+        {
+            index = i;
+            break;
+        }
+    }
+
+    if (index == -1)
+    {
+        return; // oops
+    }
+
+    // check up/down from analogRead()
+    // if high
+    // index+numberofwinches
+
+    // select winch
+    digitalWrite(MUX_DISABLE_2, HIGH);
+    digitalWrite(MUX_SEL_0, (index & 0x001));
+    digitalWrite(MUX_SEL_1, (index & 0x010));
+    digitalWrite(MUX_SEL_2, (index & 0x100)); // double check
+    digitalWrite(MUX_DISABLE_2, LOW);
+
+    while (millis() - startTime < timeout)
+    {
+        // check sensor
+        // if (analogRead height) { stop if too high or low }
+        // activate winch fires relay;
+        digitalWrite(WINCH_ACTIVATE, HIGH);
+    }
+};
 
 /*
       `'::::.

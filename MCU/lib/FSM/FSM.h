@@ -89,7 +89,7 @@ void RFDisconnectedCase(data &d);
  * @param doc
  * @return int returns 0 if the command is successfully run.\n
  */
-int runCommands(JsonDocument &doc);
+int runCommands(data &d);
 
 // Logan functions
 
@@ -99,7 +99,7 @@ double getHeight();
 
 // Winch Controls
 
-void lift();
+void winchControl(data &d);
 
 // Debugging
 void initializeDebug();
