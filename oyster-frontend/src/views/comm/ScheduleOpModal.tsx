@@ -16,8 +16,7 @@ import Checkbox from '@mui/material/Checkbox';
 import Stack from '@mui/material/Stack';
 import Chip from '@mui/material/Chip';
 import { styled } from '@mui/material/styles';
-import Paper from '@mui/material/Paper';
-import DeviceData from '../MainDash/DeviceTable'
+import DeviceData from './DeviceDataInterface'
 
 const base_url = `${import.meta.env.VITE_API_URL}`
 

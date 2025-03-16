@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react'
 
-import { DeviceTable, DeviceData } from './DeviceTable';
+import DeviceTable from './DeviceTable';
+import DeviceData from '../comm/DeviceDataInterface';
 
 const base_url = `${import.meta.env.VITE_API_URL}`
 
