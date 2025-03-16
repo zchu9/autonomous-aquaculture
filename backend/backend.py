@@ -49,7 +49,6 @@ def handle_connect(client, userdata, flags, rc):
 @mqtt.on_message()
 def handle_mqtt_message(client, userdata, message):
     print(f"Received message from MQTT broker on {MQTT_HOST_NAME}:{MQTT_PORT_NUM}")
-    global data_updated
 
     try:
         topic = message.topic
@@ -66,14 +65,14 @@ def handle_mqtt_message(client, userdata, message):
             # Update farm status to disconnected in MongoDB when LWT message is received
                 farm_collection.update_one(
                     {"_id": ObjectId(farm_id)},
-                    {"$set": {"status": "disconnected"}}
+                    {"$set": {"status": False}}
                 )
 
             elif payload == "connected":
                 # Update farm status to connected in MongoDB
                 farm_collection.update_one(
                     {"_id": ObjectId(farm_id)},
-                    {"$set": {"status": "connected"}}
+                    {"$set": {"status": True}}
                 )
 
         elif "getActiveSensorData" in topic:
@@ -119,10 +118,9 @@ def handle_mqtt_message(client, userdata, message):
 
             farm_collection.update_one(
                     {"_id": ObjectId(farm_id)},
-                    {"$set": {"status": "disconnected"}}
+                    {"$set": {"status": True}}
                 )
-            
-            data_updated = True
+
             print("System level data updated successfully")
 
     except Exception as e:
@@ -146,6 +144,9 @@ def add_farm():
 
     if 'location' not in farm_data:
         return jsonify({"error": "Location is required"}), 400
+    
+    if 'farm_name' not in farm_data:
+        return jsonify({"error": "Farm name is required"}), 400
 
     farm_data["cage_position"] = True
     farm_data["status"] = False
