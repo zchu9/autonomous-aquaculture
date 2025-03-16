@@ -1,4 +1,7 @@
+#ifndef LORA_H
+#define LORA_H
 #include <Arduino.h>
+#include "ArduinoJson.h"
 #include <string>
 #define TARGET_ADDRESS "0"
 #define PACKET_SIZE 100
@@ -49,7 +52,7 @@ void sendFragment(int packetID, const char *fragment);
  */
 bool waitForACK(int expectedID);
 
-void receiveMsg();
+void receiveMsg(JsonDocument &doc);
 
 /**
  * @brief Processes the received data from the LoRa module.\n
@@ -58,7 +61,8 @@ void receiveMsg();
  *
  * @param received is the string received from the LoRa module in json format
  */
-void processReceivedData(char *received);
+void processReceivedData(char *received, JsonDocument &doc);
+
 /**
  * @brief Sends an acknowledgment for the received packet to the sender.\n
  *        The acknowledgment is sent in the format "ACK:<packetID>".
@@ -78,4 +82,6 @@ bool allPacketsReceived();
  * @brief reconstructs the complete message from the received packets.\n
  *
  */
-std::string reconstructMessage();
+void reconstructMessage(JsonDocument &doc);
+
+#endif // LORA_H

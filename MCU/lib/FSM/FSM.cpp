@@ -151,7 +151,7 @@ void RFConnectedCase(data &d)
     Serial.println("RF Connected");
 #endif
 
-    receiveMsg();
+    receiveMsg(d.doc);
 }
 
 void getIntoLowPowerMode(data &d)

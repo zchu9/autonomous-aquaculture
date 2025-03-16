@@ -103,7 +103,7 @@ bool waitForACK(int expectedID)
     return false;
 }
 
-void receiveMsg()
+void receiveMsg(JsonDocument &doc)
 {
 
     if (Serial1.available() > 10)
@@ -116,7 +116,7 @@ void receiveMsg()
             {
                 loraBuffer[bufferIndex] = '\0';
                 Serial.println(loraBuffer);
-                processReceivedData(loraBuffer);
+                processReceivedData(loraBuffer, doc);
                 bufferIndex = 0;
             }
             else
@@ -127,7 +127,7 @@ void receiveMsg()
     }
 }
 
-void processReceivedData(char *received)
+void processReceivedData(char *received, JsonDocument &doc)
 {
     // Debug info
     Serial.print("Processing: ");
@@ -191,7 +191,7 @@ void processReceivedData(char *received)
     if (allPacketsReceived())
     {
         Serial.println("Complete message received:");
-        reconstructMessage();
+        reconstructMessage(doc);
     }
 }
 
@@ -221,7 +221,7 @@ bool allPacketsReceived()
     return true;
 }
 
-std::string reconstructMessage()
+void reconstructMessage(JsonDocument &doc)
 {
     std::string finalMsg; // Initialize to empty string
     // Debug stuff
@@ -238,5 +238,6 @@ std::string reconstructMessage()
         finalMsg += receivedPackets[i];
         Serial.print(receivedPackets[i]);
     }
-    return finalMsg;
+
+    deserializeJson(doc, finalMsg.c_str());
 }

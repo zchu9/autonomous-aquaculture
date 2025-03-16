@@ -4,6 +4,7 @@
 #include <Wire.h>
 #include "interrupts.h"
 #include "LoRa.h"
+#include "ArduinoJson.h"
 
 #define DEBUG true
 
@@ -35,6 +36,7 @@ struct data
     int img[img_size];
     device currentDevice;
     unsigned long lastDevSwitchTime;
+    JsonDocument doc;
 };
 
 #define POWER_THRESHOLD 0.5
