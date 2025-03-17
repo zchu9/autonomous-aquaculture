@@ -218,9 +218,10 @@ void powerStateChange(data& d) {
  */
 void initializeDebug() {
     Serial.begin(9600);
-    while (!Serial)
-        ;
-    delay(100);
+    // This is blocking until a serial monitor is connected
+    // while (!Serial)
+        // ;
+    // delay(100);
     Serial1.begin(9600, SERIAL_8N1);
     Serial.println("Debugging Initialized");
 }
