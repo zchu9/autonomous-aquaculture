@@ -236,8 +236,10 @@ double checkPower(data& d) {
 void winchControl(data& d) {
     // debug winch control function - no height sensor, so it will lift/lower for 5 sec.
 
-    ulong startTime = millis();
-    ulong timeout = 5000;
+    // This timer does not increment until loop() is completed in main
+    // timing for all functions will need to be worked out.
+    // ulong time = millis();
+    // ulong timeout = 5000;
     uint8_t index = -1;
     uint8_t numOfWinches = 4;
     pin_size_t liftPin = WINCH_ACTIVATE;    // pin 7 in pins.h
@@ -246,8 +248,8 @@ void winchControl(data& d) {
     static bool lift = 1;
     if (lift) {
         liftPin++;  // use pin 8 to lower;
-        lift = !lift;   // invert it for the next op.
     }
+    lift = !lift;   // invert it for the next op.
 #endif
 
     for (uint8_t i = 0; i < numOfWinches; i++)
@@ -274,14 +276,9 @@ void winchControl(data& d) {
     digitalWrite(MUX_SEL_1, (index & 0x010));
     digitalWrite(MUX_SEL_2, (index & 0x100));
     digitalWrite(MUX_DISABLE_2, LOW);
-
-    while (millis() - startTime >= timeout)
-    {
-        // check sensor
-        // if (analogRead height) { stop if too high or low }
-        // activate winch fires relay;
-        digitalWrite(liftPin, HIGH);
-    }
+ 
+    digitalWrite(liftPin, HIGH);
+    delay(3000);
     digitalWrite(liftPin, LOW); // turn off
     d.liftFlag[index] = !d.liftFlag[index]; // clear flag
 };

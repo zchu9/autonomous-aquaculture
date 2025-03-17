@@ -29,13 +29,14 @@ struct data
     static const size_t numWinches = 10;
 
     bool liftFlag[numWinches];
+    bool liftStarted;
     // bool lowerFlag[numWinches];
     State state;
     double height;
     double power_placeholder;
     int img[img_size];
     device currentDevice;
-    unsigned long lastDevSwitchTime;
+    ulong lastDevSwitchTime;
     JsonDocument doc;
 };
 
