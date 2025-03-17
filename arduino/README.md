@@ -2,7 +2,9 @@ Arduino Sensor & Display Project
 This project includes two separate Arduino sketches:
 1. Potentiometer Reader – Reads a potentiometer value and displays it via serial.
 2. DS18B20 Temperature Sensor – Reads temperature in Celsius & Fahrenheit using the DS18B20 sensor.
-3. Pins.h includes pin assignments and should be included as a header #include "pins.h"
+3. Camera Module – Captures images using the ArduCam Mini 2MP and processes them.
+4. MQTT Integration – Sends sensor data to an MQTT broker for remote monitoring.
+5. Pins.h includes pin assignments and should be included as a header #include "pins.h"
 
 
 
@@ -34,9 +36,24 @@ Pin Connections:
 | Data (Yellow) | D2 |
 | **4.7kΩ Pull-up Resistor** | Between VCC & Data |
 
+ Camera Module (`camera_handler.ino`)
+ Functionality:
+ - Captures images using the ArduCam Mini 2MP.
+ - Saves image data for processing.
+ - Sends image data over Serial for retrieval.
+
+Pin Connections:
+| Camera Modual Pin | Arduino Pin |
+|-------------|------------|
+| CS (Chip select)   | D7 |
+| MISO | D12 |
+| MOSI | D11 |
+| SCK | D13 |
+| VCC | 3.3v |
+| GND | GND |
 
 How to Use
-1. Upload the desired sketch** (`potentiometer.ino` or `temperature_sensor.ino`) to your Arduino.
+1. Upload the desired sketch** (`potentiometer.ino` or `temperature_sensor.ino` or `main.ino`) to your Arduino.
 2. Open the Serial Monitor** (`9600 baud`).
 3. Observe sensor readings in real-time.
 
@@ -50,6 +67,8 @@ Before running the **temperature sensor code**, install these libraries:
 2. DallasTemperature Library
    - Install via Arduino IDE:  
      `Sketch → Include Library → Manage Libraries → Search "DallasTemperature" → Install`
+3. ArduCAM Library
+   - Required for image capture.
 
 Still need to impliment data logging.
 
