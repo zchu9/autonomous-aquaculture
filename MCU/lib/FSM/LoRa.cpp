@@ -9,22 +9,23 @@ int bufferIndex = 0;                            // index for the loraBuffer
 
 void setupLoRa()
 {
+    ulong setupDelay = 50;
     Serial1.begin(9600);
-    delay(100);
+    delay(setupDelay);
     Serial1.println("AT+IPR=9600");
-    delay(100);
+    delay(setupDelay);
     Serial1.println("AT+CRFOP=3");
-    delay(100);
+    delay(setupDelay);
     Serial1.println("AT+NETWORKID=6");
-    delay(100);
+    delay(setupDelay);
     Serial1.println("AT+BAND=915000000");
-    delay(100);
+    delay(setupDelay);
     Serial1.println("AT+PARAMETER=9,7,1,12");
-    delay(100);
+    delay(setupDelay);
     Serial1.println("AT+ADDRESS=1");
-    delay(2000);
+    delay(setupDelay);
     Serial.println("Transceiver setup complete!!! :D");
-    delay(5000);
+    delay(setupDelay);
 
     totalPackets = (strlen(message) + PACKET_SIZE - 1) / PACKET_SIZE;
     // Until I integrate with Daniel I've just been commenting or uncommenting this line to choose between transmit and reciept.

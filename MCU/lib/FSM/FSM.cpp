@@ -1,12 +1,13 @@
 #include "FSM.h"
 #include "uartSwitch.h"
 
+#define DEBUG_LIFT 1
+
 /**
  * @brief
  *
  */
-void FSM(data &d)
-{
+void FSM(data& d) {
     // this should be in the comms handler.
     receiveMsg(d.doc);
     checkPowerHandler(d);
@@ -23,8 +24,7 @@ void FSM(data &d)
  *
  * @param d the data struct that will be passed from the main function.
  */
-void initializeStartup(data &d)
-{
+void initializeStartup(data& d) {
 #if DEBUG
     initializeDebug();
     initializeNormalFSM(d);
@@ -49,8 +49,7 @@ void initializeStartup(data &d)
  * @brief Initializes variables to be used in the (Low Power/No Connection) Mode
  *
  */
-void initializeLPMandNCM(data &d)
-{
+void initializeLPMandNCM(data& d) {
     // initialize: Low Power, No Connection, RF Mode
     d.state = LOW_POWER_NO_CONNECTION;
 
@@ -68,8 +67,7 @@ void initializeLPMandNCM(data &d)
  * The LPM should be set to 0\n
  * check power should be initialized
  */
-void initializeLPM(data &d)
-{
+void initializeLPM(data& d) {
     d.state = LOW_POWER;
 }
 
@@ -79,8 +77,7 @@ void initializeLPM(data &d)
  * If NCM was 1, then the "reconnected" should be initialized already\n
  * TODO: initializeReconnection() is undefined
  */
-void initializeNCM(data &d)
-{
+void initializeNCM(data& d) {
     d.state = NO_CONNECTION;
 }
 
@@ -92,14 +89,12 @@ void initializeNCM(data &d)
  * if NCM was 1, then a "connected" initialization might be needed\n
  * TODO: Come up with a better name for the "connected" initialization
  */
-void initializeNormalFSM(data &d)
-{
+void initializeNormalFSM(data& d) {
     // NCM -> Normal
     d.state = NORMAL;
 }
 
-void sleep()
-{
+void sleep() {
     // Sleep until an interrupt occurs
     // asm - tells compiler this is inline assembly
     // __volatile__ - tells compiler this code has side effects that should not be optimized away
@@ -107,8 +102,7 @@ void sleep()
     //__asm__ __volatile__("wfi");
 }
 
-void checkPowerHandler(data &d)
-{
+void checkPowerHandler(data& d) {
     if (getPowerFlag() == 1)
     {
 #if DEBUG
@@ -121,8 +115,7 @@ void checkPowerHandler(data &d)
     }
 }
 
-void commsHandler(data &d)
-{
+void commsHandler(data& d) {
     if (getCommsFlag() == 1)
     {
 #if DEBUG
@@ -154,8 +147,7 @@ void commsHandler(data &d)
  *
  * @param d
  */
-void RFConnectedCase(data &d)
-{
+void RFConnectedCase(data& d) {
 #if DEBUG
     Serial.println("RF Connected");
 #endif
@@ -164,8 +156,7 @@ void RFConnectedCase(data &d)
     runCommands(d);
 }
 
-int runCommands(data &d)
-{
+int runCommands(data& d) {
     if (d.doc.isNull())
     {
         Serial.println("No valid JSON received");
@@ -182,8 +173,7 @@ int runCommands(data &d)
     return 0;
 }
 
-void getIntoLowPowerMode(data &d)
-{
+void getIntoLowPowerMode(data& d) {
     if (d.state == NORMAL)
     {
         d.state = LOW_POWER;
@@ -193,8 +183,7 @@ void getIntoLowPowerMode(data &d)
         d.state = LOW_POWER_NO_CONNECTION;
     }
 };
-void getOutOfLowPowerMode(data &d)
-{
+void getOutOfLowPowerMode(data& d) {
     if (d.state == LOW_POWER_NO_CONNECTION)
     {
         d.state = NO_CONNECTION;
@@ -205,8 +194,7 @@ void getOutOfLowPowerMode(data &d)
     }
 }
 
-void powerStateChange(data &d)
-{
+void powerStateChange(data& d) {
     bool already_in_lpm = d.state == LOW_POWER || d.state == LOW_POWER_NO_CONNECTION;
     if (d.power_placeholder < POWER_THRESHOLD)
     {
@@ -228,8 +216,7 @@ void powerStateChange(data &d)
 /**
  * @brief initialize serial communication
  */
-void initializeDebug()
-{
+void initializeDebug() {
     Serial.begin(9600);
     while (!Serial)
         ;
@@ -240,18 +227,27 @@ void initializeDebug()
 ////////////////////////////////////////////////////////////////////////////
 // Zach's House
 ////////////////////////////////////////////////////////////////////////////
-double checkPower(data &d)
-{
+double checkPower(data& d) {
     double ret = messageTest(d);
     return ret;
 }
 
-void winchControl(data &d)
-{
-    unsigned long startTime = millis();
-    unsigned long timeout = 5000;
+void winchControl(data& d) {
+    // debug winch control function - no height sensor, so it will lift/lower for 5 sec.
+
+    ulong startTime = millis();
+    ulong timeout = 5000;
     uint8_t index = -1;
     uint8_t numOfWinches = 4;
+    pin_size_t liftPin = WINCH_ACTIVATE;    // pin 7 in pins.h
+
+#if DEBUG_LIFT
+    static bool lift = 1;
+    if (lift) {
+        liftPin++;  // use pin 8 to lower;
+        lift = !lift;   // invert it for the next op.
+    }
+#endif
 
     for (uint8_t i = 0; i < numOfWinches; i++)
     {
@@ -275,18 +271,18 @@ void winchControl(data &d)
     digitalWrite(MUX_DISABLE_2, HIGH);
     digitalWrite(MUX_SEL_0, (index & 0x001));
     digitalWrite(MUX_SEL_1, (index & 0x010));
-    digitalWrite(MUX_SEL_2, (index & 0x100)); // double check
+    digitalWrite(MUX_SEL_2, (index & 0x100));
     digitalWrite(MUX_DISABLE_2, LOW);
 
-    while (millis() - startTime < timeout)
+    while (millis() - startTime >= timeout)
     {
         // check sensor
         // if (analogRead height) { stop if too high or low }
         // activate winch fires relay;
-        digitalWrite(WINCH_ACTIVATE, HIGH);
+        digitalWrite(liftPin, HIGH);
     }
-    digitalWrite(WINCH_ACTIVATE, LOW); // turn off
-    d.liftFlag[index] = !d.liftFlag[index];
+    digitalWrite(liftPin, LOW); // turn off
+    d.liftFlag[index] = !d.liftFlag[index]; // clear flag
 };
 
 /*

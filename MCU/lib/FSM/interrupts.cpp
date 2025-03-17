@@ -54,8 +54,8 @@ uint32_t preMillisTimer = 0;
 void setupInterrupts()
 {
     // Initialize the timer with the selected timer and interval
-    while (millis() < 5000)
-        ;
+    // while (millis() < 5000)
+    //     ;
     if (powerTimer.attachInterruptInterval_MS(TIMER_INTERVAL_MS, PowerTimerHandler)) // TODO: change interval
     {
         preMillisTimer = millis();
