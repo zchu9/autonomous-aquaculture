@@ -3,8 +3,8 @@ import serial
 import time
 import json
 
-MQTT_BROKER = "192.168.1.42" 
-MQTT_PORT = 1883 
+MQTT_BROKER = "172.29.112.170" 
+MQTT_PORT = 1883
 LORA_PORT = 'COM7' #change if hooked directly to serial rather than via the USB-to-UART adapter
 BAUD_RATE = 9600
 PACKET_SIZE = 100 #fine tune latter
@@ -126,9 +126,12 @@ def all_packets_received():
     return all(received_packets[i] for i in range(total_packets))
 
 def reconstruct_message():
+    global total_packets, received_packets
     print("Reassembling message...")
     full_message = "".join(received_packets[:total_packets])
     print(f"Final Reconstructed Message: {full_message}")
+    received_packets = ["" for _ in range(MAX_PACKETS)]
+    total_packets = -1
     #Use the reconstructed JSON to find out what topic the message needs to be publised to.
     try:
         data = json.loads(full_message)
@@ -140,11 +143,11 @@ def reconstruct_message():
         print(f"JSON decoding failed: {e}")
     #print(get_address(data.get("farm_id")))
 
-#mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "logan")
-#mqtt_client.on_connect = lambda client, userdata, flags, rc, properties: client.subscribe("farm/+/cage")
-#mqtt_client.on_message = on_message
-#mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
-#mqtt_client.loop_start()
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "logan")
+mqtt_client.on_connect = lambda client, userdata, flags, rc, properties: client.subscribe("farm/+/cage")
+mqtt_client.on_message = on_message
+mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
+mqtt_client.loop_start()
 
 buffer = ""
 while True:
