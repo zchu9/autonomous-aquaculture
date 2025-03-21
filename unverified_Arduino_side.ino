@@ -2,7 +2,7 @@
 
 //assume this stuff is provided by a config file
 #define LORA_ADDRESS 42069
-#define FARM_ID "N0tAR3alFarm1DChang3M333"
+#define FARM_ID "67dcad71921b525e1e669551"
 
 //Changed the Pi side's address from 0 to 1 as 0 is the default and might cause issues
 #define TARGET_ADDRESS "1"
@@ -13,13 +13,15 @@
 //fine tune
 #define ACK_TIMEOUT 10000
 //fine tune
-#define RETRY_LIMIT 50
+#define RETRY_LIMIT 5000
 //fine tune 
 #define MAX_PACKETS 10
 //fixed constraint of LoRa; well ~240 is data and rest is crc; real max is 256 but I'll slap on the 4 extra bytes just in case
 #define BUFFER_SIZE 260
 
-//I probably shouldn't have made this a gloabal
+//dummy messsage 
+#define bruh "[Chorus: Razi] Gedagedigedagedago Abin mery alontamago Wede wude comfrom? Wede wude go? Wede jude kamfro Bagulado? Gedagedigedagedago Abin mery alontamago Wede wude comfrom? Wede wude go? Wede jude kamfro Chicken Eye Joe? (YEEHAA!) Gedagedigedagedago Abin mery alontamago Wede wude comfrom? Wede wude go? Wede jude kamfro Chicken Eye Joe? Bekakelikelakelako Abin mery alontamago Wede wude comfrom? Wede wude go? Wede jude kamfro Chicken Eye Joe? (YEEHAA!)"
+
 int currentPacket = 0;
 int totalPackets;
 int receivedTotalPackets = -1;
@@ -52,8 +54,7 @@ void setup() {
     sendPackets(handshake_message); 
 
     //Dummy packet sender
-    //totalPackets = (strlen(message) + PACKET_SIZE - 1) / PACKET_SIZE;
-    //sendPackets(); 
+    //sendPackets(bruh); 
 }
 
 void sendPackets(char * message) {
