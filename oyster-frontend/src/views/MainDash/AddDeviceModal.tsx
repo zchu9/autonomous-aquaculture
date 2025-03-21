@@ -37,6 +37,7 @@ export default function AddDeviceModal(props: AddDeviceModalProps) {
   return (
     <>
       <ModalTemplate label="Add new Device">
+        Enter your Device Details:
         <Stack spacing={2}>
           <Button
             variant="contained"
