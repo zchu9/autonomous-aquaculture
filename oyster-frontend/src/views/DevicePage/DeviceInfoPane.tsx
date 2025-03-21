@@ -38,7 +38,8 @@ export function DeviceInfoPane(props: DeviceInfoPaneProps) {
     );
   }
 
-  const { _id, status, cage_position, created_at } = props.deviceInfo || {};
+  const { _id, farm_name, status, cage_position, created_at } =
+    props.deviceInfo || {};
   const formattedDate = created_at ? new Date(created_at) : null;
   const createdAtString =
     formattedDate && !isNaN(formattedDate.getTime())
@@ -51,7 +52,7 @@ export function DeviceInfoPane(props: DeviceInfoPaneProps) {
         <Grid container spacing={2}>
           <Grid size={6}>
             <InfoPaneRow>
-              <h2>Device Name</h2>
+              <h2>{farm_name}</h2>
               {_id}
             </InfoPaneRow>
           </Grid>

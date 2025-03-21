@@ -7,16 +7,16 @@ Content-Type: application/json
 
 ###
 
-PUT http://localhost:3000/farm/67c8dfe807d0f8fc2fb6e2c9/update
+PUT http://localhost:3000/farm/67d64529e9547432429df362/update
 Content-Type: application/json
 
 {
-    "status": "Disconnected"
+    "farm_name": "Dickie's Cool Farm 4"
 }
 
 ###
 
-GET http://localhost:3000/farm/67c8dfef07d0f8fc2fb6e2ca/info
+GET http://localhost:3000/farm/67d60003c103ef9612736bce/info
 Content-Type: application/json
 
 {

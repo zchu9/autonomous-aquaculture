@@ -2,6 +2,7 @@ import * as React from "react";
 import ModalTemplate from "../comm/ModalTemplate";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
 const base_url = `${import.meta.env.VITE_API_URL}`;
@@ -11,6 +12,8 @@ interface AddDeviceModalProps {
 }
 
 export default function AddDeviceModal(props: AddDeviceModalProps) {
+  const [deviceName, setDeviceName] = React.useState<string>("");
+
   async function createDevice() {
     console.log("Adding new device");
     try {
@@ -20,6 +23,7 @@ export default function AddDeviceModal(props: AddDeviceModalProps) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          farm_name: deviceName,
           location: "somewhere",
           cage_position: "up",
           created_at: new Date(),
@@ -37,8 +41,17 @@ export default function AddDeviceModal(props: AddDeviceModalProps) {
   return (
     <>
       <ModalTemplate label="Add new Device">
-        Enter your Device Details:
+        <div>Enter device details</div>
         <Stack spacing={2}>
+          <h3>Device Name:</h3>
+          <TextField
+            id="outlined-basic"
+            label="Outlined"
+            variant="outlined"
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+              setDeviceName(event.target.value);
+            }}
+          />
           <Button
             variant="contained"
             onClick={() => {

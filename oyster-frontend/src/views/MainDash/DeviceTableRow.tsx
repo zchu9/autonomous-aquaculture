@@ -2,6 +2,9 @@ import * as React from "react";
 import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import Checkbox from "@mui/material/Checkbox";
+import Modal from "@mui/joy/Modal";
+import ModalClose from "@mui/joy/ModalClose";
+import ModalDialog from "@mui/joy/ModalDialog";
 
 import { Link as RouterLink } from "react-router-dom";
 import { Link } from "@mui/material";
@@ -9,10 +12,12 @@ import { Link } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import EditCalendarOutlinedIcon from "@mui/icons-material/EditCalendarOutlined";
 
 import Button from "@mui/material/Button";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import ScheduleOpModal from "../comm/ScheduleOpModal";
 
 import DeviceData from "../comm/DeviceDataInterface";
 
@@ -28,6 +33,10 @@ interface DeviceTableRowProps {
 export default function DeviceTableRow(props: DeviceTableRowProps) {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+
+  const [scheduleModalopen, setScheduleModalOpen] = React.useState(false);
+  const handleScheduleModalOpen = () => setScheduleModalOpen(true);
+  const handleScheduleModalClose = () => setScheduleModalOpen(false);
 
   const handleMoreClicked = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -78,7 +87,7 @@ export default function DeviceTableRow(props: DeviceTableRowProps) {
           }}
         />
       </TableCell>
-      <TableCell component="th" id={props.labelId} scope="row" padding="none">
+      <TableCell align="left">
         <Link
           component={RouterLink}
           to={{
@@ -86,8 +95,11 @@ export default function DeviceTableRow(props: DeviceTableRowProps) {
             search: `?id=${props.device._id}`,
           }}
         >
-          {props.device._id}
+          {props.device.farm_name}
         </Link>
+      </TableCell>
+      <TableCell component="th" id={props.labelId} scope="row" padding="none">
+        {props.device._id}
       </TableCell>
       <TableCell align="center">
         {props.device.status ? "Connected" : "Disconnected"}
@@ -124,11 +136,35 @@ export default function DeviceTableRow(props: DeviceTableRowProps) {
         }}
       >
         <MenuItem onClick={handleDelete}>
-          Delete
           <ListItemIcon>
             <DeleteIcon />
           </ListItemIcon>
+          Delete
         </MenuItem>
+        <MenuItem onClick={handleScheduleModalOpen}>
+          <ListItemIcon>
+            <EditCalendarOutlinedIcon />
+          </ListItemIcon>
+          Schedule Operation
+        </MenuItem>
+
+        <Modal
+          open={scheduleModalopen}
+          onClose={() => {
+            handleScheduleModalClose();
+            handleMoreClosed();
+          }}
+          aria-labelledby="modal-modal-title"
+          aria-describedby="modal-modal-description"
+        >
+          <ModalDialog>
+            <ModalClose />
+            <ScheduleOpModal
+              closeFn={handleScheduleModalClose}
+              devices={[props.device]}
+            />
+          </ModalDialog>
+        </Modal>
       </Menu>
     </TableRow>
   );
