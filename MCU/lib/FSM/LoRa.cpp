@@ -55,6 +55,7 @@ void sendPackets(char * message) {
         if (retries == RETRY_LIMIT) {
             Serial.print("Failed to receive ACK for packet ");
             Serial.println(i);
+            return;
         }
     }
     Serial.println("Message sent");
