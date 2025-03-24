@@ -1,5 +1,4 @@
 #include "LoRa.h"
-char message[] = MESSAGE;                       //
 int currentPacket = 0;                          // the current packet being sent
 int totalPackets;                               // the calculated number of packets from the message length
 char receivedPackets[MAX_PACKETS][BUFFER_SIZE]; // array to store the received packets
@@ -9,12 +8,13 @@ int bufferIndex = 0;                            // index for the loraBuffer
 
 void setupLoRa()
 {
-    ulong setupDelay = 50;
+    ulong setupDelay = 100;
+    Serial.begin(19200);
     Serial1.begin(9600);
-    delay(setupDelay);
+    delay(2000);
     Serial1.println("AT+IPR=9600");
     delay(setupDelay);
-    Serial1.println("AT+CRFOP=3");
+    Serial1.println("AT+CRFOP=22");
     delay(setupDelay);
     Serial1.println("AT+NETWORKID=6");
     delay(setupDelay);
@@ -22,41 +22,40 @@ void setupLoRa()
     delay(setupDelay);
     Serial1.println("AT+PARAMETER=9,7,1,12");
     delay(setupDelay);
-    Serial1.println("AT+ADDRESS=1");
+    Serial1.println("AT+ADDRESS=" + String(LORA_ADDRESS));
+    delay(setupDelay);
+    char command[32];
+    snprintf(command, sizeof(command), "AT+CPIN=%s\r\n", LORA_PASSWORD);
+    Serial1.print(command);
+    delay(setupDelay);
+    Serial1.println("AT+CPIN?");
     delay(setupDelay);
     Serial.println("Transceiver setup complete!!! :D");
     delay(setupDelay);
-
-    totalPackets = (strlen(message) + PACKET_SIZE - 1) / PACKET_SIZE;
-    // Until I integrate with Daniel I've just been commenting or uncommenting this line to choose between transmit and reciept.
-    // sendPackets();
 }
 
-void sendPackets()
-{
+void sendPackets(char * message) {
+    totalPackets = (strlen(message) + PACKET_SIZE - 1) / PACKET_SIZE;
     char fragment[PACKET_SIZE + 1];
-    for (int i = 0; i < totalPackets; i++)
-    {
+    for (int i = 0; i < totalPackets; i++) {
         int startIdx = i * PACKET_SIZE;
         int length = min(PACKET_SIZE, (int)strlen(message) - startIdx);
         strncpy(fragment, message + startIdx, length);
         fragment[length] = '\0';
 
         int retries = 0;
-        while (retries < RETRY_LIMIT)
-        {
+        while (retries < RETRY_LIMIT) {
             sendFragment(i, fragment);
-            if (waitForACK(i))
-            {
+            if (waitForACK(i)) {
                 break;
             }
             retries++;
         }
 
-        if (retries == RETRY_LIMIT)
-        {
+        if (retries == RETRY_LIMIT) {
             Serial.print("Failed to receive ACK for packet ");
             Serial.println(i);
+            return;
         }
     }
     Serial.println("Message sent");
