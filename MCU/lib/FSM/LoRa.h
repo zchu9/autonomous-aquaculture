@@ -2,19 +2,20 @@
 #define LORA_H
 #include <Arduino.h>
 #include "ArduinoJson.h"
+#include <Base64.h>
 #include <string>
-#define TARGET_ADDRESS "0"
+
+//assume this stuff is provided by a config file
+#define LORA_ADDRESS 42069 // 0 to 65535
+#define LORA_PASSWORD "A3F7B9C2" //00000001 to FFFFFFFF
+#define FARM_ID "67dcad71921b525e1e669551"
+
+#define TARGET_ADDRESS "1"
 #define PACKET_SIZE 100
-// random line I was using to test prior to using json
-#define MESSAGE "behes rhwerhat haeth et hs rth a rh at h ateh aet h awrgawfWRH  rhathrsths thaerheh dhj dohnsoiajtiphj airjhioejtiph aiperjhiopejrih aiperjhipanh aiperjhipaerh aiprjhipjaiprnawpitn arphjpierjhn aprjhiphj"
-// possibly increase
-#define ACK_TIMEOUT 10000
-// possibly increase
-#define RETRY_LIMIT 3
-// arduino memory constraint
+#define ACK_TIMEOUT 2000
+#define RETRY_LIMIT 1000
 #define MAX_PACKETS 10
-// LoRa constraint
-#define BUFFER_SIZE 240
+#define BUFFER_SIZE 260
 
 /**
  * @brief Starts Serial1 and configures the LoRa transceiver with the necessary settings.\n
@@ -26,7 +27,7 @@ void setupLoRa();
  * @brief sends the message in fragments to the serial (LoRa module)\n
  *
  */
-void sendPackets();
+void sendPackets(char * message);
 /**
  * @brief sends a fragment of a message to the serial (LoRa module)
  *
