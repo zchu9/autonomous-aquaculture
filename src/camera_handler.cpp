@@ -35,6 +35,14 @@ void initCamera() {
     myCAM.set_format(JPEG);
     myCAM.InitCAM();
     delay(100);  // let init settle
+    // myCAM.OV2640_set_JPEG_size(OV2640_160x120);
+    // myCAM.OV2640_set_JPEG_size(OV2640_176x144);
+    // myCAM.OV2640_set_JPEG_size(OV2640_320x240);
+    // myCAM.OV2640_set_JPEG_size(OV2640_352x288);
+    // myCAM.OV2640_set_JPEG_size(OV2640_640x480);
+    // myCAM.OV2640_set_JPEG_size(OV2640_800x600);
+    // myCAM.OV2640_set_JPEG_size(OV2640_1024x768);
+    // myCAM.OV2640_set_JPEG_size(OV2640_1280x1024);
     myCAM.OV2640_set_JPEG_size(OV2640_1600x1200);
 
     delay(500);
