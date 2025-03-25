@@ -5,8 +5,9 @@
 #include <Arduino.h>
 #include <ArduCAM.h>
 #include <SPI.h>
+#include <pins.h>
 
-#define CS_PIN 7
+
 #define CAM_TYPE OV2640
 
 // External camera instance

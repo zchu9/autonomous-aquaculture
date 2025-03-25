@@ -34,10 +34,12 @@ void initCamera() {
     Serial.println("[Camera] Setting JPEG format...");
     myCAM.set_format(JPEG);
     myCAM.InitCAM();
-    myCAM.OV2640_set_JPEG_size(OV2640_1600x1200);  // Adjust resolution here
+    delay(100);  // let init settle
+    myCAM.OV2640_set_JPEG_size(OV2640_1600x1200);
+
     delay(500);
 
-    Serial.println("✅ Camera initialization complete.");
+    Serial.println("Camera initialization complete.");
 }
 
 bool captureImage() {
@@ -56,7 +58,7 @@ bool captureImage() {
         }
     }
 
-    Serial.println("✅ Capture complete.");
+    Serial.println("Capture complete.");
 
     size_t imageSize = myCAM.read_fifo_length();
     Serial.print("[Camera] Image size: ");
@@ -88,20 +90,20 @@ bool captureImage() {
     myCAM.CS_HIGH();
 
     capturedImageSize = imageSize;
-    Serial.println("🖼️ Image captured and stored in memory.");
+    Serial.println("Image captured and stored in memory.");
     return true;
 }
 
 bool sendCapturedImage() {
     if (capturedImage == nullptr || capturedImageSize == 0) {
-        Serial.println("⚠️ No captured image to send.");
+        Serial.println("No captured image to send.");
         return false;
     }
 
-    Serial.println("📤 Sending image over serial...");
+    Serial.println("Sending image over serial...");
     Serial.write("IMG_START", 9);
     Serial.write(capturedImage, capturedImageSize);
     Serial.write("IMG_END", 7);
-    Serial.println("✅ Image sent.");
+    Serial.println("Image sent.");
     return true;
 }
