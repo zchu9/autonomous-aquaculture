@@ -32,6 +32,10 @@ void setupLoRa()
     delay(setupDelay);
     Serial.println("Transceiver setup complete!!! :D");
     delay(setupDelay);
+    //"handshake packet" to make sure the server knows the farm ID that corresponds to the LoRa address
+    char handshake_message[120];
+    snprintf(handshake_message, sizeof(handshake_message), "{\"farm_id\": \"%s\", \"LoRa_address\": %u}", FARM_ID, LORA_ADDRESS);
+    sendPackets(handshake_message); 
 }
 
 void sendPackets(char * message) {
