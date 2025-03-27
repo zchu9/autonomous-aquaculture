@@ -72,7 +72,7 @@ VICTRON
 ====================================================================================
 
 #pragma region DOC
-// messages are sent in blocks on 1 second intervals.
+// messages are sent in 2 blocks on 1 second intervals.
 
 //  label   |   unit    |   description
 // ------------------------------------------------------------------

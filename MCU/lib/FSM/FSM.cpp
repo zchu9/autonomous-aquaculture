@@ -229,8 +229,8 @@ void initializeDebug() {
 // Zach's House
 ////////////////////////////////////////////////////////////////////////////
 double checkPower(data& d) {
-    double ret = messageTest(d);
-    return ret;
+    // double ret = messageTest(d);
+    return 0;
 }
 
 void winchControl(data& d) {
