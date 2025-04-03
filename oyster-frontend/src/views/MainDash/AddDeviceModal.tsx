@@ -13,6 +13,7 @@ interface AddDeviceModalProps {
 
 export default function AddDeviceModal(props: AddDeviceModalProps) {
   const [deviceName, setDeviceName] = React.useState<string>("");
+  const [devicePasswd, setDevicePasswd] = React.useState<string>("");
 
   async function createDevice() {
     console.log("Adding new device");
@@ -27,12 +28,23 @@ export default function AddDeviceModal(props: AddDeviceModalProps) {
           location: "somewhere",
           cage_position: "up",
           created_at: new Date(),
+          lora_passwd: devicePasswd,
           status: "Disconnected",
         }),
       });
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "config.h"; // Replace with the desired file name
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error fetching sensor data:", error);
     }
@@ -43,13 +55,22 @@ export default function AddDeviceModal(props: AddDeviceModalProps) {
       <ModalTemplate label="Add new Device">
         <div>Enter device details</div>
         <Stack spacing={2}>
-          <h3>Device Name:</h3>
+          <h3>Device Name</h3>
           <TextField
             id="outlined-basic"
-            label="Outlined"
+            label="Device Name"
             variant="outlined"
             onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
               setDeviceName(event.target.value);
+            }}
+          />
+          <h3>LoRA Password</h3>
+          <TextField
+            id="outlined-basic"
+            label="LoRA Password"
+            variant="outlined"
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+              setDevicePasswd(event.target.value);
             }}
           />
           <Button

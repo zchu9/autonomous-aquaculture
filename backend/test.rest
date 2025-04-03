@@ -2,7 +2,9 @@ POST http://localhost:3000/addFarm
 Content-Type: application/json
 
 {
-    "location": "somewhere"
+    "farm_name": "Dickie's Cool Farm 5",
+    "location": "somewhere",
+    "lora_passwd": "hi"
 }
 
 ###
@@ -51,7 +53,7 @@ Content-Type: application/json
 }
 
 ###
-DELETE  http://localhost:3000/farm/67cce2dc9a376fcd20de416e/delete
+DELETE  http://localhost:3000/farm/67dd8a42d712b4314465a9b3/delete
 Content-Type: application/json
 
 {

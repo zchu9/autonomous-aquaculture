@@ -9,12 +9,14 @@ import logging
 import json
 import time
 from bson import ObjectId
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from flask_mqtt import Mqtt
 from database import farm_collection, sensor_active_data_collection, sensor_archive_data_collection, system_active_levels_collection, system_archive_levels_collection, lift_active_schedule_collection, lift_archive_schedule_collection
 from clock import get_eastern_time
 from flask_cors import CORS
 import time
+import os
+from gen_cfg import generate_config_file
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -28,7 +30,6 @@ app.config['MQTT_BROKER_URL'] = MQTT_HOST_NAME
 app.config['MQTT_BROKER_PORT'] = MQTT_PORT_NUM
 app.config['MQTT_REFRESH_TIME'] = 60.0  # refresh time in seconds
 mqtt = Mqtt(app)
-
 
 @mqtt.on_connect()
 def handle_connect(client, userdata, flags, rc):
@@ -147,6 +148,9 @@ def add_farm():
     
     if 'farm_name' not in farm_data:
         return jsonify({"error": "Farm name is required"}), 400
+    
+    if 'lora_passwd' not in farm_data:
+        return jsonify({"error": "LoRA password is required"}), 400
 
     farm_data["cage_position"] = True
     farm_data["status"] = False
@@ -163,8 +167,12 @@ def add_farm():
         except Exception as e:
             logging.error("Failed to create sensor and system level objects: %s", e)
             return "Error creating sensor and system level objects", 500
+        
+        # count = farm_collection.count()
+        # logging.info(count)
 
-        return jsonify({"_id": str(new_farm_id)}), 201
+        generate_config_file(new_farm_id, 2, farm_data["lora_passwd"])
+        return send_file('config.h', as_attachment=True, download_name="config.h", mimetype='text/x-c')
     except Exception as e:
         logging.error("Failed to add farm: %s", e)
         return "Error adding farm", 500
