@@ -2,21 +2,23 @@ POST http://localhost:3000/addFarm
 Content-Type: application/json
 
 {
-    "location": "somewhere"
+    "farm_name": "Dickie's Cool Farm 5",
+    "location": "somewhere",
+    "lora_passwd": "hi"
 }
 
 ###
 
-PUT http://localhost:3000/farm/67c8dfe807d0f8fc2fb6e2c9/update
+PUT http://localhost:3000/farm/67d64529e9547432429df362/update
 Content-Type: application/json
 
 {
-    "status": "Disconnected"
+    "farm_name": "Dickie's Cool Farm 4"
 }
 
 ###
 
-GET http://localhost:3000/farm/67c8dfef07d0f8fc2fb6e2ca/info
+GET http://localhost:3000/farm/67d60003c103ef9612736bce/info
 Content-Type: application/json
 
 {
@@ -51,7 +53,7 @@ Content-Type: application/json
 }
 
 ###
-DELETE  http://localhost:3000/farm/67cce2dc9a376fcd20de416e/delete
+DELETE  http://localhost:3000/farm/67dd8a42d712b4314465a9b3/delete
 Content-Type: application/json
 
 {

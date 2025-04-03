@@ -133,6 +133,7 @@ export default function DeviceTable(props: DeviceTableProps) {
 
                 return (
                   <DeviceTableRow
+                    key={index}
                     device={row}
                     isItemSelected={isItemSelected}
                     labelId={labelId}
@@ -142,7 +143,7 @@ export default function DeviceTable(props: DeviceTableProps) {
               })}
               {emptyRows > 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} />
+                  <TableCell colSpan={8} />
                 </TableRow>
               )}
             </TableBody>
