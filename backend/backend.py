@@ -7,14 +7,14 @@ backend.py: The backend service for the oyster application
 
 import logging
 import json
-import time
 from bson import ObjectId
 from flask import Flask, request, jsonify
 from flask_mqtt import Mqtt
 from database import farm_collection, sensor_active_data_collection, sensor_archive_data_collection, system_active_levels_collection, system_archive_levels_collection, lift_active_schedule_collection, lift_archive_schedule_collection
 from clock import get_eastern_time
 from flask_cors import CORS
-import time
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.interval import IntervalTrigger
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -28,11 +28,12 @@ app.config['MQTT_BROKER_URL'] = MQTT_HOST_NAME
 app.config['MQTT_BROKER_PORT'] = MQTT_PORT_NUM
 app.config['MQTT_REFRESH_TIME'] = 60.0  # refresh time in seconds
 mqtt = Mqtt(app)
-
+scheduler = BackgroundScheduler()
+# scheduler.start()
 
 @mqtt.on_connect()
 def handle_connect(client, userdata, flags, rc):
-    print(f"Successfully connected to MQTT broker on {MQTT_HOST_NAME}:{MQTT_PORT_NUM}")
+    logging.info(f"Successfully connected to MQTT broker on {MQTT_HOST_NAME}:{MQTT_PORT_NUM}")
 
     # Setup for Last Will and Testament message for farm status
     farm_id = client._client_id
@@ -44,8 +45,13 @@ def handle_connect(client, userdata, flags, rc):
     mqtt.subscribe('farm/+/getActiveSensorData')
     mqtt.subscribe('farm/+/getActiveSystemLevels')
 
+    commands = request.json
 
-# Recieves MQTT messages and stores them in the database
+    for id in commands["ids"]:
+        cmd = {"command": commands['command']}
+        mqtt.publish(f'farm/{id}/cage', json.dumps(cmd))
+
+
 @mqtt.on_message()
 def handle_mqtt_message(client, userdata, message):
     print(f"Received message from MQTT broker on {MQTT_HOST_NAME}:{MQTT_PORT_NUM}")
@@ -54,12 +60,12 @@ def handle_mqtt_message(client, userdata, message):
         topic = message.topic
         payload = message.payload.decode("utf-8")
         data = json.loads(payload)
-        print(f"Decoded topic: {topic}")
-        print(f"Decoded message: {data}")
+        logging.info(f"Decoded topic: {topic}")
+        logging.info(f"Decoded message: {data}")
 
         if "status" in topic:
             farm_id = topic.split("/")[1]
-            print(f"Farm ID: {farm_id}")
+            logging.info(f"Farm ID in status topic: {farm_id}")
 
             if payload == "disconnected":
             # Update farm status to disconnected in MongoDB when LWT message is received
@@ -98,7 +104,7 @@ def handle_mqtt_message(client, userdata, message):
                     {"$set": {"status": True}}
                 )
 
-            print("Sensor data updated succesfully")
+            logging.info("Sensor data updated succesfully")
 
         elif "getActiveSystemLevels" in topic:
             farm_id = topic.split("/")[1]
@@ -121,7 +127,7 @@ def handle_mqtt_message(client, userdata, message):
                     {"$set": {"status": True}}
                 )
 
-            print("System level data updated successfully")
+            logging.info("System level data updated successfully")
 
     except Exception as e:
         logging.error(f"Failed to handle message for topic {message.topic}:", e)
@@ -144,22 +150,30 @@ def add_farm():
 
     if 'location' not in farm_data:
         return jsonify({"error": "Location is required"}), 400
-    
+
     if 'farm_name' not in farm_data:
         return jsonify({"error": "Farm name is required"}), 400
 
     farm_data["cage_position"] = True
     farm_data["status"] = False
+
+    created_at = get_eastern_time()
+    if created_at is None:
+        logging.error("Failed to fetch Eastern Time")
+        return jsonify({"error": "Unable to get time from NTP server"}), 500
+    
     farm_data["created_at"] = get_eastern_time()
+    logging.info(f"Farm data added to datbase: {farm_data}")
 
     try:
         result = farm_collection.insert_one(farm_data)
         new_farm_id = result.inserted_id
 
-        # Create sensor and system level objects for the new farm
+        # Create farm instances in collections
         try:
             sensor_active_data_collection.insert_one({"farm_id": farm_data["_id"]})
             system_active_levels_collection.insert_one({"farm_id": farm_data["_id"]})
+            lift_active_schedule_collection.insert_one({"farm_id": farm_data["_id"]})
         except Exception as e:
             logging.error("Failed to create sensor and system level objects: %s", e)
             return "Error creating sensor and system level objects", 500
@@ -278,6 +292,23 @@ def get_active_sensor_data(id):
         logging.error("Failed to get active sensor data: %s", e)
         return "Error getting active sensor data", 500
 
+"""This is updating many feilds in the active sensor data collection"""
+@app.route("/farm/<id>/updateActiveSensorData", methods=["POST"])
+def update_active_sensor_data(id):
+    updated_data = request.json
+
+    try:
+        farm_id = ObjectId(id)
+        result = sensor_active_data_collection.update_many({"farm_id": farm_id}, {"$set": updated_data})
+
+        if result.matched_count > 0:
+            logging.info("Matched: %s, Modified: %s", result.matched_count, result.modified_count)
+            return f"Farm {id} updated successfully", 200
+        else:
+            return f"Farm {id} is not in database", 404
+    except Exception as e:
+        logging.error("Failed to update active sensor data: %s", e)
+        return "Error updating active sensor data", 500
 
 @app.route("/farm/<id>/getArchivedSensorData", methods=["GET"])
 def get_archived_sensor_data(id):
@@ -369,13 +400,161 @@ def get_archived_system_levels(id):
 def farm_lift_cages():
     # TODO: Error checking
     commands = request.json
+    max_height = commands.get('max_height', None)
+    min_height = commands.get('min_height', None)
 
-    for id in commands['ids']:
-        cmd = {"command": commands['command']}
+    for id in commands["ids"]:
+        cmd = {
+            "command": commands['command'],
+            "max_height": max_height,
+            "min_height": min_height
+            }
         mqtt.publish(f'farm/{id}/cage', json.dumps(cmd))
 
     return f"Requested to thing"
 
+
+@app.route("/farm/cage/schedule", methods=["POST"])
+def update_lift_schedule():
+    data = request.json
+
+    logging.info(f"Received data: {data}")
+
+    try:
+        max_height = data.get('max_height', None)
+        min_height = data.get('min_height', None)
+    
+        for farm_id in data["ids"]:
+
+            farm_exists = farm_collection.find_one({"_id": ObjectId(farm_id)})
+
+            if not farm_exists:
+                logging.error(f"Farm {farm_id} is not in database")
+                return f"Farm {farm_id} is not in database", 404
+
+            schedule = data.get("date", [])
+            command = data.get("command", "")
+            logging.info(f"Schedule for farm {farm_id}: {schedule}")
+            logging.info(f"Command for farm {farm_id}: {command}")
+
+            schedule_data = {
+                "farm_id": ObjectId(farm_id),
+                "schedule": schedule,
+                "command": command,
+                "max_height": max_height,
+                "min_height": min_height,
+                "created_at": get_eastern_time()
+            }
+
+            if not schedule_data["schedule"]:
+                return "No dates provided for lift schedule", 400
+
+            if not schedule_data["command"]:
+                return "No command provided for the lift schedule", 400
+
+            lift_active_schedule_collection.insert_one(schedule_data)
+            logging.info(f"Lift schedule inserted for farm {farm_id} with info of: {schedule_data}")
+
+        return f"Successfully updated farm lift schedules", 200
+
+    except Exception as e:
+        logging.error("Failed to update lift schedule: %s", e)
+        return "Error updating lift schedule", 500
+
+
+@app.route("/farm/<id>/getActiveLiftSchedule", methods=["GET"])
+def get_active_lift_schedule(id):
+    try:
+        farm_id = ObjectId(id)
+        logging.info(f"Querying lift schedule for farm ID: {farm_id}")
+        active_data = lift_active_schedule_collection.find_one({"farm_id": farm_id})
+
+        if active_data:
+            active_data["_id"] = str(active_data["_id"])
+            active_data["farm_id"] = str(active_data["farm_id"])
+            return jsonify(active_data), 200
+        else:
+            return "No active lift schedule data found", 404
+    except Exception as e:
+        logging.error("Failed to get active lift schedule: %s", e)
+        return "Error getting active lift schedule data", 500
+
+
+@app.route("/farm/<id>/getArchiveLiftSchedule", methods=["GET"])
+def get_archive_lift_schedule(id):
+    try:
+        farm_id = ObjectId(id)
+        archive_data = lift_archive_schedule_collection.find_one({"farm_id": farm_id})
+
+        if archive_data:
+            archive_data["_id"] = str(archive_data["_id"])
+            archive_data["farm_id"] = str(archive_data["farm_id"])
+            return jsonify(archive_data), 200
+        else:
+            return "No archive lift schedule data found", 404
+    except Exception as e:
+        logging.error("Failed to get archive lift schedule: %s", e)
+        return "Error getting archive lift schedule data", 500
+
+
+@app.route("/farm/<id>/deleteActiveLiftSchedule", methods=["DELETE"])
+def delete_active_lift_schedule(id):
+    try:
+        farm_id = ObjectId(id)
+        result = lift_active_schedule_collection.delete_one({"farm_id": farm_id})
+
+        if result.deleted_count > 0:
+            return f"Active lift schedule for farm {id} deleted successfully", 200
+        else:
+            return f"Active lift schedule for farm {id} not found", 404
+    except Exception as e:
+        logging.error("Failed to delete active lift schedule: %s", e)
+        return "Error deleting active lift schedule", 500
+
+
+@app.route("/farm/<id>/deleteArchiveLiftSchedule", methods=["DELETE"])
+def delete_archive_lift_schedule(id):
+    try:
+        farm_id = ObjectId(id)
+        result = lift_archive_schedule_collection.delete_one({"farm_id": farm_id})
+
+        if result.deleted_count > 0:
+            return f"Archived lift schedule for farm {id} deleted successfully", 200
+        else:
+            return f"Archived lift schedule for farm {id} not found", 404
+    except Exception as e:
+        logging.error("Failed to delete archived lift schedule: %s", e)
+        return "Error deleting archived lift schedule", 500
+"""
+def check_and_publish_lift():
+    try:
+        current_time = get_eastern_time()
+
+        active_lifts = lift_active_schedule_collection.find()
+
+        for lift_schedule in active_lifts:
+            farm_id = lift_schedule["farm_id"]
+            schedule = lift_schedule["schedule"]
+
+            for lift in schedule:
+                for lift_time_str in lift["dates"]:
+                    # Need to check time format from GUI date scheduling
+                    if lift_time_str == current_time:
+                        command = lift["command"]
+                        mqtt.publish(f"farm/{farm_id}/cage", f"{command}")
+                        logging.info(f"Farm {farm_id} has published a lift command of {command}")
+                        lift["status"] = "In progress"
+
+    except Exception as e:
+        logging.error(f"Error while checking and publishing lift: {e}")
+
+scheduler.add_job(
+    func=check_and_publish_lift,
+    trigger=IntervalTrigger(minutes=1),
+    id='lift_check',
+    replace_existing=True,
+    misfire_grace_time=3600    # Handles missed lifts within an hour if the computer crashes
+)"""
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=PORT_NUM)

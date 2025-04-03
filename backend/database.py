@@ -5,6 +5,12 @@ created: 2/10/2025
 database.py: The initailization of the database connection for the oyster application
 """
 
+""" Different implementation
+from mongoengine import connect
+
+connect('oyster_db', host='mongo', port=27017, alias='default')
+"""
+
 from pymongo import MongoClient
 
 # The URI for the mongo database
@@ -20,3 +26,4 @@ system_active_levels_collection = db.system_active_levels
 system_archive_levels_collection = db.system_archive_levels
 lift_active_schedule_collection = db.lift_active_schedule
 lift_archive_schedule_collection = db.lift_archive_schedule
+
