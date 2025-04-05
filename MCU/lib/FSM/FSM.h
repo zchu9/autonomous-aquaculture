@@ -1,10 +1,15 @@
 #ifndef FSM_H
 #define FSM_H
 #include <Arduino.h>
+#include <vector>
+#include <ArduinoJson.h>
+#include "pins.h" // for pin definitions
+#include <Base64.h>
 #include <Wire.h>
 #include "interrupts.h"
 #include "LoRa.h"
 #include "ArduinoJson.h"
+#include "Sensors/camera_handler.h" // for camera functions
 
 #define DEBUG true
 
@@ -25,16 +30,19 @@ enum device
 
 struct data
 {
-    static const size_t img_size = 10; // Assuming the size of the array is 10, you can adjust it as needed
+    // Assuming the size of the array is 10, you can adjust it as needed
     static const size_t numWinches = 10;
 
     bool liftFlag[numWinches];
     bool liftStarted;
     // bool lowerFlag[numWinches];
     State state;
+
     double height;
-    double power_placeholder;
-    int img[img_size];
+    std::vector<double> power; // stores power readings for each device
+    std::vector<double> temp;  // stores temperature readings for each device
+    uint8_t *img;
+
     device currentDevice;
     ulong lastDevSwitchTime;
     JsonDocument doc;
@@ -83,6 +91,8 @@ void RFConnectedCase(data &d);
  */
 void RFDisconnectedCase(data &d);
 
+void sendData(data &d);
+
 /**
  * @brief Reads Json and runs the commands in the json doc.\n
  * Should probably clear the JSON doc after running the commands.\n
@@ -93,10 +103,15 @@ void RFDisconnectedCase(data &d);
  */
 int runCommands(data &d);
 
+JsonDocument jsonify(data &d);
+
+void sendImage(data &d);
+
+
 // Logan functions
 
 // Sensor Controls
-int *getImg();
+uint8_t *getImg();
 double getHeight();
 
 // Winch Controls

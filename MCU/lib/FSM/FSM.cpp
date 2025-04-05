@@ -7,7 +7,8 @@
  * @brief
  *
  */
-void FSM(data& d) {
+void FSM(data &d)
+{
     // this should be in the comms handler.
     receiveMsg(d.doc);
     checkPowerHandler(d);
@@ -24,61 +25,26 @@ void FSM(data& d) {
  *
  * @param d the data struct that will be passed from the main function.
  */
-void initializeStartup(data& d) {
+void initializeStartup(data &d)
+{
 #if DEBUG
     initializeDebug();
     initializeNormalFSM(d);
     Serial.println("Hard Coded into normal mode");
-#else
-    initializeLPMandNCM(d);
+
 #endif
     // should probably be a init data function.
     setupLoRa();
     d.liftFlag[0] = 0;
     // d.lowerFlag = 0;
     //  initialize the data struct
-    d.power_placeholder = 0;
+
+    initCamera();
+
     // d.height = getHeight();
-    memset(d.img, '\0', d.img_size);
     // d.whatever = "Nice data Zachary"; it is nice thank you everyone always says how nice it is, i didn't say that but everyone is saying its very very nice data, not like that nasty data some other poeple are bringing in here with its crime and all that
     // initializes the check power interrupt the comms handler, and the emergency lift lowering timer interrupt
     // initializeLPMandNCM(d);
-}
-
-/**
- * @brief Initializes variables to be used in the (Low Power/No Connection) Mode
- *
- */
-void initializeLPMandNCM(data& d) {
-    // initialize: Low Power, No Connection, RF Mode
-    d.state = LOW_POWER_NO_CONNECTION;
-
-    /* initializeCheckPower();
-    initializeReconnection();
-    initializeEmergencyLiftLowering(); */
-
-#if DEBUG
-    Serial.println("Low Power and No Connection Mode Initialized");
-#endif
-}
-
-/**
- * @brief Initialize the Low Power Mode\n
- * The LPM should be set to 0\n
- * check power should be initialized
- */
-void initializeLPM(data& d) {
-    d.state = LOW_POWER;
-}
-
-/**
- * @brief Initialize the No Connection Mode\n
- * LPM should be set to 0\n
- * If NCM was 1, then the "reconnected" should be initialized already\n
- * TODO: initializeReconnection() is undefined
- */
-void initializeNCM(data& d) {
-    d.state = NO_CONNECTION;
 }
 
 /**
@@ -89,12 +55,14 @@ void initializeNCM(data& d) {
  * if NCM was 1, then a "connected" initialization might be needed\n
  * TODO: Come up with a better name for the "connected" initialization
  */
-void initializeNormalFSM(data& d) {
+void initializeNormalFSM(data &d)
+{
     // NCM -> Normal
     d.state = NORMAL;
 }
 
-void sleep() {
+void sleep()
+{
     // Sleep until an interrupt occurs
     // asm - tells compiler this is inline assembly
     // __volatile__ - tells compiler this code has side effects that should not be optimized away
@@ -102,7 +70,8 @@ void sleep() {
     //__asm__ __volatile__("wfi");
 }
 
-void checkPowerHandler(data& d) {
+void checkPowerHandler(data &d)
+{
     if (getPowerFlag() == 1)
     {
 #if DEBUG
@@ -114,49 +83,24 @@ void checkPowerHandler(data& d) {
         //  powerStateChange(d);
     }
 }
-
-void commsHandler(data& d) {
+//////////////////////////////////////////
+//          Comms stuff
+//////////////////////////////////////////
+void commsHandler(data &d)
+{
     if (getCommsFlag() == 1)
     {
 #if DEBUG
         Serial.println("Comms Module Interrupt");
 #endif
         setCommsFlag(false);
-        bool ncm = d.state == NO_CONNECTION || d.state == LOW_POWER_NO_CONNECTION;
-        if (ncm)
-        {
-            // attempt to reconnect
-            // RFDisconnectedCase(d);
-        }
-        else
-        {
-            // listen for messages?
-            RFConnectedCase(d);
-        }
+        receiveMsg(d.doc);
+        runCommands(d);
     }
 }
 
-/**
- * @brief Ideally The function of this code is:
- *  Try and receive message
- *      if received
- *          do the commands
- *      if not received
- *          throw error
- * TODO: THIS CODE HAS A BLOCKING LOOP THAT COULD GO ON FOREVER. ADD WDT
- *
- * @param d
- */
-void RFConnectedCase(data& d) {
-#if DEBUG
-    Serial.println("RF Connected");
-#endif
-
-    // receiveMsg(d.doc);
-    runCommands(d);
-}
-
-int runCommands(data& d) {
+int runCommands(data &d)
+{
     if (d.doc.isNull())
     {
         Serial.println("No valid JSON received");
@@ -173,7 +117,75 @@ int runCommands(data& d) {
     return 0;
 }
 
-void getIntoLowPowerMode(data& d) {
+JsonDocument jsonify(data &d)
+{
+    // Clear the previous document
+    d.doc.clear();
+
+    // Set the state
+    d.doc["state"] = d.state;
+
+    // Set the power vector
+    JsonArray powerArray = d.doc.createNestedArray("power");
+    for (size_t i = 0; i < d.power.size(); i++)
+    {
+        powerArray.add(d.power[i]);
+    }
+
+    // Set the height
+    d.doc["height"] = d.height;
+
+    // Set the lift flags
+    JsonArray liftFlagsArray = d.doc.createNestedArray("liftFlag");
+    for (size_t i = 0; i < d.numWinches; i++)
+    {
+        liftFlagsArray.add(d.liftFlag[i]);
+    }
+
+    // Set the temperature readings
+    JsonArray tempArray = d.doc.createNestedArray("Temperature");
+    for (size_t i = 0; i < d.temp.size(); i++)
+    {
+        tempArray.add(d.temp[i]);
+    }
+
+    // Set the current device
+    d.doc["currentDevice"] = static_cast<int>(d.currentDevice);
+
+    return d.doc;
+}
+
+void sendData(data &d)
+{
+    // Convert the data struct to JSON
+    JsonDocument doc = jsonify(d);
+    size_t len = measureJson(doc);
+    char *buffer = new char[len + 1]; // +1 for null terminator
+    serializeJson(doc, buffer, len + 1);
+
+    // Send the JSON over LoRa
+    sendPackets(buffer);
+
+    delete[] buffer; // Free the allocated memory
+}
+
+void sendImage(data &d)
+{
+
+    if (d.img == nullptr)
+    {
+        Serial.println("No image to send.");
+        return;
+    }
+    size_t imsize = getCapturedImageSize();
+    size_t encodedLength = Base64.encodedLength(imsize);
+    char *encodedImage = new char[encodedLength + 1]; // +1 for null terminator
+    Base64.encode(encodedImage, (char *)d.img, imsize);
+    sendPackets(encodedImage);
+}
+
+void getIntoLowPowerMode(data &d)
+{
     if (d.state == NORMAL)
     {
         d.state = LOW_POWER;
@@ -183,7 +195,8 @@ void getIntoLowPowerMode(data& d) {
         d.state = LOW_POWER_NO_CONNECTION;
     }
 };
-void getOutOfLowPowerMode(data& d) {
+void getOutOfLowPowerMode(data &d)
+{
     if (d.state == LOW_POWER_NO_CONNECTION)
     {
         d.state = NO_CONNECTION;
@@ -194,9 +207,11 @@ void getOutOfLowPowerMode(data& d) {
     }
 }
 
-void powerStateChange(data& d) {
+void powerStateChange(data &d)
+{
     bool already_in_lpm = d.state == LOW_POWER || d.state == LOW_POWER_NO_CONNECTION;
-    if (d.power_placeholder < POWER_THRESHOLD)
+    int temporary = 0;
+    if (temporary < POWER_THRESHOLD)
     {
         if (!already_in_lpm)
         {
@@ -212,15 +227,20 @@ void powerStateChange(data& d) {
     }
 }
 
+uint8_t getImg(data &d)
+{
+}
+
 /////////////////////////////////////////
 /**
  * @brief initialize serial communication
  */
-void initializeDebug() {
+void initializeDebug()
+{
     Serial.begin(9600);
     // This is blocking until a serial monitor is connected
     // while (!Serial)
-        // ;
+    // ;
     // delay(100);
     Serial1.begin(9600, SERIAL_8N1);
     Serial.println("Debugging Initialized");
@@ -228,12 +248,14 @@ void initializeDebug() {
 ////////////////////////////////////////////////////////////////////////////
 // Zach's House
 ////////////////////////////////////////////////////////////////////////////
-double checkPower(data& d) {
+double checkPower(data &d)
+{
     // double ret = messageTest(d);
     return 0;
 }
 
-void winchControl(data& d) {
+void winchControl(data &d)
+{
     // debug winch control function - no height sensor, so it will lift/lower for 5 sec.
 
     // This timer does not increment until loop() is completed in main
@@ -242,14 +264,15 @@ void winchControl(data& d) {
     // ulong timeout = 5000;
     uint8_t index = -1;
     uint8_t numOfWinches = 4;
-    pin_size_t liftPin = WINCH_ACTIVATE;    // pin 7 in pins.h
+    pin_size_t liftPin = WINCH_ACTIVATE; // pin 7 in pins.h
 
 #if DEBUG_LIFT
     static bool lift = 1;
-    if (lift) {
-        liftPin++;  // use pin 8 to lower;
+    if (lift)
+    {
+        liftPin++; // use pin 8 to lower;
     }
-    lift = !lift;   // invert it for the next op.
+    lift = !lift; // invert it for the next op.
 #endif
 
     for (uint8_t i = 0; i < numOfWinches; i++)
@@ -276,10 +299,10 @@ void winchControl(data& d) {
     digitalWrite(MUX_SEL_1, (index & 0x010));
     digitalWrite(MUX_SEL_2, (index & 0x100));
     digitalWrite(MUX_DISABLE_2, LOW);
- 
+
     digitalWrite(liftPin, HIGH);
     delay(3000);
-    digitalWrite(liftPin, LOW); // turn off
+    digitalWrite(liftPin, LOW);             // turn off
     d.liftFlag[index] = !d.liftFlag[index]; // clear flag
 };
 

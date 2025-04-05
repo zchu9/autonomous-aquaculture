@@ -35,28 +35,33 @@ void setupLoRa()
     //"handshake packet" to make sure the server knows the farm ID that corresponds to the LoRa address
     char handshake_message[120];
     snprintf(handshake_message, sizeof(handshake_message), "{\"farm_id\": \"%s\", \"LoRa_address\": %u}", FARM_ID, LORA_ADDRESS);
-    sendPackets(handshake_message); 
+    sendPackets(handshake_message);
 }
 
-void sendPackets(char * message) {
+void sendPackets(char *message)
+{
     totalPackets = (strlen(message) + PACKET_SIZE - 1) / PACKET_SIZE;
     char fragment[PACKET_SIZE + 1];
-    for (int i = 0; i < totalPackets; i++) {
+    for (int i = 0; i < totalPackets; i++)
+    {
         int startIdx = i * PACKET_SIZE;
         int length = min(PACKET_SIZE, (int)strlen(message) - startIdx);
         strncpy(fragment, message + startIdx, length);
         fragment[length] = '\0';
 
         int retries = 0;
-        while (retries < RETRY_LIMIT) {
+        while (retries < RETRY_LIMIT)
+        {
             sendFragment(i, fragment);
-            if (waitForACK(i)) {
+            if (waitForACK(i))
+            {
                 break;
             }
             retries++;
         }
 
-        if (retries == RETRY_LIMIT) {
+        if (retries == RETRY_LIMIT)
+        {
             Serial.print("Failed to receive ACK for packet ");
             Serial.println(i);
             return;

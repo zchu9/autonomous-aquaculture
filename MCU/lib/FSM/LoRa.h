@@ -5,9 +5,9 @@
 #include <Base64.h>
 #include <string>
 
-//assume this stuff is provided by a config file
-#define LORA_ADDRESS 42069 // 0 to 65535
-#define LORA_PASSWORD "A3F7B9C2" //00000001 to FFFFFFFF
+// assume this stuff is provided by a config file
+#define LORA_ADDRESS 42069       // 0 to 65535
+#define LORA_PASSWORD "A3F7B9C2" // 00000001 to FFFFFFFF
 #define FARM_ID "67dcad71921b525e1e669551"
 
 #define TARGET_ADDRESS "1"
@@ -27,9 +27,9 @@ void setupLoRa();
  * @brief sends the message in fragments to the serial (LoRa module)\n
  *
  */
-void sendPackets(char * message);
+void sendPackets(char *message);
 /**
- * @brief sends a fragment of a message to the serial (LoRa module)
+ * @brief Takes in a message, fragments it, and sends it all.(LoRa module)
  *
  * @param packetID is the packet number
  * @param fragment is the string fragment in the current packet
