@@ -42,14 +42,14 @@ def handle_connect(client, userdata, flags, rc):
     mqtt.subscribe('test/topic/1')
     mqtt.subscribe('farm')
     mqtt.subscribe('farm/+/status')
-    mqtt.subscribe('farm/+/farmData')
+    mqtt.subscribe('farm/+/data')
     mqtt.subscribe('farm/+/getActiveSystemLevels')
 
 
 # Recieves MQTT messages and stores them in the database
 @mqtt.on_message()
 def handle_mqtt_message(client, userdata, message):
-    print(f"Received message from MQTT broker on {MQTT_HOST_NAME}:{MQTT_PORT_NUM}")
+    logging.info(f"Received message from MQTT broker on {MQTT_HOST_NAME}:{MQTT_PORT_NUM}")
 
     try:
         topic = message.topic
@@ -76,30 +76,15 @@ def handle_mqtt_message(client, userdata, message):
                     {"$set": {"status": True}}
                 )
 
-        elif "getActiveSensorData" in topic:
+        elif "data" in topic:
+            logging.info("Writing new sensor data")
             farm_id = topic.split("/")[1]
-            existing_data = sensor_active_data_collection.find_one({"farm_id": farm_id})
-
-            if existing_data:
-                archive_data = {
-                    "farm_id": existing_data["farm_id"],
-                    "temperature": existing_data["temperature"],
-                    "height": existing_data["height"],
-                    "camera": existing_data["camera"],
-                    "archived_at": get_eastern_time()
-                }
-                sensor_archive_data_collection.insert_one(archive_data)
-                sensor_active_data_collection.delete_one({"_id": existing_data["_id"]})
-
+            logging.info(f"fam id {farm_id}")
+            logging.info(data)
             data["created_at"] = get_eastern_time()
-            sensor_active_data_collection.insert_one(data)
+            existing_data = sensor_active_data_collection.update_one({"farm_id": ObjectId(farm_id)}, {"$set": data})
 
-            farm_collection.update_one(
-                    {"_id": ObjectId(farm_id)},
-                    {"$set": {"status": True}}
-                )
-
-            print("Sensor data updated succesfully")
+            logging.info("Sensor data updated succesfully")
 
         elif "getActiveSystemLevels" in topic:
             farm_id = topic.split("/")[1]
@@ -281,6 +266,8 @@ def get_active_sensor_data(id):
     try:
         farm_id = ObjectId(id)
         active_data = sensor_active_data_collection.find_one({"farm_id": farm_id})
+
+        logging.info(active_data)
 
         if active_data and str(active_data["farm_id"]) == id:
             # Converts ObjectId's to string for the return statement
