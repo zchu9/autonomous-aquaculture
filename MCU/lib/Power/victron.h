@@ -6,10 +6,10 @@
 // denote cases where value returned is '---'.
 // include a timeout.
 
-#include <map>
+#include <Arduino.h>
 #include "victronFunctions.h"
 
-void fetchVictronStats(std::map<std::string, std::string>& stats) {
+void fetchVictronStats(ShuntPowerData& stats) {
     const size_t buffer_size = 128; // SAMD RX buffer is 256 total.
     uint8_t buffer[buffer_size] = { '\0' };   // checksum byte is not guaranteed to be ascii
 
