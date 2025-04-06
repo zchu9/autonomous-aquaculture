@@ -42,7 +42,7 @@ def handle_connect(client, userdata, flags, rc):
     mqtt.subscribe('test/topic/1')
     mqtt.subscribe('farm')
     mqtt.subscribe('farm/+/status')
-    mqtt.subscribe('farm/+/getActiveSensorData')
+    mqtt.subscribe('farm/+/farmData')
     mqtt.subscribe('farm/+/getActiveSystemLevels')
 
 
@@ -151,10 +151,18 @@ def add_farm():
     
     if 'lora_passwd' not in farm_data:
         return jsonify({"error": "LoRA password is required"}), 400
+    
+    if 'comm_type' not in farm_data:
+        return jsonify({"error": "Communication type is required"}), 400
+
+    passwrd = farm_data["lora_passwd"]
+    comm_type = farm_data["comm_type"]
 
     farm_data["cage_position"] = True
     farm_data["status"] = False
     farm_data["created_at"] = get_eastern_time()
+    farm_data.pop('lora_passwd')
+    farm_data.pop('comm_type')
 
     try:
         result = farm_collection.insert_one(farm_data)
@@ -168,10 +176,9 @@ def add_farm():
             logging.error("Failed to create sensor and system level objects: %s", e)
             return "Error creating sensor and system level objects", 500
         
-        # count = farm_collection.count()
-        # logging.info(count)
+        n = farm_collection.count_documents({"_id": { "$lte" : new_farm_id}})
 
-        generate_config_file(new_farm_id, 2, farm_data["lora_passwd"])
+        generate_config_file(new_farm_id, n + 1, passwrd, comm_type)
         return send_file('config.h', as_attachment=True, download_name="config.h", mimetype='text/x-c')
     except Exception as e:
         logging.error("Failed to add farm: %s", e)

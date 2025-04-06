@@ -3,12 +3,15 @@ from string import Template
 def generate_config_file(
     farm_id: str,
     lora_addr: int,
-    lora_passwd: str
+    lora_passwd: str,
+    comm_type: str
 ):
+
     d = {
         'farm_id': f'"{farm_id}"',
         'lora_addr': f'{lora_addr}',
-        'lora_passwd': f'"{lora_passwd}"'
+        'lora_passwd': f'"{lora_passwd}"',
+        'comm_type': comm_type,
     }
 
     result = ''
@@ -20,10 +23,3 @@ def generate_config_file(
 
     with open('config.h', 'w') as file:
         file.write(result)
-
-if __name__ == '__main__':
-    generate_config_file(
-        'abc',
-        2,
-        'hello'
-    )

@@ -12,4 +12,4 @@
 
 #define USE_CELLULAR 1
 #define USE_LORA 2
-#define COMMUNICATION_TYPE $communication_type
+#define COMMUNICATION_TYPE $comm_type

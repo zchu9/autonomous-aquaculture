@@ -135,7 +135,7 @@ export default function DeviceTableRow(props: DeviceTableRowProps) {
           "aria-labelledby": "basic-button",
         }}
       >
-        <MenuItem onClick={handleDelete}>
+        <MenuItem onClick={handleDelete} disabled>
           <ListItemIcon>
             <DeleteIcon />
           </ListItemIcon>

@@ -12,10 +12,6 @@ import Divider from "@mui/material/Divider";
 import Grid from "@mui/material/Grid";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
-import Box from "@mui/material/Box";
 
 import Typography from "@mui/material/Typography";
 
@@ -28,6 +24,7 @@ interface AddDeviceModalProps {
 export default function AddDeviceModal(props: AddDeviceModalProps) {
   const [deviceName, setDeviceName] = React.useState<string>("");
   const [devicePasswd, setDevicePasswd] = React.useState<string>("");
+  const [commType, setCommType] = React.useState<string>("");
 
   async function createDevice() {
     console.log("Adding new device");
@@ -40,10 +37,8 @@ export default function AddDeviceModal(props: AddDeviceModalProps) {
         body: JSON.stringify({
           farm_name: deviceName,
           location: "somewhere",
-          cage_position: "up",
-          created_at: new Date(),
           lora_passwd: devicePasswd,
-          status: "Disconnected",
+          comm_type: commType,
         }),
       });
       if (!response.ok) {
@@ -63,6 +58,10 @@ export default function AddDeviceModal(props: AddDeviceModalProps) {
       console.error("Error fetching sensor data:", error);
     }
   }
+
+  const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setCommType(event.target.value);
+  };
 
   return (
     <>
@@ -99,14 +98,15 @@ export default function AddDeviceModal(props: AddDeviceModalProps) {
                   aria-labelledby="demo-radio-buttons-group-label"
                   defaultValue="female"
                   name="radio-buttons-group"
+                  onChange={handleRadioChange}
                 >
                   <FormControlLabel
-                    value="Cellular"
+                    value="USE_CELLULAR"
                     control={<Radio />}
                     label="Cellular"
                   />
                   <FormControlLabel
-                    value="LoRA"
+                    value="USE_LORA"
                     control={<Radio />}
                     label="LoRA"
                   />
@@ -119,6 +119,11 @@ export default function AddDeviceModal(props: AddDeviceModalProps) {
                   createDevice();
                   props.closeFn();
                 }}
+                disabled={
+                  deviceName.length < 1 ||
+                  devicePasswd.length < 1 ||
+                  commType.length < 1
+                }
               >
                 Confirm
               </Button>
