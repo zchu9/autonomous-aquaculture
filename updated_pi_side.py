@@ -185,11 +185,11 @@ def reconstruct_message():
 
     #print(get_address(data.get("farm_id")))
 
-#mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "logan")
-#mqtt_client.on_connect = lambda client, userdata, flags, rc, properties: client.subscribe("farm/+/cage")
-#mqtt_client.on_message = on_message
-#mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
-#mqtt_client.loop_start()
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "logan")
+mqtt_client.on_connect = lambda client, userdata, flags, rc, properties: client.subscribe("farm/+/cage")
+mqtt_client.on_message = on_message
+mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
+mqtt_client.loop_start()
 
 buffer = ""
 while True:
