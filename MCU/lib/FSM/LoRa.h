@@ -21,13 +21,13 @@
  * @brief Starts Serial1 and configures the LoRa transceiver with the necessary settings.\n
  *
  */
-void setupLoRa();
+bool setupLoRa();
 
 /**
  * @brief sends the message in fragments to the serial (LoRa module)\n
  *
  */
-void sendPackets(char *message);
+bool sendPackets(char *message);
 /**
  * @brief Takes in a message, fragments it, and sends it all.(LoRa module)
  *

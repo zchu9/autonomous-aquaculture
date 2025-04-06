@@ -1,5 +1,5 @@
 #include "FSM.h"
-#include "uartSwitch.h"
+// #include "uartSwitch.h"
 
 #define DEBUG_LIFT 1
 
@@ -120,10 +120,11 @@ int runCommands(data &d)
 JsonDocument jsonify(data &d)
 {
     // Clear the previous document
-    d.doc.clear();
+
+    JsonDocument doc;
 
     // Set the state
-    d.doc["state"] = d.state;
+    doc["state"] = d.state;
 
     // Set the power vector
     JsonArray powerArray = d.doc.createNestedArray("power");
@@ -133,55 +134,58 @@ JsonDocument jsonify(data &d)
     }
 
     // Set the height
-    d.doc["height"] = d.height;
-
-    // Set the lift flags
-    JsonArray liftFlagsArray = d.doc.createNestedArray("liftFlag");
-    for (size_t i = 0; i < d.numWinches; i++)
-    {
-        liftFlagsArray.add(d.liftFlag[i]);
-    }
+    doc["height"] = d.height;
 
     // Set the temperature readings
-    JsonArray tempArray = d.doc.createNestedArray("Temperature");
+    JsonArray tempArray = doc.createNestedArray("Temperature");
     for (size_t i = 0; i < d.temp.size(); i++)
     {
         tempArray.add(d.temp[i]);
     }
 
-    // Set the current device
-    d.doc["currentDevice"] = static_cast<int>(d.currentDevice);
-
-    return d.doc;
+    return doc;
 }
 
-void sendData(data &d)
+bool sendData(data &d)
 {
     // Convert the data struct to JSON
     JsonDocument doc = jsonify(d);
     size_t len = measureJson(doc);
     char *buffer = new char[len + 1]; // +1 for null terminator
     serializeJson(doc, buffer, len + 1);
-
     // Send the JSON over LoRa
-    sendPackets(buffer);
-
+    bool success = sendPackets(buffer);
+    Serial.print("made it out 100");
     delete[] buffer; // Free the allocated memory
+    return success;
 }
 
-void sendImage(data &d)
+bool sendImage(data &d)
 {
 
     if (d.img == nullptr)
     {
         Serial.println("No image to send.");
-        return;
+        return false;
     }
     size_t imsize = getCapturedImageSize();
     size_t encodedLength = Base64.encodedLength(imsize);
     char *encodedImage = new char[encodedLength + 1]; // +1 for null terminator
     Base64.encode(encodedImage, (char *)d.img, imsize);
-    sendPackets(encodedImage);
+    d.doc["image"] = encodedImage;
+    // only serialize the image part of the json
+
+    JsonDocument imdoc;
+    imdoc["image"] = encodedImage;
+    size_t imdocLen = measureJson(imdoc);
+    char *imBuffer = new char[imdocLen + 1]; // +1 for null terminator
+    serializeJson(imdoc, imBuffer, imdocLen + 1);
+    bool success = sendPackets(imBuffer);
+    delete[] imBuffer;     // Free the allocated memory
+    delete[] encodedImage; // Free the Base64 encoded image
+    free(d.img);           // Free the original image buffer
+    d.img = nullptr;       // Set to nullptr to avoid dangling pointer
+    return success;
 }
 
 void getIntoLowPowerMode(data &d)
@@ -227,8 +231,25 @@ void powerStateChange(data &d)
     }
 }
 
-uint8_t getImg(data &d)
+void getImg(data &d)
 {
+    if (d.img != nullptr)
+    {
+        free(d.img); // Free previous image if it exists
+        d.img = nullptr;
+    }
+
+    d.img = captureImage(); // Capture new image
+    if (d.img == nullptr)
+    {
+        Serial.println("Failed to capture image.");
+        return;
+    }
+
+    size_t imgSize = getCapturedImageSize();
+    Serial.print("Captured image size: ");
+    Serial.print(imgSize);
+    Serial.println(" bytes");
 }
 
 /////////////////////////////////////////

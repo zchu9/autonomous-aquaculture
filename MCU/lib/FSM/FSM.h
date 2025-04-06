@@ -91,7 +91,7 @@ void RFConnectedCase(data &d);
  */
 void RFDisconnectedCase(data &d);
 
-void sendData(data &d);
+bool sendData(data &d);
 
 /**
  * @brief Reads Json and runs the commands in the json doc.\n
@@ -105,13 +105,12 @@ int runCommands(data &d);
 
 JsonDocument jsonify(data &d);
 
-void sendImage(data &d);
-
+bool sendImage(data &d);
 
 // Logan functions
 
 // Sensor Controls
-uint8_t *getImg();
+void getImg(data &d);
 double getHeight();
 
 // Winch Controls

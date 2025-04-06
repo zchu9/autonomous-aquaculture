@@ -4,9 +4,11 @@ int totalPackets;                               // the calculated number of pack
 char receivedPackets[MAX_PACKETS][BUFFER_SIZE]; // array to store the received packets
 int receivedTotalPackets = -1;                  // the total number of packets received
 char loraBuffer[BUFFER_SIZE];                   // buffer to store the received data
-int bufferIndex = 0;                            // index for the loraBuffer
+int bufferIndex = 0;
 
-void setupLoRa()
+#define HANDSHAKE 0 // index for the loraBuffer
+
+bool setupLoRa()
 {
     ulong setupDelay = 100;
     Serial.begin(19200);
@@ -36,9 +38,11 @@ void setupLoRa()
     char handshake_message[120];
     snprintf(handshake_message, sizeof(handshake_message), "{\"farm_id\": \"%s\", \"LoRa_address\": %u}", FARM_ID, LORA_ADDRESS);
     sendPackets(handshake_message);
+    Serial.println("Handshake packet sent.");
+    return true;
 }
 
-void sendPackets(char *message)
+bool sendPackets(char *message)
 {
     totalPackets = (strlen(message) + PACKET_SIZE - 1) / PACKET_SIZE;
     char fragment[PACKET_SIZE + 1];
@@ -50,6 +54,7 @@ void sendPackets(char *message)
         fragment[length] = '\0';
 
         int retries = 0;
+        Serial.print("sending packet ");
         while (retries < RETRY_LIMIT)
         {
             sendFragment(i, fragment);
@@ -64,10 +69,12 @@ void sendPackets(char *message)
         {
             Serial.print("Failed to receive ACK for packet ");
             Serial.println(i);
-            return;
+            return false;
         }
     }
-    Serial.println("Message sent");
+    Serial.print("All packets sent successfully. Total packets: ");
+    Serial.println(totalPackets);
+    return true;
 }
 
 void sendFragment(int packetID, const char *fragment)
