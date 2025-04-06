@@ -131,12 +131,12 @@ int messageTest(data &data, bool useLED = false)
     }
     if (pass)
     {
-        data.power_placeholder = 420;
+        // data.power_placeholder = 420;
         return 1;
     }
     else
     {
-        data.power_placeholder = -1; //  ):
+        // data.power_placeholder = -1; //  ):
         return 0;
     }
 };

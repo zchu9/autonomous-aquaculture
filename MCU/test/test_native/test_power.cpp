@@ -37,12 +37,12 @@ void test_checksum() {
 void test_parse() {
     unsigned char data[] = { "\r\ndata\tfield\r\ndata2\tfield2" };
     size_t data_size = 27;
-    std::map<std::string, std::string> output;
+    ShuntPowerData output;
     victronParse(output, data, data_size);
-    TEST_ASSERT_TRUE(output.find("data") != output.end());
-    TEST_ASSERT_EQUAL_STRING("field", output["data"].c_str());
-    TEST_ASSERT_TRUE(output.find("data2") != output.end());
-    TEST_ASSERT_EQUAL_STRING("field2", output["data2"].c_str());
+    TEST_ASSERT_EQUAL_STRING("data", output.labels[0].c_str());
+    TEST_ASSERT_EQUAL_STRING("field", output.fields[0].c_str());
+    TEST_ASSERT_EQUAL_STRING("data2", output.labels[1].c_str());
+    TEST_ASSERT_EQUAL_STRING("field2", output.fields[1].c_str());
 }
 
 int main() {
