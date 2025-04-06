@@ -13,7 +13,7 @@
 #define TARGET_ADDRESS "1"
 #define PACKET_SIZE 100
 #define ACK_TIMEOUT 2000
-#define RETRY_LIMIT 1000
+#define RETRY_LIMIT 15
 #define MAX_PACKETS 10
 #define BUFFER_SIZE 260
 
