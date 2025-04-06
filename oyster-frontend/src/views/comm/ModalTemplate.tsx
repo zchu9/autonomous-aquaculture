@@ -1,6 +1,7 @@
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import { ReactElement } from "react";
+import Divider from "@mui/material/Divider";
 
 interface ModalTemplateProps {
   label: string;
@@ -24,6 +25,7 @@ export default function AddDeviceModal(props: ModalTemplateProps) {
     <>
       <Box>
         <h2> {props.label}</h2>
+        <Divider />
         {props.children}
       </Box>
     </>

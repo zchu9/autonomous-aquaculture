@@ -3,6 +3,20 @@ import ModalTemplate from "../comm/ModalTemplate";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
+import Radio from "@mui/material/Radio";
+import RadioGroup from "@mui/material/RadioGroup";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import FormControl from "@mui/material/FormControl";
+import FormLabel from "@mui/material/FormLabel";
+import Divider from "@mui/material/Divider";
+import Grid from "@mui/material/Grid";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import Box from "@mui/material/Box";
+
 import Typography from "@mui/material/Typography";
 
 const base_url = `${import.meta.env.VITE_API_URL}`;
@@ -53,36 +67,85 @@ export default function AddDeviceModal(props: AddDeviceModalProps) {
   return (
     <>
       <ModalTemplate label="Add new Device">
-        <div>Enter device details</div>
-        <Stack spacing={2}>
-          <h3>Device Name</h3>
-          <TextField
-            id="outlined-basic"
-            label="Device Name"
-            variant="outlined"
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-              setDeviceName(event.target.value);
-            }}
-          />
-          <h3>LoRA Password</h3>
-          <TextField
-            id="outlined-basic"
-            label="LoRA Password"
-            variant="outlined"
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-              setDevicePasswd(event.target.value);
-            }}
-          />
-          <Button
-            variant="contained"
-            onClick={() => {
-              createDevice();
-              props.closeFn();
-            }}
-          >
-            Confirm
-          </Button>
-        </Stack>
+        <Grid container>
+          <Grid size={5}>
+            <Stack spacing={2}>
+              <div>Enter device details</div>
+              <FormLabel>Device Name</FormLabel>
+              <TextField
+                id="outlined-basic"
+                label="Device Name"
+                variant="outlined"
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                  setDeviceName(event.target.value);
+                }}
+              />
+
+              <FormLabel>LoRA Password</FormLabel>
+              <TextField
+                id="outlined-basic"
+                label="LoRA Password"
+                variant="outlined"
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                  setDevicePasswd(event.target.value);
+                }}
+              />
+
+              <Divider variant="inset" />
+
+              <FormControl>
+                <FormLabel>Communication Type</FormLabel>
+                <RadioGroup
+                  aria-labelledby="demo-radio-buttons-group-label"
+                  defaultValue="female"
+                  name="radio-buttons-group"
+                >
+                  <FormControlLabel
+                    value="Cellular"
+                    control={<Radio />}
+                    label="Cellular"
+                  />
+                  <FormControlLabel
+                    value="LoRA"
+                    control={<Radio />}
+                    label="LoRA"
+                  />
+                </RadioGroup>
+              </FormControl>
+
+              <Button
+                variant="contained"
+                onClick={() => {
+                  createDevice();
+                  props.closeFn();
+                }}
+              >
+                Confirm
+              </Button>
+            </Stack>
+          </Grid>
+          <Grid size={1}>
+            <Divider orientation="vertical" variant="middle" />
+          </Grid>
+          <Grid size={5}>
+            <List>
+              <ListItem disablePadding>
+                1. Use the form to the left to enter your device's details.
+              </ListItem>
+              <ListItem disablePadding>
+                2. Click confirm to register the device and generate a config
+                file. The config file will be dowwnloaded automatically.
+              </ListItem>
+              <ListItem disablePadding>
+                3. Copy the config file to the microcontroller code's include
+                directory.
+              </ListItem>
+              <ListItem disablePadding>
+                4. Upload the microcontroller code to the device.
+              </ListItem>
+            </List>
+          </Grid>
+        </Grid>
       </ModalTemplate>
     </>
   );
