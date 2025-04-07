@@ -1,7 +1,9 @@
 #include "FSM.h"
 #include <unity.h>
-#include "img.h"
+
 #define NUM_DATA_POINTS 100
+#define LORA_TESTS 0
+
 uint8_t image_data[] PROGMEM = {
     0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x01, 0x00, 0x60,
     0x00, 0x60, 0x00, 0x00, 0xFF, 0xDB, 0x00, 0x43, 0x00, 0x14, 0x0E, 0x0F, 0x12, 0x0F, 0x0D, 0x14,
@@ -371,7 +373,20 @@ void test_checkPower()
 }
 void test_getHeight()
 {
-    // add davids height files and then check this shiiiiit.
+    Serial.println("This test will be interactive to verify the height at different real world positions:\n");
+    Serial.println("The Height should be at the zero point now");
+    delay(10000);
+    Serial.println("Pot Value: " + String(getRawPotValue()));
+    Serial.println("Height Value in Feet before setZeroHeight: " + String(getHeight()));
+    setZeroHeight();
+    Serial.println("Height Value in feet after calibration: " + String(getHeight()));
+    Serial.println("Now move 1 foot up and Record the height again.");
+    delay(5000);
+    int currHeight = getHeight();
+    bool oneFootUp = (currHeight > 0.9 && currHeight < 1.1);
+    TEST_ASSERT_TRUE(oneFootUp); // Allow a tolerance of 0.1 feet
+    Serial.println("Pot Value after Moving: " + String(getRawPotValue()));
+    Serial.println("Height Value in Feet after moving up: " + String(getHeight()));
 }
 void test_getImage()
 {
@@ -430,14 +445,25 @@ void test_FSM_initialization()
 void runTests()
 {
     UNITY_BEGIN();
+
+    // Test tests
     RUN_TEST(test_board_initialization);
     RUN_TEST(test_board_response);
-    // RUN_TEST(test_FSM_initialization);
+
     // RUN_TEST(test_checkPower);
-    // RUN_TEST(test_getHeight);
+    RUN_TEST(test_getHeight);
     // RUN_TEST(test_getImage);
     RUN_TEST(test_jsonify);
+
+// LoRa Dependent  Tests
+#if LORA_TESTS
     RUN_TEST(test_sendData);
+
+#endif
+
+#if SYSTEM_TESTS
+    test_FSM_initialization();
+#endif
     UNITY_END();
 }
 

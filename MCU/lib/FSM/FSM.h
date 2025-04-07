@@ -3,13 +3,15 @@
 #include <Arduino.h>
 #include <vector>
 #include <ArduinoJson.h>
-#include "pins.h" // for pin definitions
+#include "pins.h" 
 #include <Base64.h>
 #include <Wire.h>
 #include "interrupts.h"
 #include "LoRa.h"
 #include "ArduinoJson.h"
-#include "Sensors/camera_handler.h" // for camera functions
+#include "Sensors/camera_handler.h" 
+#include "Sensors/pot_handler.h"    
+#include "Sensors/temperature_sensor.h" 
 
 #define DEBUG true
 
@@ -111,7 +113,7 @@ bool sendImage(data &d);
 
 // Sensor Controls
 void getImg(data &d);
-double getHeight();
+
 
 // Winch Controls
 
