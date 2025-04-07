@@ -45,5 +45,5 @@ while True:
             with open(OUTPUT_FILE, 'wb') as f:
                 f.write(image_data)
 
-            print(f"[Python] ✅ Image saved to {OUTPUT_FILE}")
+            print(f"[Python] Image saved to {OUTPUT_FILE}")
             break
