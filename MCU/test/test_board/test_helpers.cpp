@@ -354,6 +354,7 @@ void setUp(void)
         d.temp.push_back(random(0, 100)); // random lift flag values (0 or 1)
     }
     // d.img = image_data;
+    initPot();
 }
 void tearDown(void)
 {
@@ -379,14 +380,20 @@ void test_getHeight()
     Serial.println("Pot Value: " + String(getRawPotValue()));
     Serial.println("Height Value in Feet before setZeroHeight: " + String(getHeight()));
     setZeroHeight();
-    Serial.println("Height Value in feet after calibration: " + String(getHeight()));
-    Serial.println("Now move 1 foot up and Record the height again.");
-    delay(5000);
+
     int currHeight = getHeight();
+    TEST_ASSERT_TRUE(currHeight == 0);
+
+    Serial.println("Height Value in feet after calibration: " + String(currHeight));
+    Serial.println("Now move 1 foot up and Record the height again.");
+    delay(10000);
+
+    currHeight = getHeight();
+    Serial.println("Height Value in Feet after moving up: " + String(currHeight));
     bool oneFootUp = (currHeight > 0.9 && currHeight < 1.1);
     TEST_ASSERT_TRUE(oneFootUp); // Allow a tolerance of 0.1 feet
-    Serial.println("Pot Value after Moving: " + String(getRawPotValue()));
-    Serial.println("Height Value in Feet after moving up: " + String(getHeight()));
+
+    Serial.println("Height Value in Feet after moving up: " + String(currHeight));
 }
 void test_getImage()
 {
@@ -475,4 +482,11 @@ void setup()
     runTests();
 }
 
-void loop() {}
+void loop()
+{
+
+    /*Height Test */
+    Serial.println("current height: " + String(getHeight()));
+    Serial.println("current potentiometer value: " + String(getRawPotValue()));
+    delay(1000);
+}
