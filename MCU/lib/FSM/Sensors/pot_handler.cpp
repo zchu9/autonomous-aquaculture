@@ -9,7 +9,7 @@
 
 static int zeroPosition = 0;
 static int minRawValue = 0;
-static int maxRawValue = 1023;
+static int maxRawValue = 4095;
 static float maxHeightFt = 4.0; // default max height in feet
 
 void initPot()
@@ -34,9 +34,9 @@ void setZeroHeight()
     zeroPosition = analogRead(POT_PIN);
 
     // Give wiggle room and prevent mechanical limit damage
-    int wiggle = 20;
+    int wiggle = 200;
     minRawValue = zeroPosition - ((zeroPosition - 0) > wiggle ? wiggle : 0);
-    maxRawValue = zeroPosition + ((1023 - zeroPosition) > wiggle ? wiggle : 0);
+    maxRawValue = zeroPosition + ((maxRawValue - zeroPosition) > wiggle ? wiggle : 0);
 }
 
 void setMaxHeight(float feet)
