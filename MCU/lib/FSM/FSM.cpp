@@ -127,7 +127,7 @@ JsonDocument jsonify(data &d)
     doc["state"] = d.state;
 
     // Set the power vector
-    JsonArray powerArray = d.doc.createNestedArray("power");
+    JsonArray powerArray = d.doc["power"].to<JsonArray>();
     for (size_t i = 0; i < d.power.size(); i++)
     {
         powerArray.add(d.power[i]);
@@ -137,7 +137,7 @@ JsonDocument jsonify(data &d)
     doc["height"] = d.height;
 
     // Set the temperature readings
-    JsonArray tempArray = doc.createNestedArray("Temperature");
+    JsonArray tempArray = d.doc["temp"].to<JsonArray>();
     for (size_t i = 0; i < d.temp.size(); i++)
     {
         tempArray.add(d.temp[i]);
