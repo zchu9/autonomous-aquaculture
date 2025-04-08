@@ -358,7 +358,7 @@ void setUp(void)
         d.power.push_back(powerStartPoint + i); // random power values between 0 and 100
     }
     // populate height with a random value
-    d.height = random(0, 100); // random height value between 0 and 100
+
     for (size_t i = 0; i < NUM_DATA_POINTS; i++)
     {
         d.temp.push_back(random(0, 100)); // random lift flag values (0 or 1)
@@ -410,6 +410,39 @@ void test_getHeight()
     TEST_ASSERT_TRUE(oneFootUp); // Allow a tolerance of 0.1 feet
 
     Serial.println("Height Value in Feet after moving up: " + String(currHeight));
+}
+
+void heightInstantiation()
+{
+    setMaxHeight();
+    Serial.println("The max height is set.");
+    Serial.println("pull ripcord out and wait:");
+    delay(10000);
+    setZeroHeight();
+}
+
+void pinInstantition()
+{
+    pinMode(LIFT_PIN, OUTPUT);
+    digitalWrite(LIFT_PIN, LOW);
+    pinMode(LOWER_PIN, OUTPUT);
+    digitalWrite(LOWER_PIN, LOW);
+}
+
+void test_liftWinch()
+{
+    heightInstantiation();
+    pinInstantition();
+    // lift the winch from zero to 3.5 feet
+
+    TEST_ASSERT_TRUE(liftWinch(LIFT_PIN, 0, 3.5));
+}
+
+void test_liftWinch_stuck()
+{
+    heightInstantiation();
+
+    TEST_ASSERT_FALSE(liftWinch(LIFT_PIN, 0, 3.5));
 }
 void test_getImage()
 {
@@ -474,9 +507,10 @@ void runTests()
     RUN_TEST(test_board_response);
 
     // RUN_TEST(test_checkPower);
-    // RUN_TEST(test_getHeight);
     // RUN_TEST(test_getImage);
     // RUN_TEST(test_jsonify);
+    // RUN_TEST(test_getHeight);
+    RUN_TEST(test_liftWinch);
 
 // LoRa Dependent  Tests
 #if LORA_TESTS
@@ -500,9 +534,4 @@ void setup()
 
 void loop()
 {
-
-    /*Height Test */
-    Serial.println("current height: " + String(getHeight()));
-    Serial.println("current potentiometer value: " + String(getRawPotValue()));
-    delay(1000);
 }

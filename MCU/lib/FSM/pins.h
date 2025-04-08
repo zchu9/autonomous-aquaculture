@@ -6,7 +6,12 @@
 #define MUX_DISABLE_1 4 // TX
 #define MUX_DISABLE_2 5 // Winch
 
-#define WINCH_ACTIVATE 7 // change this; this is shared with the SPI CS line. Avoid pin 6; this is shared with the onboard LED and is used during flashing.
+#define WINCH_ACTIVATE 0
+
+// Above is potentially depricated
+
+#define LIFT_PIN 3
+#define LOWER_PIN 4
 
 // Potentiometer analog input
 #define POT_PIN A0

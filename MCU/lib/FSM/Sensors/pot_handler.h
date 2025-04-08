@@ -12,5 +12,6 @@ float getHeight();
 void setZeroHeight();
 void setMaxHeight();
 void setMinHeight();
+float getMaxHeightFeet();
 
 #endif // POT_HANDLER_H

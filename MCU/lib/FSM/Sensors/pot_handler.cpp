@@ -46,3 +46,8 @@ void setZeroHeight()
 
     setMinHeight();
 }
+
+float getMaxHeightFeet()
+{
+    return maxHeightFt;
+}

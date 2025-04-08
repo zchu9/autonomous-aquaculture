@@ -3,15 +3,15 @@
 #include <Arduino.h>
 #include <vector>
 #include <ArduinoJson.h>
-#include "pins.h" 
+#include "pins.h"
 #include <Base64.h>
 #include <Wire.h>
 #include "interrupts.h"
 #include "LoRa.h"
 #include "ArduinoJson.h"
-#include "Sensors/camera_handler.h" 
-#include "Sensors/pot_handler.h"    
-#include "Sensors/temperature_sensor.h" 
+#include "Sensors/camera_handler.h"
+#include "Sensors/pot_handler.h"
+#include "Sensors/temperature_sensor.h"
 
 #define DEBUG true
 
@@ -40,7 +40,7 @@ struct data
     // bool lowerFlag[numWinches];
     State state;
 
-    double height;
+    double height[numWinches];
     std::vector<double> power; // stores power readings for each device
     std::vector<double> temp;  // stores temperature readings for each device
     uint8_t *img;
@@ -51,6 +51,7 @@ struct data
 };
 
 #define POWER_THRESHOLD 0.5
+#define MAX_HEIGHT 3.5
 
 // Emergency Lift Lowering
 #define TIME_UNTIL_EMERGENCY_LIFT_LOWER_HRS 4
@@ -114,9 +115,9 @@ bool sendImage(data &d);
 // Sensor Controls
 void getImg(data &d);
 
-
 // Winch Controls
-
+bool liftWinch(int heightPin, int liftPin, float desiredHeight);
+bool lowerWinch(int heightPin, int lowerPin, float desiredHeight);
 void winchControl(data &d);
 
 // Debugging

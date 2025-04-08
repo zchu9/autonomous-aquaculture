@@ -133,9 +133,6 @@ JsonDocument jsonify(data &d)
         powerArray.add(d.power[i]);
     }
 
-    // Set the height
-    doc["height"] = d.height;
-
     // Set the temperature readings
     JsonArray tempArray = d.doc["temp"].to<JsonArray>();
     for (size_t i = 0; i < d.temp.size(); i++)
@@ -273,6 +270,53 @@ double checkPower(data &d)
 {
     // double ret = messageTest(d);
     return 0;
+}
+
+bool liftWinch(int liftPin, int heightPin, float desiredHeight)
+{
+    int numIterations = 0;
+    int beginningHeight = getHeight();
+    digitalWrite(liftPin, HIGH);
+    while (getHeight() < desiredHeight)
+    {
+        Serial.println(getHeight());
+        numIterations = 1; // stop the stuck checking for testing
+        if (numIterations % 25 == 0)
+        {
+            if (beginningHeight - getHeight() < 0.1)
+            {
+                // we are stuck
+                digitalWrite(liftPin, LOW);
+                return false;
+            }
+            beginningHeight = getHeight();
+        }
+    }
+    digitalWrite(liftPin, LOW);
+    return true;
+}
+
+bool lowerWinch(int lowerPin, int heightPin, float desiredHeight)
+{
+    int numIterations = 0;
+    int beginningHeight = getHeight();
+    digitalWrite(lowerPin, HIGH);
+    while (getHeight() > desiredHeight)
+    {
+        numIterations++;
+        if (numIterations % 25 == 0)
+        {
+            if (beginningHeight - getHeight() < 0.1)
+            {
+                // we are stuck
+                digitalWrite(lowerPin, LOW);
+                return false;
+            }
+            beginningHeight = getHeight();
+        }
+    }
+    digitalWrite(lowerPin, LOW);
+    return true;
 }
 
 void winchControl(data &d)
