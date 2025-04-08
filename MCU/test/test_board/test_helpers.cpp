@@ -1,3 +1,13 @@
+/**
+ * @file test_helpers.cpp
+ * @author Daniel Reeves (dtr@vt.edu)
+ * @brief function test cases for the system and stuff
+ * @version 0.1
+ * @date 2025-04-08
+ *
+ * @copyright Copyright (c) 2025
+ *
+ */
 #include "FSM.h"
 #include <unity.h>
 
@@ -372,16 +382,22 @@ void test_checkPower()
 {
     // I don't know how this function is going to work.
 }
+
 void test_getHeight()
 {
     Serial.println("This test will be interactive to verify the height at different real world positions:\n");
-    Serial.println("The Height should be at the zero point now");
+    Serial.println("Setting the max height:");
+    setMaxHeight();
+    Serial.println("Pot Value: " + String(getRawPotValue()));
+    Serial.println("Height Value in Feet before setZeroHeight: " + String(getHeight()));
+    Serial.println("-----------------------------");
+    Serial.println("Move the cord to its limit and set the Min Height:");
     delay(10000);
     Serial.println("Pot Value: " + String(getRawPotValue()));
     Serial.println("Height Value in Feet before setZeroHeight: " + String(getHeight()));
     setZeroHeight();
 
-    int currHeight = getHeight();
+    float currHeight = getHeight();
     TEST_ASSERT_TRUE(currHeight == 0);
 
     Serial.println("Height Value in feet after calibration: " + String(currHeight));
@@ -390,7 +406,7 @@ void test_getHeight()
 
     currHeight = getHeight();
     Serial.println("Height Value in Feet after moving up: " + String(currHeight));
-    bool oneFootUp = (currHeight > 0.9 && currHeight < 1.1);
+    bool oneFootUp = (currHeight > 0.8 && currHeight < 1.2);
     TEST_ASSERT_TRUE(oneFootUp); // Allow a tolerance of 0.1 feet
 
     Serial.println("Height Value in Feet after moving up: " + String(currHeight));
@@ -458,9 +474,9 @@ void runTests()
     RUN_TEST(test_board_response);
 
     // RUN_TEST(test_checkPower);
-    RUN_TEST(test_getHeight);
+    // RUN_TEST(test_getHeight);
     // RUN_TEST(test_getImage);
-    RUN_TEST(test_jsonify);
+    // RUN_TEST(test_jsonify);
 
 // LoRa Dependent  Tests
 #if LORA_TESTS

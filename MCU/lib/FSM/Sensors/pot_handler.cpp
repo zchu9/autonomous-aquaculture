@@ -10,6 +10,8 @@
 static int zeroPosition = 0;
 static int minRawValue = 0;
 static int maxRawValue = 4095;
+static int maxHeight = 0;
+static int minHeight = 0;
 static float maxHeightFt = 4.0; // default max height in feet
 
 void initPot()
@@ -24,28 +26,23 @@ int getRawPotValue()
 
 float getHeight()
 {
-    int currentValue = getRawPotValue();
-    float height = ((float)(currentValue - zeroPosition) / (maxRawValue - minRawValue)) * maxHeightFt;
+    float currentValue = getRawPotValue();
+    float height = ((float)(currentValue - zeroPosition) / (maxHeight - minHeight)) * maxHeightFt;
     return height;
+}
+void setMaxHeight()
+{
+    maxHeight = analogRead(POT_PIN);
+}
+
+void setMinHeight()
+{
+    minHeight = analogRead(POT_PIN);
 }
 
 void setZeroHeight()
 {
     zeroPosition = analogRead(POT_PIN);
 
-    // Give wiggle room and prevent mechanical limit damage
-    int wiggle = 200;
-    minRawValue = zeroPosition - ((zeroPosition - 0) > wiggle ? wiggle : 0);
-    maxRawValue = zeroPosition + ((maxRawValue - zeroPosition) > wiggle ? wiggle : 0);
-}
-
-void setMaxHeight(float feet)
-{
-    maxHeightFt = feet;
-}
-
-void setMinHeight(float feet)
-{
-    // This function doesn't directly affect behavior since we're using maxHeightFt.
-    // Reserved in case we switch to min/max ft-based clamping in future.
+    setMinHeight();
 }
