@@ -27,7 +27,7 @@
 #include <SPI.h>
 #include <pins.h>
 
-#define CAM_TYPE OV2640 // Camera type - Adjust if using a different model
+#define CAM_TYPE OV2640 // Camera type
 
 // External camera instance
 extern ArduCAM myCAM;
