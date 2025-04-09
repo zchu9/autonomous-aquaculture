@@ -1,19 +1,17 @@
 #include "LoRa.h"
-int currentPacket = 0;                          // the current packet being sent
-int totalPackets;                               // the calculated number of packets from the message length
-char receivedPackets[MAX_PACKETS][BUFFER_SIZE]; // array to store the received packets
-int receivedTotalPackets = -1;                  // the total number of packets received
-char loraBuffer[BUFFER_SIZE];                   // buffer to store the received data
-int bufferIndex = 0;
 
-#define HANDSHAKE 0 // index for the loraBuffer
+LoraRadio::LoraRadio() {
+    // init buffer to null
+    memset(this->loraBuffer, '\0', BUFFER_SIZE);
+    this->setupLoRa();
+};
 
-bool setupLoRa()
-{
-    ulong setupDelay = 100;
-    Serial.begin(19200);
-    Serial1.begin(9600);
+bool LoraRadio::setupLoRa() {
+    uint8_t setupDelay = 100;
+    
+    Serial1.begin(9600);        // ideally this is handled elsewhere
     delay(2000);
+
     Serial1.println("AT+IPR=9600");
     delay(setupDelay);
     Serial1.println("AT+CRFOP=22");
@@ -26,6 +24,7 @@ bool setupLoRa()
     delay(setupDelay);
     Serial1.println("AT+ADDRESS=" + String(LORA_ADDRESS));
     delay(setupDelay);
+
     char command[32];
     snprintf(command, sizeof(command), "AT+CPIN=%s\r\n", LORA_PASSWORD);
     Serial1.print(command);
@@ -39,8 +38,7 @@ bool setupLoRa()
     return true;
 }
 
-bool sendPackets(char *message)
-{
+bool LoraRadio::sendPackets(char* message) {
     totalPackets = (strlen(message) + PACKET_SIZE - 1) / PACKET_SIZE;
     char fragment[PACKET_SIZE + 1];
     for (int i = 0; i < totalPackets; i++)
@@ -74,8 +72,7 @@ bool sendPackets(char *message)
     return true;
 }
 
-void sendFragment(int packetID, const char *fragment)
-{
+void LoraRadio::sendFragment(int packetID, const char* fragment) {
     char packet[PACKET_SIZE + 20];
     snprintf(packet, sizeof(packet), "%d,%d,%s", packetID, totalPackets, fragment);
 
@@ -87,8 +84,7 @@ void sendFragment(int packetID, const char *fragment)
     Serial1.println(command);
 }
 
-bool waitForACK(int expectedID)
-{
+bool LoraRadio::waitForACK(int expectedID) {
     unsigned long startTime = millis();
     char buffer[50];
     int index = 0;
@@ -124,8 +120,7 @@ bool waitForACK(int expectedID)
     return false;
 }
 
-void receiveMsg(JsonDocument &doc)
-{
+void LoraRadio::receiveMsg(JsonDocument& doc) {
 
     while (Serial1.available())
     {
@@ -144,8 +139,7 @@ void receiveMsg(JsonDocument &doc)
     }
 }
 
-void processReceivedData(char *received, JsonDocument &doc)
-{
+void LoraRadio::processReceivedData(char* received, JsonDocument& doc) {
     // Debug info
     Serial.print("Processing: ");
     Serial.println(received);
@@ -157,7 +151,7 @@ void processReceivedData(char *received, JsonDocument &doc)
     }
 
     // Extract packet information
-    char *token = strtok(received + 5, ","); // Skip +RCV=
+    char* token = strtok(received + 5, ","); // Skip +RCV=
     if (!token)
         return;
     token = strtok(NULL, ","); // Skip sender address
@@ -178,11 +172,11 @@ void processReceivedData(char *received, JsonDocument &doc)
         return;
 
     // Remove signal strength info (after the last two commas)
-    char *lastComma = strrchr(token, ',');
+    char* lastComma = strrchr(token, ',');
     if (lastComma)
     {
         *lastComma = '\0';
-        char *secondLastComma = strrchr(token, ',');
+        char* secondLastComma = strrchr(token, ',');
         if (secondLastComma)
         {
             *secondLastComma = '\0';
@@ -212,8 +206,7 @@ void processReceivedData(char *received, JsonDocument &doc)
     }
 }
 
-void sendACK(int packetID)
-{
+void LoraRadio::sendACK(int packetID) {
     // Create the ACK message for the received packet
     char ackMessage[20];
     snprintf(ackMessage, sizeof(ackMessage), "ACK:%d", packetID);
@@ -226,8 +219,7 @@ void sendACK(int packetID)
     Serial.println(packetID);
 }
 
-bool allPacketsReceived()
-{
+bool LoraRadio::allPacketsReceived() {
     if (totalPackets == -1)
         return false;
     for (int i = 0; i < totalPackets; i++)
@@ -238,8 +230,7 @@ bool allPacketsReceived()
     return true;
 }
 
-void reconstructMessage(JsonDocument &doc)
-{
+void LoraRadio::reconstructMessage(JsonDocument& doc) {
     std::string finalMsg; // Initialize to empty string
     // Debug stuff
     Serial.println("Reassembling message...");
@@ -272,12 +263,13 @@ void reconstructMessage(JsonDocument &doc)
     }
 }
 
-bool sendHandshake()
-{
-    char handshake_message[120];
+bool LoraRadio::sendHandshake() {
+    const size_t message_size = 120;
+    char handshake_message[message_size];
+
     snprintf(handshake_message, sizeof(handshake_message), "{\"farm_id\": \"%s\", \"LoRa_address\": %u}", FARM_ID, LORA_ADDRESS);
-    bool success;
-    success = sendPackets(handshake_message);
+    bool success = sendPackets(handshake_message);
     Serial.println("Handshake packet attempted.");
+
     return success;
 }

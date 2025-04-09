@@ -10,7 +10,7 @@
 void FSM(data &d)
 {
     // this should be in the comms handler.
-    receiveMsg(d.doc);
+    d.lora->receiveMsg(d.doc);
     checkPowerHandler(d);
     commsHandler(d);
     //  emergencyLiftHandler(d);
@@ -34,7 +34,10 @@ void initializeStartup(data &d)
 
 #endif
     // should probably be a init data function.
-    setupLoRa();
+
+    // init the lora class
+    d.lora = new LoraRadio;
+
     d.liftFlag[0] = 0;
     // d.lowerFlag = 0;
     //  initialize the data struct
@@ -94,7 +97,7 @@ void commsHandler(data &d)
         Serial.println("Comms Module Interrupt");
 #endif
         setCommsFlag(false);
-        receiveMsg(d.doc);
+        d.lora->receiveMsg(d.doc);
         runCommands(d);
     }
 }
@@ -151,7 +154,7 @@ bool sendData(data &d)
     char *buffer = new char[len + 1]; // +1 for null terminator
     serializeJson(doc, buffer, len + 1);
     // Send the JSON over LoRa
-    bool success = sendPackets(buffer);
+    bool success = d.lora->sendPackets(buffer);
     Serial.print("made it out 100");
     delete[] buffer; // Free the allocated memory
     return success;
@@ -177,7 +180,7 @@ bool sendImage(data &d)
     size_t imdocLen = measureJson(imdoc);
     char *imBuffer = new char[imdocLen + 1]; // +1 for null terminator
     serializeJson(imdoc, imBuffer, imdocLen + 1);
-    bool success = sendPackets(imBuffer);
+    bool success = d.lora->sendPackets(imBuffer);
     delete[] imBuffer;     // Free the allocated memory
     delete[] encodedImage; // Free the Base64 encoded image
     free(d.img);           // Free the original image buffer

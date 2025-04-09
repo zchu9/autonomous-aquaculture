@@ -35,6 +35,8 @@ struct data
     // Assuming the size of the array is 10, you can adjust it as needed
     static const size_t numWinches = 10;
 
+    LoraRadio* lora; // a class to hold all the lora variables.
+
     bool liftFlag[numWinches];
     bool liftStarted;
     // bool lowerFlag[numWinches];
