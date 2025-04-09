@@ -35,10 +35,7 @@ bool setupLoRa()
     Serial.println("Transceiver setup complete!!! :D");
     delay(setupDelay);
     //"handshake packet" to make sure the server knows the farm ID that corresponds to the LoRa address
-    char handshake_message[120];
-    snprintf(handshake_message, sizeof(handshake_message), "{\"farm_id\": \"%s\", \"LoRa_address\": %u}", FARM_ID, LORA_ADDRESS);
-    sendPackets(handshake_message);
-    Serial.println("Handshake packet sent.");
+    sendHandshake();
     return true;
 }
 
@@ -273,4 +270,14 @@ void reconstructMessage(JsonDocument &doc)
         serializeJson(doc, Serial);
         Serial.println();
     }
+}
+
+bool sendHandshake()
+{
+    char handshake_message[120];
+    snprintf(handshake_message, sizeof(handshake_message), "{\"farm_id\": \"%s\", \"LoRa_address\": %u}", FARM_ID, LORA_ADDRESS);
+    bool success;
+    success = sendPackets(handshake_message);
+    Serial.println("Handshake packet attempted.");
+    return success;
 }

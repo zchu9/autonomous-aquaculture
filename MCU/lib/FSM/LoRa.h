@@ -84,4 +84,12 @@ bool allPacketsReceived();
  */
 void reconstructMessage(JsonDocument &doc);
 
+/**
+ * @brief performs a handshake with the server to communicate ID and maintain proof of connection
+ *
+ * @return true if successful
+ * @return false if not successful
+ */
+bool sendHandshake();
+
 #endif // LORA_H
