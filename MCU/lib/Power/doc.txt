@@ -77,9 +77,6 @@ VICTRON
 //  label   |   unit    |   description
 // ------------------------------------------------------------------
 //  V       |   mV      |   Main or channel 1 (battery) voltage
-//  VS      |   mV      |   Auxiliary (starter) voltage
-//  VM      |   mV      |   Mid-point voltage of the battery bank
-//  DM      |   %       |   Mid-point deviation of the battery bank
 //  I       |   mA      |   Main or channel 1 battery current
 //  T       |   C       |   Battery temperature
 //  P       |   W       |   Instantaneous power
@@ -87,7 +84,6 @@ VICTRON
 //  SOC     |   %       |   State-of-charge
 //  TTG     |   Minutes |   Time-to-go
 //  Alarm   |           |   Alarm condition active
-//  Relay   |           |   Relay state
 //  AR      |           |   Alarm reason
 //  H1      |   mAh     |   Depth of the deepest discharge
 //  H2      |   mAh     |   Depth of the last discharge
@@ -109,3 +105,37 @@ VICTRON
 //  FW      |           |   Firmware version (16 bit)
 //  PID     |           |   Product ID
 //  MON     |           |   DC monitor mode (v4.08+)
+
+SAMPLE (2 messages, 1 block of data)
+================
+PID	0xA389
+V	-66
+I	-397
+P	0
+CE	---
+SOC	---
+TTG	---
+Alarm	OFF
+AR	0
+BMV	SmartShunt 500A/50mV
+FW	0413
+MON	0
+Checksum	õ
+
+H1	0
+H2	0
+H3	0
+H4	0
+H5	0
+H6	-617
+H7	-432
+H8	1
+H9	0
+H10	0
+H11	0
+H12	0
+H15	0
+H16	0
+H17	0
+H18	0
+Checksum	Z

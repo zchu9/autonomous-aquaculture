@@ -1,5 +1,5 @@
 #include "FSM.h"
-// #include "uartSwitch.h"
+#include "uartSwitch.h"
 
 #define DEBUG_LIFT 1
 
