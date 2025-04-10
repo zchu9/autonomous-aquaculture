@@ -109,6 +109,16 @@ uint8_t* captureImage() {
     return capturedImage;
 }
 
+void getPartialImage(char* buffer, size_t bufferSize) {
+    myCAM.CS_LOW();
+    myCAM.set_fifo_burst();
+    for (size_t i = 0; i < bufferSize; i++)
+    {
+        buffer[i] = SPI.transfer(0x00);
+    }
+    myCAM.CS_HIGH();
+}
+
 size_t getCapturedImageSize() {
     return capturedImageSize;
 }

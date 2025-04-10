@@ -180,7 +180,7 @@ bool sendImage(data &d)
     d.img = nullptr;       // Set to nullptr to avoid dangling pointer
 
     imdoc["image"] = encodedImage;  // TODO: Verify this copies the whole char array and not just a pointer!
-    delete[] encodedImage; // Free the Base64 encoded image
+    delete[] encodedImage;          // Free the Base64 encoded image
 
     size_t imdocLen = measureJson(imdoc);
     char *imBuffer = new char[imdocLen + 1]; // +1 for null terminator
@@ -190,7 +190,6 @@ bool sendImage(data &d)
     bool success = d.lora->sendPackets(imBuffer);
 
     delete[] imBuffer;     // Free the allocated memory
-
 
     return success;
 }
@@ -259,6 +258,31 @@ void getImg(data &d)
     // Serial.print("Captured image size: ");
     // Serial.print(imgSize);
     // Serial.println(" bytes");
+}
+
+void getImgSeg() {
+    const int chunksize = 250;
+    char buffer[chunksize] = { '\0'};
+
+    // empty fifo buffer
+    myCAM.flush_fifo();
+    myCAM.clear_fifo_flag();
+
+    uint32_t imgSize = myCAM.read_fifo_length();
+
+    int chunk = chunksize;
+    
+    // send chunk -> update size -> repeat until empty
+    while (imgSize > 0) {
+        memset(buffer, '\0', chunksize);
+        if(imgSize < chunksize) {
+            chunk = imgSize;
+        }
+        getPartialImage(buffer, chunk);
+        // at this point, buffer contains a bit of the image
+        imgSize -= chunk;
+    }
+    myCAM.clear_fifo_flag();
 }
 
 /**

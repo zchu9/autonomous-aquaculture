@@ -16,5 +16,6 @@ void initCamera();
 uint8_t *captureImage();
 bool sendCapturedImage();
 size_t getCapturedImageSize();
+void getPartialImage(char* buffer, size_t bufferSize);
 
 #endif
