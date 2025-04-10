@@ -5,7 +5,6 @@
 #include <ArduinoJson.h>
 #include "pins.h"
 #include <Base64.h>
-#include <Wire.h>
 #include "interrupts.h"
 #include "LoRa.h"
 #include "ArduinoJson.h"
@@ -67,6 +66,7 @@ void initializeNormalFSM(data &d);
 void initializeLPM(data &d);
 void initializeNCM(data &d);
 void initializeLPMandNCM(data &d);
+
 // interrupt initialization functions
 void initializeCheckPower();
 void initializeReconnection();
@@ -111,8 +111,6 @@ int runCommands(data &d);
 JsonDocument jsonify(data &d);
 
 bool sendImage(data &d);
-
-// Logan functions
 
 // Sensor Controls
 void getImg(data &d);

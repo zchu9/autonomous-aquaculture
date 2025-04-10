@@ -1,17 +1,18 @@
 #include "camera_handler.h"
 #include <ArduCAM.h>
 #include <SPI.h>
+#include <Wire.h>
 #include <pins.h>
 
 // Camera instance
 ArduCAM myCAM(CAM_TYPE, CS_PIN);
 
 // Global buffer for captured image
-
 size_t capturedImageSize = 0;
 
-void initCamera()
-{
+void initCamera() {
+
+    Wire.begin();
     Serial.println("[Camera] Initializing SPI...");
     pinMode(CS_PIN, OUTPUT);
     digitalWrite(CS_PIN, HIGH);
@@ -48,14 +49,14 @@ void initCamera()
     // myCAM.OV2640_set_JPEG_size(OV2640_1280x1024);
     myCAM.OV2640_set_JPEG_size(OV2640_1600x1200);
 
-    delay(500);
+    delay(500); // ?
 
     Serial.println("Camera initialization complete.");
 }
 
-uint8_t *captureImage()
-{
-    uint8_t *capturedImage = nullptr;
+uint8_t* captureImage() {
+
+    uint8_t* capturedImage = nullptr;
     Serial.println("[Camera] Flushing FIFO...");
     myCAM.flush_fifo();
     myCAM.clear_fifo_flag();
@@ -63,7 +64,8 @@ uint8_t *captureImage()
     Serial.println("[Camera] Starting image capture...");
     myCAM.start_capture();
 
-    unsigned long startTime = millis();
+    unsigned long startTime = millis(); // millis may not work in this function
+
     while (!myCAM.get_bit(ARDUCHIP_TRIG, CAP_DONE_MASK))
     {
         if (millis() - startTime > 5000)
@@ -76,24 +78,17 @@ uint8_t *captureImage()
     Serial.println("Capture complete.");
 
     size_t imageSize = myCAM.read_fifo_length();
-    Serial.print("[Camera] Image size: ");
-    Serial.print(imageSize / 1024.0, 2);
-    Serial.println(" KB");
+    // Serial.print("[Camera] Image size: ");
+    // Serial.print(imageSize / 1024.0, 2);
+    // Serial.println(" KB");
 
-    if (imageSize == 0 || imageSize > 30000)
+    if (imageSize == 0 || imageSize > 30000)    // this is too much room for the image
     {
         Serial.println(" Invalid image size.");
         return nullptr;
     }
 
-    // Free previous buffer if needed
-    if (capturedImage != nullptr)
-    {
-        free(capturedImage);
-        capturedImage = nullptr;
-    }
-
-    capturedImage = (uint8_t *)malloc(imageSize);
+    capturedImage = static_cast<uint8_t*>(malloc(imageSize));
     if (!capturedImage)
     {
         Serial.println(" Memory allocation failed.");
@@ -107,19 +102,18 @@ uint8_t *captureImage()
         capturedImage[i] = SPI.transfer(0x00);
     }
     myCAM.CS_HIGH();
+    myCAM.clear_fifo_flag();
 
-    capturedImageSize = imageSize;
+    capturedImageSize = imageSize;  // global var
 
     return capturedImage;
 }
 
-size_t getCapturedImageSize()
-{
+size_t getCapturedImageSize() {
     return capturedImageSize;
 }
 
-bool sendCapturedImage(uint8_t *capturedImage)
-{
+bool sendCapturedImage(uint8_t* capturedImage) {
     if (capturedImage == nullptr || capturedImageSize == 0)
     {
         Serial.println("No captured image to send.");

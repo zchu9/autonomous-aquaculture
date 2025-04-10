@@ -44,8 +44,6 @@ void initializeStartup(data &d)
 
     initCamera();
 
-    // d.height = getHeight();
-    // d.whatever = "Nice data Zachary"; it is nice thank you everyone always says how nice it is, i didn't say that but everyone is saying its very very nice data, not like that nasty data some other poeple are bringing in here with its crime and all that
     // initializes the check power interrupt the comms handler, and the emergency lift lowering timer interrupt
     // initializeLPMandNCM(d);
 }
@@ -82,13 +80,13 @@ void checkPowerHandler(data &d)
 #endif
         setPowerFlag(false);
         // checkPower(d);
-        //  d.power_placeholder = 100; // checkPower();
-        //  powerStateChange(d);
     }
 }
+
 //////////////////////////////////////////
 //          Comms stuff
 //////////////////////////////////////////
+
 void commsHandler(data &d)
 {
     if (getCommsFlag() == 1)
@@ -162,29 +160,36 @@ bool sendData(data &d)
 
 bool sendImage(data &d)
 {
-
     if (d.img == nullptr)
     {
         Serial.println("No image to send.");
         return false;
     }
+
     size_t imsize = getCapturedImageSize();
     size_t encodedLength = Base64.encodedLength(imsize);
+    JsonDocument imdoc;
+
+    // 8 * 1.3 = 10.4
+    // 10.4 * 2 = 20.8!
     char *encodedImage = new char[encodedLength + 1]; // +1 for null terminator
     Base64.encode(encodedImage, (char *)d.img, imsize);
-    d.doc["image"] = encodedImage;
-    // only serialize the image part of the json
 
-    JsonDocument imdoc;
+    d.doc["image"] = encodedImage; // only serialize the image part of the json
     imdoc["image"] = encodedImage;
+
     size_t imdocLen = measureJson(imdoc);
     char *imBuffer = new char[imdocLen + 1]; // +1 for null terminator
     serializeJson(imdoc, imBuffer, imdocLen + 1);
+
     bool success = d.lora->sendPackets(imBuffer);
+
     delete[] imBuffer;     // Free the allocated memory
     delete[] encodedImage; // Free the Base64 encoded image
+
     free(d.img);           // Free the original image buffer
     d.img = nullptr;       // Set to nullptr to avoid dangling pointer
+
     return success;
 }
 
@@ -198,7 +203,8 @@ void getIntoLowPowerMode(data &d)
     {
         d.state = LOW_POWER_NO_CONNECTION;
     }
-};
+}
+
 void getOutOfLowPowerMode(data &d)
 {
     if (d.state == LOW_POWER_NO_CONNECTION)
@@ -240,16 +246,17 @@ void getImg(data &d)
     }
 
     d.img = captureImage(); // Capture new image
+
     if (d.img == nullptr)
     {
         Serial.println("Failed to capture image.");
         return;
     }
 
-    size_t imgSize = getCapturedImageSize();
-    Serial.print("Captured image size: ");
-    Serial.print(imgSize);
-    Serial.println(" bytes");
+    // size_t imgSize = getCapturedImageSize();
+    // Serial.print("Captured image size: ");
+    // Serial.print(imgSize);
+    // Serial.println(" bytes");
 }
 
 /////////////////////////////////////////
