@@ -170,25 +170,27 @@ bool sendImage(data &d)
     size_t encodedLength = Base64.encodedLength(imsize);
     JsonDocument imdoc;
 
-    // 8 * 1.3 = 10.4
+    // 8kb * 1.3 = 10.4
     // 10.4 * 2 = 20.8!
     char *encodedImage = new char[encodedLength + 1]; // +1 for null terminator
     Base64.encode(encodedImage, (char *)d.img, imsize);
 
-    d.doc["image"] = encodedImage; // only serialize the image part of the json
-    imdoc["image"] = encodedImage;
+    // d.img can be freed immediately here.
+    free(d.img);           // Free the original image buffer
+    d.img = nullptr;       // Set to nullptr to avoid dangling pointer
+
+    imdoc["image"] = encodedImage;  // TODO: Verify this copies the whole char array and not just a pointer!
+    delete[] encodedImage; // Free the Base64 encoded image
 
     size_t imdocLen = measureJson(imdoc);
     char *imBuffer = new char[imdocLen + 1]; // +1 for null terminator
     serializeJson(imdoc, imBuffer, imdocLen + 1);
 
+    // TODO: Verify the UART line is selected!!
     bool success = d.lora->sendPackets(imBuffer);
 
     delete[] imBuffer;     // Free the allocated memory
-    delete[] encodedImage; // Free the Base64 encoded image
 
-    free(d.img);           // Free the original image buffer
-    d.img = nullptr;       // Set to nullptr to avoid dangling pointer
 
     return success;
 }
@@ -259,7 +261,6 @@ void getImg(data &d)
     // Serial.println(" bytes");
 }
 
-/////////////////////////////////////////
 /**
  * @brief initialize serial communication
  */
@@ -340,15 +341,6 @@ void winchControl(data &d)
     uint8_t index = -1;
     uint8_t numOfWinches = 4;
     pin_size_t liftPin = WINCH_ACTIVATE; // pin 7 in pins.h
-
-#if DEBUG_LIFT
-    static bool lift = 1;
-    if (lift)
-    {
-        liftPin++; // use pin 8 to lower;
-    }
-    lift = !lift; // invert it for the next op.
-#endif
 
     for (uint8_t i = 0; i < numOfWinches; i++)
     {

@@ -55,7 +55,6 @@ void initCamera() {
 }
 
 uint8_t* captureImage() {
-
     uint8_t* capturedImage = nullptr;
     Serial.println("[Camera] Flushing FIFO...");
     myCAM.flush_fifo();
@@ -82,13 +81,14 @@ uint8_t* captureImage() {
     // Serial.print(imageSize / 1024.0, 2);
     // Serial.println(" KB");
 
-    if (imageSize == 0 || imageSize > 30000)    // this is too much room for the image
+    if (imageSize == 0 || imageSize > 16000)
     {
         Serial.println(" Invalid image size.");
         return nullptr;
     }
 
-    capturedImage = static_cast<uint8_t*>(malloc(imageSize));
+    capturedImage = static_cast<uint8_t*>(malloc(imageSize));   // freed in SendImage() in FSM.cpp
+
     if (!capturedImage)
     {
         Serial.println(" Memory allocation failed.");
