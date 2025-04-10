@@ -271,7 +271,7 @@ void getImgSeg() {
     uint32_t imgSize = myCAM.read_fifo_length();
 
     int chunk = chunksize;
-    
+
     // send chunk -> update size -> repeat until empty
     while (imgSize > 0) {
         memset(buffer, '\0', chunksize);
@@ -305,98 +305,7 @@ double checkPower(data &d)
 {
     // double ret = messageTest(d);
     return 0;
-}
-
-bool liftWinch(int liftPin, int heightPin, float desiredHeight)
-{
-    int numIterations = 0;
-    int beginningHeight = getHeight();
-    digitalWrite(liftPin, HIGH);
-    while (getHeight() < desiredHeight)
-    {
-        Serial.println(getHeight());
-        numIterations = 1; // stop the stuck checking for testing
-        if (numIterations % 25 == 0)
-        {
-            if (beginningHeight - getHeight() < 0.1)
-            {
-                // we are stuck
-                digitalWrite(liftPin, LOW);
-                return false;
-            }
-            beginningHeight = getHeight();
-        }
-    }
-    digitalWrite(liftPin, LOW);
-    return true;
-}
-
-bool lowerWinch(int lowerPin, int heightPin, float desiredHeight)
-{
-    int numIterations = 0;
-    int beginningHeight = getHeight();
-    digitalWrite(lowerPin, HIGH);
-    while (getHeight() > desiredHeight)
-    {
-        numIterations++;
-        if (numIterations % 25 == 0)
-        {
-            if (beginningHeight - getHeight() < 0.1)
-            {
-                // we are stuck
-                digitalWrite(lowerPin, LOW);
-                return false;
-            }
-            beginningHeight = getHeight();
-        }
-    }
-    digitalWrite(lowerPin, LOW);
-    return true;
-}
-
-void winchControl(data &d)
-{
-    // debug winch control function - no height sensor, so it will lift/lower for 5 sec.
-
-    // This timer does not increment until loop() is completed in main
-    // timing for all functions will need to be worked out.
-    // ulong time = millis();
-    // ulong timeout = 5000;
-    uint8_t index = -1;
-    uint8_t numOfWinches = 4;
-    pin_size_t liftPin = WINCH_ACTIVATE; // pin 7 in pins.h
-
-    for (uint8_t i = 0; i < numOfWinches; i++)
-    {
-        if (d.liftFlag[i])
-        {
-            index = i;
-            break;
-        }
-    }
-
-    if (index == -1)
-    {
-        return; // oops
-    }
-
-    // check up/down from analogRead()
-    // if high
-    // index+numberofwinches
-
-    // select winch
-    digitalWrite(MUX_DISABLE_2, HIGH);
-    digitalWrite(MUX_SEL_0, (index & 0x001));
-    digitalWrite(MUX_SEL_1, (index & 0x010));
-    digitalWrite(MUX_SEL_2, (index & 0x100));
-    digitalWrite(MUX_DISABLE_2, LOW);
-
-    digitalWrite(liftPin, HIGH);
-    delay(3000);
-    digitalWrite(liftPin, LOW);             // turn off
-    d.liftFlag[index] = !d.liftFlag[index]; // clear flag
 };
-
 /*
       `'::::.
         _____A_

@@ -22,6 +22,7 @@ int getRawPotValue()
     return analogRead(POT_PIN);
 }
 
+// returns height in feet
 float getHeight()
 {
     float currentValue = getRawPotValue();
