@@ -1,154 +1,156 @@
+// camera_handler.cpp
 #include "camera_handler.h"
 
-// Camera instance
-ArduCAM myCAM(CAM_TYPE, CS_PIN);
-
-// Global buffer for captured image
-uint8_t *capturedImage = nullptr;
-size_t capturedImageSize = 0;
-
-void initCamera()
-{
-    Serial.println("[Camera] Initializing SPI...");
-    pinMode(CS_PIN, OUTPUT);
-    digitalWrite(CS_PIN, HIGH);
-    SPI.begin();
-
-    delay(100);
-
-    Serial.println("[Camera] Resetting sensor...");
-    myCAM.write_reg(0x07, 0x80); // Software reset
-    delay(100);
-    myCAM.write_reg(0x07, 0x00);
-    delay(100);
-
-    uint8_t sensorID = myCAM.read_reg(0x0A);
-    Serial.print("[Camera] Sensor ID: 0x");
-    Serial.println(sensorID, HEX);
-    if (sensorID == 0 || sensorID == 0xFF)
-    {
-        Serial.println("Camera not responding. Check wiring and power.");
-        return;
-    }
-
-    Serial.println("[Camera] Setting JPEG format...");
-    myCAM.set_format(JPEG);
-    myCAM.InitCAM();
-    delay(100);
-    // myCAM.OV2640_set_JPEG_size(OV2640_160x120);
-    // myCAM.OV2640_set_JPEG_size(OV2640_176x144);
-    // myCAM.OV2640_set_JPEG_size(OV2640_320x240);
-    // myCAM.OV2640_set_JPEG_size(OV2640_352x288);
-    myCAM.OV2640_set_JPEG_size(OV2640_640x480); // Probably will be our MAX considering RAM
-    // myCAM.OV2640_set_JPEG_size(OV2640_800x600);
-    // myCAM.OV2640_set_JPEG_size(OV2640_1024x768);
-    // myCAM.OV2640_set_JPEG_size(OV2640_1280x1024);
-    // myCAM.OV2640_set_JPEG_size(OV2640_1600x1200);  // Adjust resolution as needed
-
-    delay(500);
-    Serial.println("Camera initialization complete.");
+CameraHandler::CameraHandler(uint8_t csPin) : _csPin(csPin) {
+    myCAM = new ArduCAM(OV2640, _csPin);
 }
 
-bool captureImage()
-{
-    Serial.println("[Camera] Flushing FIFO...");
-    myCAM.flush_fifo();
-    myCAM.clear_fifo_flag();
+void CameraHandler::init() {
+    pinMode(_csPin, OUTPUT);
+    digitalWrite(_csPin, HIGH);
+    SPI.begin();
 
-    Serial.println("[Camera] Starting image capture...");
-    myCAM.start_capture();
+    // Reset ArduCAM with extended delay for better stability
+    myCAM->write_reg(0x07, 0x80);
+    delay(200);  // Extended reset delay
+    myCAM->write_reg(0x07, 0x00);
+    delay(200);  // Extended delay after reset
 
+    // Test SPI communication with improved error handling
+    uint8_t temp = 0;
     unsigned long startTime = millis();
-    while (!myCAM.get_bit(ARDUCHIP_TRIG, CAP_DONE_MASK))
-    {
-        if (millis() - startTime > 5000)
-        {
-            Serial.println("Timeout waiting for image capture.");
+    Serial.println("Testing SPI connection...");
+    
+    while (temp != 0x55) {
+        myCAM->write_reg(ARDUCHIP_TEST1, 0x55);
+        temp = myCAM->read_reg(ARDUCHIP_TEST1);
+        
+        if (temp != 0x55) {
+            Serial.println("SPI connection failed. Retrying...");
+            delay(100);
+        }
+        
+        // Timeout after 3 seconds of trying
+        if (millis() - startTime > 3000) {
+            Serial.println("ERROR: Camera not responding. Check connections.");
+            break;
+        }
+    }
+    
+    if (temp == 0x55) {
+        Serial.println("SPI connection verified!");
+    }
+
+    // Clear FIFO and set JPEG mode
+    myCAM->flush_fifo();
+    myCAM->clear_fifo_flag();
+    myCAM->set_format(JPEG);
+    myCAM->write_reg(ARDUCHIP_MODE, 0x00);
+    delay(100);
+
+    // Initialize OV2640 with proper sequence
+    Serial.println("Initializing camera sensor...");
+    
+    // Software reset
+    myCAM->wrSensorReg8_8(0xff, 0x01);
+    myCAM->wrSensorReg8_8(0x12, 0x80);
+    delay(300);  // Extended delay after reset
+    
+    // Load basic settings
+    myCAM->wrSensorRegs8_8(OV2640_JPEG_INIT);
+    
+    // Important: set resolution BEFORE setting up JPEG format
+    Serial.println("Setting resolution to 640x480...");
+    myCAM->wrSensorRegs8_8(OV2640_640x480_JPEG);
+    // Alternative resolutions:
+    // myCAM->wrSensorRegs8_8(OV2640_800x600_JPEG);
+    // myCAM->wrSensorRegs8_8(OV2640_1024x768_JPEG);
+    // myCAM->wrSensorRegs8_8(OV2640_1600x1200_JPEG);
+    delay(1000);
+    
+    // Now set format sequence
+    myCAM->wrSensorRegs8_8(OV2640_YUV422);
+    myCAM->wrSensorRegs8_8(OV2640_JPEG);
+    
+    // Additional critical settings for proper JPEG operation
+    myCAM->wrSensorReg8_8(0xff, 0x01);
+    myCAM->wrSensorReg8_8(0x15, 0x00);
+    
+    // Force JPEG mode enabled
+    myCAM->wrSensorReg8_8(0xff, 0x00);
+    myCAM->wrSensorReg8_8(0xda, 0x10);
+    myCAM->wrSensorReg8_8(0xd7, 0x03);
+    myCAM->wrSensorReg8_8(0xe0, 0x00);
+    
+    // Apply quality settings (optional - medium quality default)
+    myCAM->wrSensorReg8_8(0xff, 0x00);
+    myCAM->wrSensorReg8_8(0x44, 0x00);  // Set appropriate clock divider
+    
+    // Verify settings took effect
+    delay(500);
+    Serial.println("Camera initialized successfully at 640x480");
+    
+    // Clear FIFO again to ensure clean start
+    myCAM->flush_fifo();
+    myCAM->clear_fifo_flag();
+}
+
+bool CameraHandler::captureImage() {
+    myCAM->flush_fifo();
+    myCAM->clear_fifo_flag();
+    myCAM->start_capture();
+
+    unsigned long start = millis();
+    while (!myCAM->get_bit(ARDUCHIP_TRIG, CAP_DONE_MASK)) {
+        if (millis() - start > 5000) {
+            Serial.println("Capture timeout.");
             return false;
         }
     }
-
-    Serial.println("Capture complete.");
-
-    size_t imageSize = myCAM.read_fifo_length();
-    Serial.print("[Camera] Image size: ");
-    Serial.print(imageSize / 1024.0, 2);
-    Serial.println(" KB");
-
-    if (imageSize == 0 || imageSize > 33000)
-    { // MAX IMAGE SIZE 33kb rn
-        Serial.println("Invalid image size.");
-        return false;
-    }
-
-    // Free previous buffer if needed
-    if (capturedImage != nullptr)
-    {
-        free(capturedImage);
-        capturedImage = nullptr;
-    }
-
-    capturedImage = (uint8_t *)malloc(imageSize);
-    if (!capturedImage)
-    {
-        Serial.println("Memory allocation failed.");
-        return false;
-    }
-
-    myCAM.CS_LOW();
-    myCAM.set_fifo_burst();
-    for (size_t i = 0; i < imageSize; i++)
-    {
-        capturedImage[i] = SPI.transfer(0x00);
-    }
-    myCAM.CS_HIGH();
-
-    capturedImageSize = imageSize;
-    Serial.println("Image captured and stored in memory.");
     return true;
 }
 
-uint8_t *getImageBuffer()
-{
-    return capturedImage; // Returns pointer to the image buffer
+bool CameraHandler::isImageReady() {
+    return myCAM->get_bit(ARDUCHIP_TRIG, CAP_DONE_MASK);
 }
 
-size_t getImageSize()
-{
-    return capturedImageSize; // Returns size of the image in bytes
+uint8_t CameraHandler::readFIFO() {
+    return myCAM->read_fifo();
 }
-/*
-CAN BE REMOVED, used to test camera.
-When this is ran and "Capture" is sent in terminal it will stream the image over
-serial where you need to run the python file
 
-if (captureImage()) {
-    Serial.println("Image captured successfully.");
-    sendImageOverSerial();  // Send the image to your computer over Serial
-} else {
-    Serial.println("Failed to capture image.");
+uint32_t CameraHandler::getImageLength() {
+    return myCAM->read_fifo_length();
 }
-*/
-void sendImageOverSerial()
-{
-    uint8_t *imgBuffer = getImageBuffer();
-    size_t imgSize = getImageSize();
 
-    if (imgBuffer == nullptr || imgSize == 0)
-    {
-        Serial.println("No captured image to send.");
+void CameraHandler::streamImage(HardwareSerial &serial) {
+    uint32_t length = myCAM->read_fifo_length();
+
+    if (length >= 0x7FFFFF || length == 0) {
+        serial.println("ERROR: Bad length");
         return;
     }
 
-    Serial.println("IMG_START"); // Send Start Marker
+    Serial.print("Image length: ");
+    Serial.println(length);  //  Helpful debug info
 
-    for (size_t i = 0; i < imgSize; i++)
-    {
-        Serial.write(imgBuffer[i]);
+    myCAM->CS_LOW();
+    myCAM->set_fifo_burst();
+
+    serial.println("IMG_START");
+    serial.flush();
+    delay(100);
+
+    for (uint32_t i = 0; i < length; i++) {
+        uint8_t val = SPI.transfer(0x00);
+        serial.write(val);
+        if (i % 64 == 0) delay(1); // Throttle
     }
 
-    Serial.println("IMG_END"); // Send End Marker
+    serial.println("IMG_END");
+    serial.flush();
+    delay(20);
 
-    Serial.println("Image sent successfully over Serial.");
+    myCAM->CS_HIGH();
+    myCAM->flush_fifo();
+    myCAM->clear_fifo_flag();
 }
-//
