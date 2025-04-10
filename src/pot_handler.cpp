@@ -27,20 +27,17 @@
  }
  
  void setZeroHeight() {
-     zeroPosition = analogRead(POT_PIN);
- 
-     // Give wiggle room and prevent mechanical limit damage
-     int wiggle = 20;
-     minRawValue = zeroPosition - ((zeroPosition - 0) > wiggle ? wiggle : 0);
-     maxRawValue = zeroPosition + ((1023 - zeroPosition) > wiggle ? wiggle : 0);
+    zeroPosition = analogRead(POT_PIN);
+    minRawValue = 0;
+    maxRawValue = 1023;
  }
+
  
- void setMaxHeight(float feet) {
+ void setMaxHeight(float feet) { //call setMaxHeightFeet(6.0);  // or whatever our range is from min to max
      maxHeightFt = feet;
  }
  
- void setMinHeight(float feet) {
-     // This function doesn't directly affect behavior since we're using maxHeightFt.
-     // Reserved in case we switch to min/max ft-based clamping in future.
+ void setMinHeight() {
+    minRawValue = analogRead(POT_PIN);
  }
  

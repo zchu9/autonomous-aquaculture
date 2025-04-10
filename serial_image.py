@@ -1,28 +1,26 @@
 import serial
 
 # --- Config ---
-PORT = 'COM14'
+PORT = 'COM13'  # Change this to your Arduino's port
 BAUD = 115200
 START_MARKER = b'IMG_START'
 END_MARKER = b'IMG_END'
 OUTPUT_FILE = 'captured_image.jpg'
 
 # Open serial connection
-ser = serial.Serial(PORT, BAUD, timeout=5)
+ser = serial.Serial(PORT, BAUD, timeout=10)
 ser.flush()
-
-# Send 'Capture' command
-ser.write(b'Capture\n')
-print("[Python] Sent 'Capture' command, waiting for response...")
 
 buffer = b''
 in_image = False
 
+print("[Python] Waiting for image...")
+
 while True:
-    chunk = ser.read(512)
+    chunk = ser.read(256)  # Read smaller chunks to avoid missing data
 
     if not chunk:
-        print("[Python] Timeout or no data.")
+        print("[Python] Timeout or no data received.")
         break
 
     buffer += chunk
@@ -34,6 +32,7 @@ while True:
             buffer = buffer[start_index + len(START_MARKER):]
             in_image = True
         else:
+            # Keep the last few bytes in case the start marker is split
             buffer = buffer[-len(START_MARKER):]
 
     if in_image:
