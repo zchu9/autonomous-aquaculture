@@ -1,4 +1,6 @@
 from controllers import logging, jsonify, request, Farm, convert_to_eastern_time
+from flask import send_file
+from gen_cfg import generate_config_file
 
 def add_farm():
     farm_data = request.json
@@ -8,6 +10,15 @@ def add_farm():
 
     if "farm_name" not in farm_data:
         return "Eroor, farm name is required", 400
+
+    if 'lora_passwd' not in farm_data:
+        return jsonify({"error": "LoRA password is required"}), 400
+    
+    if 'comm_type' not in farm_data:
+        return jsonify({"error": "Communication type is required"}), 400
+
+    passwrd = farm_data["lora_passwd"]
+    comm_type = farm_data["comm_type"]
 
     try:
         new_farm = Farm(
@@ -26,7 +37,8 @@ def add_farm():
             farm_response["created_at"] = eastern_time.strftime("%Y-%m-%d %H:%M:%S EST")
         logging.info(f"farm response is {farm_response}")
 
-        return jsonify(farm_response), 201
+        generate_config_file(new_farm.id, 2, passwrd, comm_type)
+        return send_file('config.h', as_attachment=True, download_name="config.h", mimetype='text/x-c')
     
     except Exception as e:
         logging.error("Failed to add farm: %s", e)

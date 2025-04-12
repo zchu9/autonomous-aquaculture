@@ -20,6 +20,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from mongoengine import connect
 from routes import main_blueprint
+import os
 
 connect(db='oyster_db', host='mongo', port=27017, alias='default')
 logging.basicConfig(level=logging.DEBUG)
@@ -61,7 +62,7 @@ def handle_connect(client, userdata, flags, rc):
 
 @mqtt.on_message()
 def handle_mqtt_message(client, userdata, message):
-    print(f"Received message from MQTT broker on {MQTT_HOST_NAME}:{MQTT_PORT_NUM}")
+    logging.info(f"Received message from MQTT broker on {MQTT_HOST_NAME}:{MQTT_PORT_NUM}")
 
     try:
         topic = message.topic
