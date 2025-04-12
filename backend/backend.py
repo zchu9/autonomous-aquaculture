@@ -42,14 +42,14 @@ def handle_connect(client, userdata, flags, rc):
     mqtt.subscribe('test/topic/1')
     mqtt.subscribe('farm')
     mqtt.subscribe('farm/+/status')
-    mqtt.subscribe('farm/+/getActiveSensorData')
+    mqtt.subscribe('farm/+/data')
     mqtt.subscribe('farm/+/getActiveSystemLevels')
 
 
 # Recieves MQTT messages and stores them in the database
 @mqtt.on_message()
 def handle_mqtt_message(client, userdata, message):
-    print(f"Received message from MQTT broker on {MQTT_HOST_NAME}:{MQTT_PORT_NUM}")
+    logging.info(f"Received message from MQTT broker on {MQTT_HOST_NAME}:{MQTT_PORT_NUM}")
 
     try:
         topic = message.topic
@@ -76,30 +76,15 @@ def handle_mqtt_message(client, userdata, message):
                     {"$set": {"status": True}}
                 )
 
-        elif "getActiveSensorData" in topic:
+        elif "data" in topic:
+            logging.info("Writing new sensor data")
             farm_id = topic.split("/")[1]
-            existing_data = sensor_active_data_collection.find_one({"farm_id": farm_id})
-
-            if existing_data:
-                archive_data = {
-                    "farm_id": existing_data["farm_id"],
-                    "temperature": existing_data["temperature"],
-                    "height": existing_data["height"],
-                    "camera": existing_data["camera"],
-                    "archived_at": get_eastern_time()
-                }
-                sensor_archive_data_collection.insert_one(archive_data)
-                sensor_active_data_collection.delete_one({"_id": existing_data["_id"]})
-
+            logging.info(f"fam id {farm_id}")
+            logging.info(data)
             data["created_at"] = get_eastern_time()
-            sensor_active_data_collection.insert_one(data)
+            existing_data = sensor_active_data_collection.update_one({"farm_id": ObjectId(farm_id)}, {"$set": data})
 
-            farm_collection.update_one(
-                    {"_id": ObjectId(farm_id)},
-                    {"$set": {"status": True}}
-                )
-
-            print("Sensor data updated succesfully")
+            logging.info("Sensor data updated succesfully")
 
         elif "getActiveSystemLevels" in topic:
             farm_id = topic.split("/")[1]
@@ -151,10 +136,18 @@ def add_farm():
     
     if 'lora_passwd' not in farm_data:
         return jsonify({"error": "LoRA password is required"}), 400
+    
+    if 'comm_type' not in farm_data:
+        return jsonify({"error": "Communication type is required"}), 400
+
+    passwrd = farm_data["lora_passwd"]
+    comm_type = farm_data["comm_type"]
 
     farm_data["cage_position"] = True
     farm_data["status"] = False
     farm_data["created_at"] = get_eastern_time()
+    farm_data.pop('lora_passwd')
+    farm_data.pop('comm_type')
 
     try:
         result = farm_collection.insert_one(farm_data)
@@ -168,10 +161,9 @@ def add_farm():
             logging.error("Failed to create sensor and system level objects: %s", e)
             return "Error creating sensor and system level objects", 500
         
-        # count = farm_collection.count()
-        # logging.info(count)
+        n = farm_collection.count_documents({"_id": { "$lte" : new_farm_id}})
 
-        generate_config_file(new_farm_id, 2, farm_data["lora_passwd"])
+        generate_config_file(new_farm_id, n + 1, passwrd, comm_type)
         return send_file('config.h', as_attachment=True, download_name="config.h", mimetype='text/x-c')
     except Exception as e:
         logging.error("Failed to add farm: %s", e)
@@ -274,6 +266,8 @@ def get_active_sensor_data(id):
     try:
         farm_id = ObjectId(id)
         active_data = sensor_active_data_collection.find_one({"farm_id": farm_id})
+
+        logging.info(active_data)
 
         if active_data and str(active_data["farm_id"]) == id:
             # Converts ObjectId's to string for the return statement
