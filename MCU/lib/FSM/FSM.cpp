@@ -110,7 +110,7 @@ int runCommands(data &d)
     if (d.doc["command"] == 1)
     {
         d.liftFlag[0] = 1;
-        winchControl(d);
+        // winchControl(d);
         Serial.println("Lift command received");
     }
     // clear the json doc
