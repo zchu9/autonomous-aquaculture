@@ -1,27 +1,15 @@
-from mongoengine import (
-    Document, EmbeddedDocument, EmbeddedDocumentField,
-    ObjectIdField, FloatField, DateTimeField, ListField
-)
-from clock import get_eastern_time
+from mongoengine import Document, ObjectIdField, FloatField, DateTimeField
+
+from clock import get_utc_timestamp
 
 
-# Embedded document for battery voltage readings
-class VoltageReading(EmbeddedDocument):
-    timestamp = DateTimeField(default=get_eastern_time)
-    voltage = FloatField()
-
-
-class SystemActiveLevels(Document):
+class SystemLevels(Document):
     farm_id = ObjectIdField(required=True)
-    battery_voltage = ListField(EmbeddedDocumentField(VoltageReading))
-    created_at = DateTimeField(default=get_eastern_time)
+    solar_panel_power = FloatField()
+    battery_voltage = FloatField()
+    battery_temp = FloatField()
+    battery_time = DateTimeField()
+    created_at = DateTimeField(required=True, default=get_utc_timestamp)
 
     meta = {'db_alias': 'default'}
 
-
-class SystemArchiveLevels(Document):
-    farm_id = ObjectIdField(required=True)
-    battery_voltage = ListField(EmbeddedDocumentField(VoltageReading))
-    archived_at = DateTimeField(default=get_eastern_time)
-
-    meta = {'db_alias': 'default'}

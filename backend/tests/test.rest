@@ -1,0 +1,244 @@
+### Farm CRUD Tests
+POST http://localhost:3000/addFarm
+Content-Type: application/json
+
+{
+    "location": "BITVH",
+    "farm_name": "BOIII"
+}
+
+###
+
+PUT http://localhost:3000/farm/67f966b2b9c6c0d234547e30/update
+Content-Type: application/json
+
+{
+    "status": true,
+    "farm_name": "I FUCKING DID IT",
+    "cage_position": false 
+}
+
+###
+
+GET http://localhost:3000/farm/67f966b2b9c6c0d234547e30/info
+Content-Type: application/json
+
+{
+
+}
+
+###
+
+GET http://localhost:3000/farm/67f95e768844df15f0121f71/check_status
+Content-Type: application/json
+
+{
+    
+
+}
+
+###
+GET http://localhost:3000/farm
+Content-Type: application/json
+
+{
+
+}
+
+###
+DELETE  http://localhost:3000/farm/67f853db547fbbf38ec4af78/delete
+Content-Type: application/json
+
+{
+
+}
+
+### Sensor Tests
+GET http://localhost:3000/farm/67f966e7b9c6c0d234547e34/getSensorData
+Content-Type: application/json
+
+{
+
+}
+
+###
+GET http://localhost:3000/farm/67f966e7b9c6c0d234547e34/getAllSensorData
+Content-Type: application/json
+
+{
+
+}
+
+###
+GET http://localhost:3000/farm/67f966e7b9c6c0d234547e34/getMultSensorData?start_date=2025-04-11&end_date=2025-04-11
+
+Content-Type: application/json
+{
+
+}
+
+###
+POST http://localhost:3000/farm/67f966e7b9c6c0d234547e34/addSensorData
+Content-Type: application/json
+
+{
+    "temperature": 123232,
+    "height": 252225,
+    "camera": "https://i.pinimg.com/originals/75/f6/35/75f6354f76f157a343326cb48a0949f7.jpg",
+    "created_at": "2025-04-18 15:54:33 EST"
+}
+
+###
+DELETE http://localhost:3000/farm/67f966e7b9c6c0d234547e34/deleteSensorData
+Content-Type: application/json
+
+{
+    
+}
+
+###
+GET http://localhost:3000/farm/67f966e7b9c6c0d234547e34/sensorImage
+
+{
+
+}
+
+### System Level Tests
+GET http://localhost:3000/farm/67f966b2b9c6c0d234547e30/getSystemLevels
+Content-Type: application/json
+
+{
+
+}
+
+###
+GET http://localhost:3000/farm/67f966b2b9c6c0d234547e30/getAllSystemLevels
+Content-Type: application/json
+
+{
+
+}
+
+###
+GET http://localhost:3000/farm/67f966b2b9c6c0d234547e30/getMultSystemLevels?start_date=2025-04-11&end_date=2025-04-12
+
+Content-Type: application/json
+{
+
+}
+
+###
+POST http://localhost:3000/farm/67f966b2b9c6c0d234547e30/addSystemLevels
+Content-Type: application/json
+
+{
+    "solar_panel_power": 1,
+    "battery_voltage": 1.5,
+    "battery_temp": 1.1,
+    "battery_time": "2025-03-20"
+}
+
+###
+DELETE http://localhost:3000/farm/67f966b2b9c6c0d234547e30/deleteSystemLevels
+Content-Type: application/json
+
+{
+    
+}
+
+### LIft Schedule Tests 
+POST http://localhost:3000/farm/cage
+Content-Type: application/json
+
+{
+    "ids": "67edd17ad47abf534b7b45d8",
+    "command": 1,
+    "max_height": 10,
+    "min_height": 5
+}
+
+###
+POST http://localhost:3000/farm/cage/addActiveSchedule
+Content-Type: application/json
+
+{
+    "farm_ids": [
+        "67f966b2b9c6c0d234547e30"
+    ],
+    "schedule": [
+        {
+            "dates": ["2025-04-18 15:54:33", "2025-04-20 5:55:33"],
+            "command": 1,
+            "duration": 60,
+            "status": "pending"
+        }
+    ]
+}
+
+###
+GET http://localhost:3000/farm/67f966b2b9c6c0d234547e30/getActiveLiftSchedule
+Content-Type: application/json
+
+{
+
+}
+
+###
+GET http://localhost:3000/farm/67f966b2b9c6c0d234547e30/getAllActiveLiftSchedule
+Content-Type: application/json
+
+{
+
+}
+
+###
+GET http://localhost:3000/farm/67f454ea1d88591a57cef9e0/getMultActiveLiftSchedule?start_date=2025-04-11&end_date=2025-04-20
+Content-Type: application/json
+
+{
+
+}
+
+###
+POST http://localhost:3000/farm/cage/addArchiveSchedule
+Content-Type: application/json
+
+{
+    
+   "farm_ids": [
+        "67f966b2b9c6c0d234547e30"
+    ],
+    "schedule": [
+        {
+            "dates": ["2025-04-18 15:54:33", "2025-04-20 5:55:33"],
+            "command": 1,
+            "duration": 60,
+            "status": "pending"
+        }
+    ]
+    
+}
+
+###
+GET http://localhost:3000/farm/67f454ea1d88591a57cef9e0/getArchiveLiftSchedule
+Content-Type: application/json
+
+{
+
+}
+
+###
+DELETE http://localhost:3000/farm/67f966b2b9c6c0d234547e30/deleteActiveLiftSchedule
+Content-Type: application/json
+
+{
+
+}
+
+###
+DELETE http://localhost:3000/farm/67dd82c0583ddb4a70757e64/deleteArchiveLiftSchedule
+Content-Type: application/json
+
+{
+
+}
