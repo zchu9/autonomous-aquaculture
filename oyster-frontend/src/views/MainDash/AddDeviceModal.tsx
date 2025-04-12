@@ -129,11 +129,11 @@ export default function AddDeviceModal(props: AddDeviceModalProps) {
               </Button>
             </Stack>
           </Grid>
-          <Grid item>
+          <Grid item xs={1}>
             <Divider orientation="vertical" variant="middle" />
           </Grid>
-          <Grid item xs={5}>
-            <List>
+          <Grid item xs={6}>
+            <List sx={{ width: "100%" }}>
               <ListItem disablePadding>
                 1. Use the form on the left to enter your device's details.
               </ListItem>
