@@ -76,7 +76,7 @@ export default function DeviceTableRow(props: DeviceTableRowProps) {
       tabIndex={-1}
       key={props.device._id}
       selected={props.isItemSelected}
-      sx={{ cursor: "pointer" }}
+      sx={{ cursor: "pointer", width: "100%" }}
     >
       <TableCell padding="checkbox">
         <Checkbox

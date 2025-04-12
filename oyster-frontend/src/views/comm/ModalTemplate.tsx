@@ -23,9 +23,17 @@ const style = {
 export default function AddDeviceModal(props: ModalTemplateProps) {
   return (
     <>
-      <Box>
-        <h2> {props.label}</h2>
-        <Divider />
+      <Box
+        sx={{
+          margin: "auto",
+          padding: 3,
+          borderRadius: 2,
+        }}
+      >
+        <Typography variant="h6" component="h2">
+          {props.label}
+        </Typography>
+        <Divider sx={{ marginBottom: 2 }} />
         {props.children}
       </Box>
     </>

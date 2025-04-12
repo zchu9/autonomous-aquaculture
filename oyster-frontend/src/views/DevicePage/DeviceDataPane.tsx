@@ -1,6 +1,8 @@
 import * as React from "react";
-import Box from "@mui/material/Box";
+import { useEffect } from "react";
+import Stack from "@mui/material/Stack";
 import {
+  ResponsiveContainer,
   LineChart,
   XAxis,
   YAxis,
@@ -11,82 +13,149 @@ import {
 } from "recharts";
 import Paper from "@mui/material/Paper";
 import { styled } from "@mui/material/styles";
+import Typography from "@mui/material/Typography";
 
-export interface IQueryResult {
-  date: string;
-  temperature_c: number;
-  height: number;
-}
+const base_url = `${import.meta.env.VITE_API_URL}`;
 
 interface DeviceDataPaneProps {
-  data: IQueryResult[];
+  uuid: string;
 }
 
-const InfoPane = styled(Paper)(({ theme }) => ({
-  // width: 120,
-  // height: 120,
-  padding: theme.spacing(2),
-  // ...theme.typography.body2,
-}));
+interface SensorData {
+  camera: string;
+  created_at: Date;
+  height: number;
+  temperature: number;
+}
 
-const InfoPaneRow = styled(Box)(({ them }) => ({
-  textAlign: "left",
+const DataPane = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(2),
+  height: "100%",
+  display: "flex",
+  flexDirection: "column",
 }));
 
 export function DeviceDataPane(props: DeviceDataPaneProps) {
   const [id, setId] = React.useState(0);
+  const [objectData, setObjectData] = React.useState<SensorData>();
+
+  async function fetchSensorData() {
+    console.log(`Fetching device data from ${base_url}...`);
+
+    try {
+      const response = await fetch(
+        base_url + "/farm/" + props.uuid + "/getAllSensorData",
+        {
+          method: "GET",
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      setObjectData(
+        data.map((item: any) => {
+          return {
+            camera: item.camera,
+            created_at: new Date(item.created_at),
+            height: item.height,
+            temperature: item.temperature,
+          };
+        })
+      );
+
+      console.log(data);
+    } catch (error) {
+      console.error("Error fetching sensor data:", error);
+    }
+  }
+
+  async function fetchImage() {
+    console.log(`Fetching device data from ${base_url}...`);
+
+    try {
+      const response = await fetch(
+        base_url + "/farm/" + props.uuid + "/getAllSensorData",
+        {
+          method: "GET",
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      setObjectData(
+        data.map((item: any) => {
+          return {
+            camera: item.camera,
+            created_at: new Date(item.created_at),
+            height: item.height,
+            temperature: item.temperature,
+          };
+        })
+      );
+
+      console.log(data);
+    } catch (error) {
+      console.error("Error fetching sensor data:", error);
+    }
+  }
+
+  useEffect(() => {
+    fetchSensorData();
+
+    const intervalId = setInterval(fetchSensorData, 60000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, []);
 
   return (
-    <InfoPane>
-      <h2>Sensor Data</h2>
-      <LineChart
-        width={500}
-        height={400}
-        data={props.data}
-        margin={{ top: 5, right: 5, left: 5, bottom: 100 }}
-      >
-        <CartesianGrid stroke="#f5f5f5" />
-        <XAxis
-          dataKey="date"
-          angle={0}
-          interval={"preserveStartEnd"}
-          position="bottom"
-        />
-        <YAxis
-          yAxisId={0}
-          hide={id != 0}
-          label={{
-            value: "Temperature (C)",
-            angle: -90,
-            position: "insideLeft",
-          }}
-        />
-        <YAxis
-          yAxisId={1}
-          hide={id != 1}
-          label={{ value: "Height (m)", angle: -90, position: "insideLeft" }}
-        />
-        <Tooltip offset={-100} />
-        <Legend verticalAlign="top" height={36} />
-        <Line
-          type="monotone"
-          dataKey="temperature_c"
-          stroke="#8884d8"
-          yAxisId={0}
-          onMouseOver={() => {
-            setId(0);
-          }}
-        />
-        <Line
-          type="monotone"
-          dataKey="height"
-          stroke="#82ca9d"
-          yAxisId={1}
-          onMouseOver={() => {
-            setId(1);
-          }}
-        />
-      </LineChart>
-    </InfoPane>
+    <DataPane>
+      <Stack>
+        <Typography variant="h5" fontWeight="bold">
+          Sensor Data
+        </Typography>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={objectData} margin={{ top: 5, right: 5, left: 5 }}>
+            <CartesianGrid stroke="#f5f5f5" />
+            <XAxis
+              dataKey="date"
+              angle={0}
+              interval={"preserveStartEnd"}
+              position="bottom"
+            />
+            <YAxis yAxisId={0} />
+            <Tooltip offset={-100} />
+            <Legend verticalAlign="top" height={36} />
+            <Line
+              type="monotone"
+              dataKey="temperature"
+              stroke="#8884d8"
+              onMouseOver={() => {
+                setId(0);
+              }}
+            />
+            <Line
+              type="monotone"
+              dataKey="height"
+              stroke="#82ca9d"
+              onMouseOver={() => {
+                setId(1);
+              }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+
+        <Typography variant="h5" fontWeight="bold">
+          Image
+        </Typography>
+      </Stack>
+    </DataPane>
   );
 }
