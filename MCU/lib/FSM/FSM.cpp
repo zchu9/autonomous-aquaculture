@@ -110,15 +110,15 @@ int runCommands(data &d)
     }
     if (d.doc["command"] == 1)
     {
-        d.winch->lift(3.5);
+        d.winch->lift(3);
         // winchControl(d);
         Serial.println(">>>>>Lift command received");
     }
     if (d.doc["command"] == 0)
     {
-        d.winch->lower(0);
+        d.winch->lower(0.8);
         // winchControl(d);
-        Serial.println("Lower command received");
+        Serial.println(">>>>>Lower command received");
     }
     // clear the json doc
     d.doc.clear();

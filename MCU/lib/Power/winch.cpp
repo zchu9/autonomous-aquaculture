@@ -42,17 +42,17 @@ bool winchData::selectWinchLine(bool lift)
 
 bool winchData::lower(double desiredHeight)
 {
-    int numIterations = 0;
+    int numIterations = 1;
     int beginningHeight = getHeight();
 
     selectWinchLine(false);
 
     pin_size_t lowerPin = this->winchLowerPin;
-    digitalWrite(lowerPin, HIGH);
-
+    
     while (getHeight() > desiredHeight)
     {
-        numIterations++;
+        digitalWrite(lowerPin, HIGH);
+        Serial.println(getHeight());
         if (numIterations % 25 == 0)
         {
             if (beginningHeight - getHeight() < 0.1)
@@ -71,18 +71,17 @@ bool winchData::lower(double desiredHeight)
 
 bool winchData::lift(double desiredHeight)
 {
-    int numIterations = 0;
+    int numIterations = 1;
     int beginningHeight = getHeight();
 
     selectWinchLine(true);
 
     pin_size_t liftPin = this->winchLiftPin;
-    Serial.println(getHeight());
     
     while (getHeight() < desiredHeight)
     {
-        // numIterations++;
         digitalWrite(liftPin, HIGH);
+        Serial.println(getHeight());
         if (numIterations % 25 == 0)
         {
             if (beginningHeight - getHeight() < 0.1)
