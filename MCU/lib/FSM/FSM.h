@@ -7,10 +7,10 @@
 #include <Base64.h>
 #include "interrupts.h"
 #include "LoRa.h"
-#include "ArduinoJson.h"
 #include "Sensors/camera_handler.h"
 #include "Sensors/pot_handler.h"
 #include "Sensors/temperature_sensor.h"
+#include "winch.h"
 
 #define DEBUG true
 
@@ -34,7 +34,8 @@ struct data
     // Assuming the size of the array is 10, you can adjust it as needed
     static const size_t numWinches = 10;
 
-    LoraRadio* lora; // a class to hold all the lora variables.
+    LoraRadio *lora; // a class to hold all the lora variables.
+    winchData *winch;
 
     bool liftFlag[numWinches];
     bool liftStarted;

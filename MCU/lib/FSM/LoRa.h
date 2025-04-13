@@ -8,24 +8,24 @@
 // assume this stuff is provided by a config file
 #define LORA_ADDRESS 42069       // 0 to 65535
 #define LORA_PASSWORD "A3F7B9C2" // 00000001 to FFFFFFFF
-#define FARM_ID "67dcad71921b525e1e669551"
+#define FARM_ID "67fc0059859ec93796b14af4"
 
 #define TARGET_ADDRESS "1"
 #define PACKET_SIZE 100
 #define ACK_TIMEOUT 2000
 #define RETRY_LIMIT 15
 #define MAX_PACKETS 10
-#define BUFFER_SIZE 260     // assuming this is set above 256 for a reason?
-#define HANDSHAKE 0         // index for the loraBuffer
+#define BUFFER_SIZE 260 // assuming this is set above 256 for a reason?
+#define HANDSHAKE 0     // index for the loraBuffer
 
-class LoraRadio {
+class LoraRadio
+{
     int currentPacket = 0;                          // the current packet being sent
     int totalPackets = 0;                           // the calculated number of packets from the message length
     char receivedPackets[MAX_PACKETS][BUFFER_SIZE]; // array to store the received packets
     int receivedTotalPackets = -1;                  // the total number of packets received
     char loraBuffer[BUFFER_SIZE];                   // buffer to store the received data
     int bufferIndex = 0;
-
 
 public:
     LoraRadio();
@@ -40,7 +40,7 @@ public:
      * @brief sends the message in fragments to the serial (LoRa module)\n
      *
      */
-    bool sendPackets(char* message);
+    bool sendPackets(char *message);
 
     /**
      * @brief Takes in a message, fragments it, and sends it all.(LoRa module)
@@ -48,7 +48,7 @@ public:
      * @param packetID is the packet number
      * @param fragment is the string fragment in the current packet
      */
-    void sendFragment(int packetID, const char* fragment);
+    void sendFragment(int packetID, const char *fragment);
 
     /**
      * @brief Function reports when the Acknowledgment is received from the message recipient.
@@ -66,7 +66,7 @@ public:
      *
      * @param doc the json doc object to be updated.
      */
-    void receiveMsg(JsonDocument& doc);
+    void receiveMsg(JsonDocument &doc);
 
     /**
      * @brief Processes the received data from the LoRa module.\n
@@ -75,7 +75,7 @@ public:
      *
      * @param received is the string received from the LoRa module in json format
      */
-    void processReceivedData(char* received, JsonDocument& doc);
+    void processReceivedData(char *received, JsonDocument &doc);
 
     /**
      * @brief Sends an acknowledgment for the received packet to the sender.\n
@@ -97,7 +97,7 @@ public:
      * @brief reconstructs the complete message from the received packets.\n
      *
      */
-    void reconstructMessage(JsonDocument& doc);
+    void reconstructMessage(JsonDocument &doc);
 
     /**
      * @brief performs a handshake with the server to communicate ID and maintain proof of connection

@@ -37,7 +37,7 @@ void initializeStartup(data &d)
 
     // init the lora class
     d.lora = new LoraRadio;
-
+    //d.winch = new winchData;
     d.liftFlag[0] = 0;
     // d.lowerFlag = 0;
     //  initialize the data struct
@@ -107,11 +107,17 @@ int runCommands(data &d)
         Serial.println("No valid JSON received");
         return -1;
     }
-    if (d.doc["command"] == 1)
+    if (d.doc["cage"] == 1)
     {
-        d.liftFlag[0] = 1;
+        d.winch->lift(3.5);
         // winchControl(d);
         Serial.println("Lift command received");
+    }
+    if (d.doc["cage"] == 0)
+    {
+        d.winch->lower(0);
+        // winchControl(d);
+        Serial.println("Lower command received");
     }
     // clear the json doc
     d.doc.clear();
@@ -176,11 +182,11 @@ bool sendImage(data &d)
     Base64.encode(encodedImage, (char *)d.img, imsize);
 
     // d.img can be freed immediately here.
-    free(d.img);           // Free the original image buffer
-    d.img = nullptr;       // Set to nullptr to avoid dangling pointer
+    free(d.img);     // Free the original image buffer
+    d.img = nullptr; // Set to nullptr to avoid dangling pointer
 
-    imdoc["image"] = encodedImage;  // TODO: Verify this copies the whole char array and not just a pointer!
-    delete[] encodedImage;          // Free the Base64 encoded image
+    imdoc["image"] = encodedImage; // TODO: Verify this copies the whole char array and not just a pointer!
+    delete[] encodedImage;         // Free the Base64 encoded image
 
     size_t imdocLen = measureJson(imdoc);
     char *imBuffer = new char[imdocLen + 1]; // +1 for null terminator
@@ -189,7 +195,7 @@ bool sendImage(data &d)
     // TODO: Verify the UART line is selected!!
     bool success = d.lora->sendPackets(imBuffer);
 
-    delete[] imBuffer;     // Free the allocated memory
+    delete[] imBuffer; // Free the allocated memory
 
     return success;
 }
@@ -260,9 +266,10 @@ void getImg(data &d)
     // Serial.println(" bytes");
 }
 
-void getImgSeg() {
+void getImgSeg()
+{
     const int chunksize = 250;
-    char buffer[chunksize] = { '\0'};
+    char buffer[chunksize] = {'\0'};
 
     // empty fifo buffer
     myCAM.flush_fifo();
@@ -273,9 +280,11 @@ void getImgSeg() {
     int chunk = chunksize;
 
     // send chunk -> update size -> repeat until empty
-    while (imgSize > 0) {
+    while (imgSize > 0)
+    {
         memset(buffer, '\0', chunksize);
-        if(imgSize < chunksize) {
+        if (imgSize < chunksize)
+        {
             chunk = imgSize;
         }
         getPartialImage(buffer, chunk);
