@@ -1,29 +1,11 @@
 #include <unity.h>
 #include "victronFunctions.h"
-#include "renogyFunctions.h"
 
 void setUp(void) {
 }
 
 void tearDown(void) {
 }
-
-void test_renchecksum() {
-    // from minimalModbus tests
-    unsigned char data1[] = { 0x02, 0x07 };
-    int check1 = 0x1241;
-    TEST_ASSERT_TRUE(crcCheck(check1, data1, 2));
-
-    unsigned char data2[] = { "ABCDE" };
-    int check2 = 0x500F;
-    TEST_ASSERT_TRUE(crcCheck(check2, data2, 5));
-
-    // From Renogy docs
-    unsigned char data3[] = { 0x01, 0x03, 0x00, 0x0a, 0x00, 0x01 };
-    int check3 = 0x08A4;
-    TEST_ASSERT_TRUE(crcCheck(check3, data3, 6));
-
-};
 
 void test_checksum() {
     unsigned char dataGS[] = { "allmyexesliveintexasandtexasisaplaceiddearlylovetobebutallmyexesliveintexasandthatswhyihangmyhatintennesseerosannasdownintexarkanawantedmetopushherbroomsweeteileensinabilenesheforgotihungthemoonandallisonsingalvestonsomehowlosthersanityanddimpleswhonowlivesintemplesgotthelawlookingformeallmyexesliveintexasandtexasisaplaceiddearlylovetobebutallmyexesliveintexasandthatswhyihangmyhatintennesseeirememberthatoldfrioriverwhereilearnedtoswimbutitbringstomindanothertimewhereiworemywelcomethinbytranscendentalmeditationigothereeachnightbutialwayscomebacktomyselflongbeforedaylightallmyexesliveintexasandtexasisaplaceiddearlylovetobebutallmyexesliveintexasthereforeiresideintennesseesomefolksthinkimhidinitsbeenrumoredthatidiedbutimaliveandwellintennesseek" };
@@ -71,6 +53,5 @@ int main() {
     RUN_TEST(test_checksum);
     RUN_TEST(test_victron_parse);
     RUN_TEST(test_victron_parse_and_check);
-    RUN_TEST(test_renchecksum);
     UNITY_END();
 }

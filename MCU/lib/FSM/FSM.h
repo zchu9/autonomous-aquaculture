@@ -24,9 +24,9 @@ enum State
 
 enum device
 {
-    BMS,
-    MPPT,
     RADIO,
+    MPPT,
+    BMS,
 }; // victron bms, renogy mppt, LoRA module.
 
 struct data

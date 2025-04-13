@@ -1,7 +1,6 @@
 // functional modbus implementation. very messy. replaces previous library which filled 0s to failed reads.
 
 #include <Arduino.h>
-#include <renogyFunctions.h>
 #include <ModbusMaster.h>
 
 void getDeviceAddress() {
