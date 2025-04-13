@@ -32,16 +32,25 @@ float getHeight()
 void setMaxHeight()
 {
     maxHeight = analogRead(POT_PIN);
+#if HARDCODE
+    maxHeight = 960;
+#endif
 }
 
 void setMinHeight()
 {
     minHeight = analogRead(POT_PIN);
+#if HARDCODE
+    minHeight = 60;
+#endif
 }
 
 void setZeroHeight()
 {
     zeroPosition = analogRead(POT_PIN);
+#if HARDCODE
+    zeroPosition = 60;
+#endif
 
     setMinHeight();
 }

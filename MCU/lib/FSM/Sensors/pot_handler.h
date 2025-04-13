@@ -5,6 +5,7 @@
 
 #ifndef POT_HANDLER_H
 #define POT_HANDLER_H
+#define HARDCODE 1
 
 void initPot();
 int getRawPotValue();

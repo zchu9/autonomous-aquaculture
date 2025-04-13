@@ -345,6 +345,7 @@ void test_board_response(void)
 }
 
 data d;
+LoraRadio radio;
 void setUp(void)
 {
     // This function is called before each test
@@ -466,7 +467,7 @@ void test_jsonify()
 
 void test_sendData()
 {
-    TEST_ASSERT_TRUE(setupLoRa()); // Ensure LoRa is set up before sending data
+    TEST_ASSERT_TRUE(radio.setupLoRa()); // Ensure LoRa is set up before sending data
     Serial.println("jsonify next");
     JsonDocument doc = jsonify(d);
     size_t len = measureJson(doc);
@@ -510,13 +511,11 @@ void runTests()
     // RUN_TEST(test_getImage);
     // RUN_TEST(test_jsonify);
     // RUN_TEST(test_getHeight);
-    RUN_TEST(test_liftWinch);
+    // RUN_TEST(test_liftWinch);
 
-// LoRa Dependent  Tests
-#if LORA_TESTS
+    // LoRa Dependent  Tests
+
     RUN_TEST(test_sendData);
-
-#endif
 
 #if SYSTEM_TESTS
     test_FSM_initialization();
