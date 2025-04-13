@@ -69,7 +69,6 @@ export default function AddDeviceModal(props: AddDeviceModalProps) {
         <Grid container spacing={2}>
           <Grid item xs={5}>
             <Stack spacing={2}>
-              <div>Enter device details</div>
               <FormLabel>Device Name</FormLabel>
               <TextField
                 id="outlined-basic"
