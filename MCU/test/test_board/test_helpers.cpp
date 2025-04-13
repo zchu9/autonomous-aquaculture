@@ -10,6 +10,7 @@
  */
 #include "FSM.h"
 #include <unity.h>
+#include "LoRa.h"
 
 #define NUM_DATA_POINTS 100
 #define LORA_TESTS 0
@@ -467,6 +468,8 @@ void test_jsonify()
 
 void test_sendData()
 {
+    LoraRadio radio;
+
     TEST_ASSERT_TRUE(radio.setupLoRa()); // Ensure LoRa is set up before sending data
     Serial.println("jsonify next");
     JsonDocument doc = jsonify(d);
