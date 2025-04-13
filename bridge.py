@@ -40,7 +40,7 @@ def get_address(id):
 def get_id_by_address(address):
     """Fetch the ID based on the given address."""
     for id, addr in address_lookup.items():
-        if addr == address:
+        if int(addr) == int(address):
             return id
     return None
 
