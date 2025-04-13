@@ -8,7 +8,7 @@
 #include "pins.h"
 
 static int zeroPosition = 0;
-static int maxHeight = 0;
+static int maxHeight = 960;
 static int minHeight = 0;
 static float maxHeightFt = 4.0; // default max height in feet
 

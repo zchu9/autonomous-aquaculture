@@ -121,7 +121,6 @@ bool LoraRadio::waitForACK(int expectedID) {
 }
 
 void LoraRadio::receiveMsg(JsonDocument& doc) {
-
     while (Serial1.available())
     {
         char c = Serial1.read();
@@ -248,6 +247,7 @@ void LoraRadio::reconstructMessage(JsonDocument& doc) {
     }
 
     DeserializationError error = deserializeJson(doc, finalMsg.c_str());
+
     if (error)
     {
         Serial.print("Deserialization failed: ");

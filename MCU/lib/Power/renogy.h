@@ -61,19 +61,13 @@ public:
     RenogyMPPT(int modbus_address = 255);
     void renogy_read_data_registers();
     void renogy_read_info_registers();
-
-private:
-    ModbusMaster node;
-
-    /*
-    Number of registers to check. I think all Renogy controllers have 35
-    data registers (not all of which are used) and 17 info registers.
-    */
+    
     Controller_data renogyData;
     Controller_info renogyInfo;
+private:
+    ModbusMaster node;
     const uint32_t num_data_registers = 35;
     const uint32_t num_info_registers = 17;
-
 };
 
 RenogyMPPT::RenogyMPPT(int modbus_address) {

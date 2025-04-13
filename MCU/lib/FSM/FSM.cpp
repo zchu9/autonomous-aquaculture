@@ -33,11 +33,12 @@ void initializeStartup(data &d)
     Serial.println("Hard Coded into normal mode");
 
 #endif
+    uartSwitch(d, RADIO, 9600, SERIAL_8N1);
     // should probably be a init data function.
 
     // init the lora class
     d.lora = new LoraRadio;
-    //d.winch = new winchData;
+    d.winch = new winchData(LIFT_PIN, LOWER_PIN, A0);
     d.liftFlag[0] = 0;
     // d.lowerFlag = 0;
     //  initialize the data struct
@@ -107,13 +108,13 @@ int runCommands(data &d)
         Serial.println("No valid JSON received");
         return -1;
     }
-    if (d.doc["cage"] == 1)
+    if (d.doc["command"] == 1)
     {
         d.winch->lift(3.5);
         // winchControl(d);
-        Serial.println("Lift command received");
+        Serial.println(">>>>>Lift command received");
     }
-    if (d.doc["cage"] == 0)
+    if (d.doc["command"] == 0)
     {
         d.winch->lower(0);
         // winchControl(d);

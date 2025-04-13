@@ -13,4 +13,6 @@ void setup()
 void loop()
 {
   FSM(d);
+//   d.winch->lift(3.5);
+//   while(1);
 }
