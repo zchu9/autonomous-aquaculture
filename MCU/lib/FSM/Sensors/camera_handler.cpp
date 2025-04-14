@@ -46,9 +46,7 @@ void CameraHandler::begin()
     if (myCAM.read_reg(ARDUCHIP_TEST1) != 0x55)
     {
         Serial.println("ArduCAM init failed. Communication error.");
-        while (1)
-            ; // Halt if communication fails.
-    }
+        }
 
     // Set the image format to JPEG.
     myCAM.set_format(JPEG);
