@@ -117,6 +117,9 @@ bool sendImage(data &d);
 // Sensor Controls
 void getImg(data &d);
 
+//Temp sensor
+void temperatureFSM(data &d);
+
 // Winch Controls
 
 // Debugging
