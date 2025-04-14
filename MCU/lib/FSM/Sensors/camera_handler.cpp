@@ -55,6 +55,7 @@ void CameraHandler::begin()
 
     // Initialize the camera.
     myCAM.InitCAM();
+
     myCAM.clear_fifo_flag();
 
     // Configure the sensor resolution.
@@ -103,7 +104,6 @@ uint32_t CameraHandler::captureImage()
 
     return imgLength;
 }
-
 void CameraHandler::startImageStream()
 {
     // Reset the current position.
@@ -130,4 +130,46 @@ void CameraHandler::finishImageStream()
 {
     myCAM.CS_HIGH();
     Serial.println("IMG_END");
+}
+
+/**
+ *  TAYLORS VERSION :)
+ */
+
+void CameraHandler::getPartialImage(char *buffer, size_t bufferSize)
+{
+    myCAM.CS_LOW();
+    myCAM.set_fifo_burst();
+    for (size_t i = 0; i < bufferSize; i++)
+    {
+        buffer[i] = SPI.transfer(0x00);
+    }
+}
+
+void CameraHandler::getImgSeg()
+{
+    const int chunksize = 250;
+    char buffer[chunksize] = {'\0'};
+
+    // empty fifo buffer
+    myCAM.flush_fifo();
+    myCAM.clear_fifo_flag();
+
+    uint32_t imgSize = myCAM.read_fifo_length();
+
+    int chunk = chunksize;
+
+    // send chunk -> update size -> repeat until empty
+    while (imgSize > 0)
+    {
+        memset(buffer, '\0', chunksize);
+        if (imgSize < chunksize)
+        {
+            chunk = imgSize;
+        }
+        getPartialImage(buffer, chunk);
+        // at this point, buffer contains a bit of the image
+        imgSize -= chunk;
+    }
+    myCAM.clear_fifo_flag();
 }

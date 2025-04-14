@@ -215,28 +215,11 @@ void getAndSendImg(data &d)
     uint32_t imgSize = d.cam->captureImage();
     uint32_t imDivider = 6;
     int chunkSize = imgSize / imDivider;
-    uint8_t beginMsg[] = "cash";
-    uint8_t endMsg[] = "mony";
-
+    uint8_t img[chunkSize];
     if (imgSize > 0)
     {
         for (int currentChunk = 0; currentChunk < imDivider; currentChunk++)
         {
-            if (currentChunk == 0)
-            {
-                // add begin message chars
-                chunkSize = chunkSize + sizeof(beginMsg);
-            }
-            else if (currentChunk == imDivider - 1)
-            {
-                chunkSize = chunkSize + sizeof(endMsg);
-            }
-            else
-            {
-                chunkSize = chunkSize;
-            }
-            uint8_t img[chunkSize];
-            memcpy(img, beginMsg, sizeof(beginMsg));
             d.cam->startImageStream();
             d.cam->readImageChunk(chunkSize, img);
             int encodedLength = Base64.encodedLength(chunkSize);
@@ -253,58 +236,23 @@ void getAndSendImg(data &d)
     d.cam->finishImageStream();
 }
 
-
-void temperatureFSM(data &d) {
+void temperatureFSM(data &d)
+{
     // Read temperature
     float currentTempC = getTempC();
     float currentTempF = getTempF();
-    
+
     // Print the reading
     Serial.print("Temperature: ");
-    //Serial.print(currentTempC);
-    //Serial.print(" °C / ");
+    // Serial.print(currentTempC);
+    // Serial.print(" °C / ");
     Serial.print(currentTempF);
     Serial.println(" °F");
-    
+
     // Append the reading to the temperature array in d.
-    //d.temp.push_back(currentTempC);
+    // d.temp.push_back(currentTempC);
     d.temp.push_back(currentTempF);
-    
-    
 }
-
-
-
-/*
-Shiz is lowk deprecated but I like the way it looks.
-void getImgSeg()
-{
-    const int chunksize = 250;
-    char buffer[chunksize] = {'\0'};
-
-    // empty fifo buffer
-    myCAM.flush_fifo();
-    myCAM.clear_fifo_flag();
-
-    uint32_t imgSize = myCAM.read_fifo_length();
-
-    int chunk = chunksize;
-
-    // send chunk -> update size -> repeat until empty
-    while (imgSize > 0)
-    {
-        memset(buffer, '\0', chunksize);
-        if (imgSize < chunksize)
-        {
-            chunk = imgSize;
-        }
-        getPartialImage(buffer, chunk);
-        // at this point, buffer contains a bit of the image
-        imgSize -= chunk;
-    }
-    myCAM.clear_fifo_flag();
-}
-    */
 
 /**
  * @brief initialize serial communication

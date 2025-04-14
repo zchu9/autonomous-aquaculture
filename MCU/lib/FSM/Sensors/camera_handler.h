@@ -25,6 +25,12 @@ public:
 
     // Finish the image stream (closes the burst read).
     void finishImageStream();
+    ////////////////////////////////////////////////////////
+    // TAYLORS VERSION
+    ////////////////////////////////////////////////////////
+    // Start streaming the captured image from FIFO.
+    void getPartialImage(char *buffer, size_t bufferSize);
+    void getImgSeg();
 
 private:
     uint32_t imgLength;  // Total captured image length.
