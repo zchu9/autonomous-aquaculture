@@ -46,7 +46,6 @@ struct data
     double height[numWinches];
     std::vector<double> power; // stores power readings for each device
     std::vector<double> temp;  // stores temperature readings for each device
-    uint8_t *img;
 
     device currentDevice;
     ulong lastDevSwitchTime;
@@ -115,7 +114,7 @@ JsonDocument jsonify(data &d);
 bool sendImage(data &d);
 
 // Sensor Controls
-void getImg(data &d);
+void getAndSendImg(data &d);
 
 // Winch Controls
 

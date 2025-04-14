@@ -166,10 +166,6 @@ bool sendData(data &d)
     return success;
 }
 
-bool sendImage(data &d)
-{
-}
-
 void getIntoLowPowerMode(data &d)
 {
     if (d.state == NORMAL)
@@ -214,9 +210,47 @@ void powerStateChange(data &d)
     }
 }
 
-void getImg(data &d)
+void getAndSendImg(data &d)
 {
-    
+    uint32_t imgSize = d.cam->captureImage();
+    uint32_t imDivider = 6;
+    int chunkSize = imgSize / imDivider;
+    uint8_t beginMsg[] = "cash";
+    uint8_t endMsg[] = "mony";
+
+    if (imgSize > 0)
+    {
+        for (int currentChunk = 0; currentChunk < imDivider; currentChunk++)
+        {
+            if (currentChunk == 0)
+            {
+                // add begin message chars
+                chunkSize = chunkSize + sizeof(beginMsg);
+            }
+            else if (currentChunk == imDivider - 1)
+            {
+                chunkSize = chunkSize + sizeof(endMsg);
+            }
+            else
+            {
+                chunkSize = chunkSize;
+            }
+            uint8_t img[chunkSize];
+            memcpy(img, beginMsg, sizeof(beginMsg));
+            d.cam->startImageStream();
+            d.cam->readImageChunk(chunkSize, img);
+            int encodedLength = Base64.encodedLength(chunkSize);
+            char encodedImg[encodedLength + 1];
+            Base64.encode(encodedImg, (char *)img, chunkSize);
+            d.lora->sendPackets(encodedImg);
+            Serial.println("Chunk:" + String(currentChunk) + " sent");
+        }
+    }
+    else
+    {
+        Serial.println("Failed to capture image.");
+    }
+    d.cam->finishImageStream();
 }
 
 /*

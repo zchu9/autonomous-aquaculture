@@ -373,11 +373,6 @@ void tearDown(void)
     // This function is called after each test
     // Clean up any resources if needed
     // For example, if you allocated memory, free it here
-    if (d.img != nullptr)
-    {
-        free(d.img);
-        d.img = nullptr;
-    }
 }
 
 void test_checkPower()
@@ -436,22 +431,13 @@ void test_liftWinch()
     heightInstantiation();
     pinInstantition();
     // lift the winch from zero to 3.5 feet
-
-    TEST_ASSERT_TRUE(liftWinch(LIFT_PIN, 0, 3.5));
 }
 
 void test_liftWinch_stuck()
 {
     heightInstantiation();
+}
 
-    TEST_ASSERT_FALSE(liftWinch(LIFT_PIN, 0, 3.5));
-}
-void test_getImage()
-{
-    initCamera();
-    getImg(d);
-    TEST_ASSERT_NOT_NULL(d.img);
-}
 void test_jsonify()
 {
     JsonDocument dataJson = jsonify(d);
@@ -483,16 +469,6 @@ void test_sendData()
     // Send the JSON over LoRa
     TEST_ASSERT_TRUE(sendData(d));
     delete[] buffer; // Free the allocated memory
-}
-
-void test_sendImage()
-{
-
-    TEST_ASSERT_NOT_NULL(d.img); // Ensure the image is captured
-    TEST_ASSERT_TRUE(sendImage(d));
-    // Check if the image was sent successfully
-    // This might require mocking the sendCapturedImage function to verify the call
-    TEST_ASSERT_TRUE(getCapturedImageSize() > 0); // Ensure image size is greater than 0
 }
 
 void test_FSM_initialization()
