@@ -16,7 +16,7 @@ uint32_t imageSize = 0;
 uint16_t bytesRead = 0;
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
   delay(2000);  // Allow time for Serial and hardware initialization.
   
   camera.begin();

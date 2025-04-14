@@ -1,7 +1,7 @@
 import serial
 import time
 
-def capture_image(port='COM13', baudrate=115200, output_file='captured_image.jpg'):
+def capture_image(port='COM16', baudrate=9600, output_file='captured_image.jpg'):
     # Open the serial connection.
     ser = serial.Serial(port, baudrate, timeout=3)
     time.sleep(2)  # Give some time for the port to initialize.
@@ -42,4 +42,4 @@ def capture_image(port='COM13', baudrate=115200, output_file='captured_image.jpg
 
 if __name__ == '__main__':
     # Adjust the port if needed
-    capture_image(port='COM13', baudrate=115200, output_file='captured_image.jpg')
+    capture_image(port='COM16', baudrate=9600, output_file='captured_image.jpg')
