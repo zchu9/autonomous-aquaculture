@@ -43,7 +43,8 @@ void initializeStartup(data &d)
     // d.lowerFlag = 0;
     //  initialize the data struct
 
-    initCamera();
+    d.cam = new CameraHandler;
+    d.cam->begin();
 
     // initializes the check power interrupt the comms handler, and the emergency lift lowering timer interrupt
     // initializeLPMandNCM(d);
@@ -167,38 +168,6 @@ bool sendData(data &d)
 
 bool sendImage(data &d)
 {
-    if (d.img == nullptr)
-    {
-        Serial.println("No image to send.");
-        return false;
-    }
-
-    size_t imsize = getCapturedImageSize();
-    size_t encodedLength = Base64.encodedLength(imsize);
-    JsonDocument imdoc;
-
-    // 8kb * 1.3 = 10.4
-    // 10.4 * 2 = 20.8!
-    char *encodedImage = new char[encodedLength + 1]; // +1 for null terminator
-    Base64.encode(encodedImage, (char *)d.img, imsize);
-
-    // d.img can be freed immediately here.
-    free(d.img);     // Free the original image buffer
-    d.img = nullptr; // Set to nullptr to avoid dangling pointer
-
-    imdoc["image"] = encodedImage; // TODO: Verify this copies the whole char array and not just a pointer!
-    delete[] encodedImage;         // Free the Base64 encoded image
-
-    size_t imdocLen = measureJson(imdoc);
-    char *imBuffer = new char[imdocLen + 1]; // +1 for null terminator
-    serializeJson(imdoc, imBuffer, imdocLen + 1);
-
-    // TODO: Verify the UART line is selected!!
-    bool success = d.lora->sendPackets(imBuffer);
-
-    delete[] imBuffer; // Free the allocated memory
-
-    return success;
 }
 
 void getIntoLowPowerMode(data &d)
@@ -247,26 +216,11 @@ void powerStateChange(data &d)
 
 void getImg(data &d)
 {
-    if (d.img != nullptr)
-    {
-        free(d.img); // Free previous image if it exists
-        d.img = nullptr;
-    }
-
-    d.img = captureImage(); // Capture new image
-
-    if (d.img == nullptr)
-    {
-        Serial.println("Failed to capture image.");
-        return;
-    }
-
-    // size_t imgSize = getCapturedImageSize();
-    // Serial.print("Captured image size: ");
-    // Serial.print(imgSize);
-    // Serial.println(" bytes");
+    
 }
 
+/*
+Shiz is lowk deprecated but I like the way it looks.
 void getImgSeg()
 {
     const int chunksize = 250;
@@ -294,6 +248,7 @@ void getImgSeg()
     }
     myCAM.clear_fifo_flag();
 }
+    */
 
 /**
  * @brief initialize serial communication

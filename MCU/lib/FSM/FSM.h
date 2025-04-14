@@ -36,6 +36,7 @@ struct data
 
     LoraRadio *lora; // a class to hold all the lora variables.
     winchData *winch;
+    CameraHandler *cam;
 
     bool liftFlag[numWinches];
     bool liftStarted;
@@ -117,9 +118,6 @@ bool sendImage(data &d);
 void getImg(data &d);
 
 // Winch Controls
-bool liftWinch(int heightPin, int liftPin, float desiredHeight);
-bool lowerWinch(int heightPin, int lowerPin, float desiredHeight);
-void winchControl(data &d);
 
 // Debugging
 void initializeDebug();
