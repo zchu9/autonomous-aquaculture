@@ -114,10 +114,10 @@ JsonDocument jsonify(data &d);
 bool sendImage(data &d);
 
 // Sensor Controls
-void getAndSendImg(data &d);
+bool getAndSendImg(data &d);
 
-//Temp sensor
-void temperatureFSM(data &d);
+// Temp sensor
+void updateTemp(data &d);
 
 // Winch Controls
 

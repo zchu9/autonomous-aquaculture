@@ -210,33 +210,51 @@ void powerStateChange(data &d)
     }
 }
 
-void getAndSendImg(data &d)
+bool getAndSendImg(data &d)
 {
     uint32_t imgSize = d.cam->captureImage();
+    Serial.print("Image size: ");
+    Serial.println(imgSize);
     uint32_t imDivider = 6;
     int chunkSize = imgSize / imDivider;
     uint8_t img[chunkSize];
+    int numBytesRead = 1;
     if (imgSize > 0)
     {
-        for (int currentChunk = 0; currentChunk < imDivider; currentChunk++)
+        d.cam->startImageStream(); // this may cause the beginning to repeat.
+
+        while (numBytesRead > 0)
         {
-            d.cam->startImageStream();
-            d.cam->readImageChunk(chunkSize, img);
+            numBytesRead = d.cam->readImageChunk(chunkSize, img);
+            Serial.print((char *)img);
             int encodedLength = Base64.encodedLength(chunkSize);
             char encodedImg[encodedLength + 1];
             Base64.encode(encodedImg, (char *)img, chunkSize);
-            d.lora->sendPackets(encodedImg);
-            Serial.println("Chunk:" + String(currentChunk) + " sent");
+            Serial.print(encodedImg);
+
+            /*
+            if (d.lora->sendPackets(encodedImg))
+            {
+                Serial.println("Chunk:" + String(currentChunk + 1) + " sent");
+            }
+            else
+            {
+                Serial.println("Failed to send chunk:" + String(currentChunk + 1));
+                return false;
+            }
+                */
         }
     }
     else
     {
         Serial.println("Failed to capture image.");
+        return false;
     }
     d.cam->finishImageStream();
+    return true;
 }
 
-void temperatureFSM(data &d)
+void updateTemp(data &d)
 {
     // Read temperature
     float currentTempC = getTempC();

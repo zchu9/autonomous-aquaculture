@@ -111,7 +111,7 @@ void CameraHandler::startImageStream()
     // Begin burst read from FIFO.
     myCAM.CS_LOW();
     SPI.transfer(BURST_FIFO_READ);
-    Serial.println("IMG_START");
+    Serial.println("start reading pal");
 }
 
 uint16_t CameraHandler::readImageChunk(uint16_t chunkSize, uint8_t *buffer)
@@ -129,7 +129,7 @@ uint16_t CameraHandler::readImageChunk(uint16_t chunkSize, uint8_t *buffer)
 void CameraHandler::finishImageStream()
 {
     myCAM.CS_HIGH();
-    Serial.println("IMG_END");
+    Serial.println("cutting off stream (ouch)");
 }
 
 /**
