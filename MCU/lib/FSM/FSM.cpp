@@ -16,6 +16,8 @@ void FSM(data &d)
     //  emergencyLiftHandler(d);
 }
 
+#pragma region Initialize
+
 /**
  * @brief initializes the system at startup. The system should be put into low power mode and no connection mode.\n
  * The data struct should be initialized\n
@@ -40,8 +42,6 @@ void initializeStartup(data &d)
     d.lora = new LoraRadio;
     d.winch = new winchData(LIFT_PIN, LOWER_PIN, A0);
     d.liftFlag[0] = 0;
-    // d.lowerFlag = 0;
-    //  initialize the data struct
 
     d.cam = new CameraHandler;
     d.cam->begin();
@@ -63,6 +63,17 @@ void initializeNormalFSM(data &d)
     // NCM -> Normal
     d.state = NORMAL;
 }
+
+/**
+ * @brief initialize serial communication
+ */
+void initializeDebug() {
+    Serial.begin(9600);
+    Serial1.begin(9600, SERIAL_8N1);
+    Serial.println("Debugging Initialized");
+}
+
+#pragma endregion Initialize
 
 void sleep()
 {
@@ -210,16 +221,23 @@ void powerStateChange(data &d)
     }
 }
 
+#pragma region Sensors
+
 bool getAndSendImg(data &d)
 {
     uint32_t imgSize = d.cam->captureImage();
+    // uint32_t imgSize = d.cam->myCAM->read_fifo_length();
+
     Serial.print("Image size: ");
     Serial.println(imgSize);
+
     uint32_t imDivider = 6;
     int chunkSize = imgSize / imDivider;
     uint8_t img[chunkSize];
+
     int numBytesRead = 1;
     int currentChunk = 0;
+
     if (imgSize > 0)
     {
         d.cam->startImageStream(); // this may cause the beginning to repeat.
@@ -227,10 +245,12 @@ bool getAndSendImg(data &d)
         while (numBytesRead > 0)
         {
             currentChunk++;
+
             numBytesRead = d.cam->readImageChunk(chunkSize, img);
-            Serial.print((char *)img);
+            
             int encodedLength = Base64.encodedLength(chunkSize);
             char encodedImg[encodedLength + 1];
+
             Base64.encode(encodedImg, (char *)img, chunkSize);
 
             if (d.lora->sendPackets(encodedImg))
@@ -240,6 +260,7 @@ bool getAndSendImg(data &d)
             else
             {
                 Serial.println("Failed to send chunk:" + String(currentChunk + 1));
+                d.cam->finishImageStream(); // returns CS line high on failure.
                 return false;
             }
         }
@@ -247,8 +268,10 @@ bool getAndSendImg(data &d)
     else
     {
         Serial.println("Failed to capture image.");
+        d.cam->finishImageStream();
         return false;
     }
+
     d.cam->finishImageStream();
     return true;
 }
@@ -256,7 +279,7 @@ bool getAndSendImg(data &d)
 void updateTemp(data &d)
 {
     // Read temperature
-    float currentTempC = getTempC();
+    // float currentTempC = getTempC();
     float currentTempF = getTempF();
 
     // Print the reading
@@ -271,19 +294,8 @@ void updateTemp(data &d)
     d.temp.push_back(currentTempF);
 }
 
-/**
- * @brief initialize serial communication
- */
-void initializeDebug()
-{
-    Serial.begin(9600);
-    // This is blocking until a serial monitor is connected
-    // while (!Serial)
-    // ;
-    // delay(100);
-    Serial1.begin(9600, SERIAL_8N1);
-    Serial.println("Debugging Initialized");
-}
+#pragma endregion Sensors
+
 ////////////////////////////////////////////////////////////////////////////
 // Zach's House
 ////////////////////////////////////////////////////////////////////////////

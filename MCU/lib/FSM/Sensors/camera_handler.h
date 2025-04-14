@@ -2,12 +2,16 @@
 #define CAMERA_HANDLER_H
 
 #include <Arduino.h>
+#include <ArduCAM.h>
 
 // A simple handler class for the ArduCAM Mini 2MP Plus.
 class CameraHandler
 {
 public:
     CameraHandler();
+
+    ArduCAM* myCAM;
+
     // Initialize SPI, I2C, and the camera module.
     void begin();
 
@@ -25,12 +29,6 @@ public:
 
     // Finish the image stream (closes the burst read).
     void finishImageStream();
-    ////////////////////////////////////////////////////////
-    // TAYLORS VERSION
-    ////////////////////////////////////////////////////////
-    // Start streaming the captured image from FIFO.
-    void getPartialImage(char *buffer, size_t bufferSize);
-    void getImgSeg();
 
 private:
     uint32_t imgLength;  // Total captured image length.

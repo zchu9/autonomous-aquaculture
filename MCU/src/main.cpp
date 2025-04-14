@@ -13,18 +13,6 @@ void setup()
 
 void loop()
 {
-
-  /*
-  // Test the temperature sensor FSM function:
-  temperatureFSM(d);  // Reads sensor, prints to Serial, and adds value to d.temp
-
-  Serial.print("Number of temperature readings stored: ");
-  Serial.println(d.temp.size());
-  //d.temp.clear(); to erase data
-
-  delay(5000);
-  */
-
   // Test get and send image
   if (oggg == 1)
   {
@@ -35,6 +23,4 @@ void loop()
   delay(10000);
 
   //  FSM(d);
-  //   d.winch->lift(3.5);
-  //   while(1);
 }

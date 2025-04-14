@@ -11,7 +11,6 @@
 // Create an instance of the ArduCAM class.
 // We use OV2640 (a valid numeric constant defined in ArduCAM.h) as the sensor model.
 // The memorysaver.h file configures the module as OV2640 Mini 2MP Plus.
-ArduCAM myCAM(OV2640, CS_PIN);
 
 // Resolution selection – choose your desired resolution.
 // Uncomment the one you wish to use.
@@ -24,13 +23,11 @@ ArduCAM myCAM(OV2640, CS_PIN);
 // #define JPEG_RESOLUTION OV2640_1280x1024   // 1280 x 1024 resolution (SXGA)
 // #define JPEG_RESOLUTION OV2640_1600x1200   // 1600 x 1200 resolution (UXGA)
 
-CameraHandler::CameraHandler()
-{
-    // Empty constructor.
+CameraHandler::CameraHandler() {
+    this->myCAM = new ArduCAM(OV2640, CS_PIN);
 }
 
-void CameraHandler::begin()
-{
+void CameraHandler::begin() {
     // Initialize SPI.
     SPI.begin();
 
@@ -42,44 +39,48 @@ void CameraHandler::begin()
     Wire.begin();
 
     // Test communication with the camera module.
-    myCAM.write_reg(ARDUCHIP_TEST1, 0x55);
-    if (myCAM.read_reg(ARDUCHIP_TEST1) != 0x55)
+    this->myCAM->write_reg(ARDUCHIP_TEST1, 0x55);
+    if (this->myCAM->read_reg(ARDUCHIP_TEST1) != 0x55)
     {
         Serial.println("ArduCAM init failed. Communication error.");
-        }
+    }
 
     // Set the image format to JPEG.
-    myCAM.set_format(JPEG);
+    this->myCAM->set_format(JPEG);
 
-    // Initialize the camera.
-    myCAM.InitCAM();
+    // Initialize the camera. Uses I2C.
+    this->myCAM->InitCAM();
+    // Configure the sensor resolution. Also uses I2C.
+    this->myCAM->OV2640_set_JPEG_size(JPEG_RESOLUTION);
 
-    myCAM.clear_fifo_flag();
-
-    // Configure the sensor resolution.
-    myCAM.OV2640_set_JPEG_size(JPEG_RESOLUTION);
+    this->myCAM->CS_LOW();
+    this->myCAM->clear_fifo_flag();    // Uses SPI!
+    this->myCAM->CS_HIGH();
 
     Serial.println("ArduCAM OV2640 Mini 2MP Plus initialized.");
 }
 
-uint32_t CameraHandler::captureImage()
-{
+// depreciated in favor of segmented image transfers.
+uint32_t CameraHandler::captureImage() {
     // Reset image length and position.
     imgLength = 0;
     currentPos = 0;
 
+    this->myCAM->CS_LOW();
+
     // Flush any residual data and clear FIFO flags.
-    myCAM.flush_fifo();
-    myCAM.clear_fifo_flag();
+    this->myCAM->flush_fifo();
+    this->myCAM->clear_fifo_flag();
 
     // Start image capture.
-    myCAM.start_capture();
+    this->myCAM->start_capture();
     Serial.println("Capturing image...");
 
     // Wait until capture is complete (with a timeout).
     const unsigned long timeout = 5000; // 5000 ms timeout.
     unsigned long startTime = millis();
-    while (!myCAM.get_bit(ARDUCHIP_TRIG, CAP_DONE_MASK))
+
+    while (!this->myCAM->get_bit(ARDUCHIP_TRIG, CAP_DONE_MASK))
     {
         if (millis() - startTime > timeout)
         {
@@ -89,9 +90,10 @@ uint32_t CameraHandler::captureImage()
     }
 
     // Retrieve the length (in bytes) of the captured image.
-    imgLength = myCAM.read_fifo_length();
-    if ((imgLength >= 0x7FFFFF) || (imgLength == 0))
-    {
+    // This function returns (value & 0x07fffff).
+    imgLength = this->myCAM->read_fifo_length();
+
+    if (!imgLength) {
         Serial.println("Error: Image length is invalid.");
         return 0;
     }
@@ -102,18 +104,22 @@ uint32_t CameraHandler::captureImage()
 
     return imgLength;
 }
-void CameraHandler::startImageStream()
-{
+
+void CameraHandler::startImageStream() {
     // Reset the current position.
-    currentPos = 0;
+    this->currentPos = 0;
     // Begin burst read from FIFO.
-    myCAM.CS_LOW();
-    SPI.transfer(BURST_FIFO_READ);
+    this->myCAM->CS_LOW();
+
+    this->myCAM->flush_fifo();         // clear stale data
+    this->myCAM->clear_fifo_flag();    // set flag for next capture.
+
+    this->myCAM->set_fifo_burst();     // equivalent to SPI.transfer(0x3C) or SPI.transfer(BURST_FIFO_READ);
+
     Serial.println("start reading pal");
 }
 
-uint16_t CameraHandler::readImageChunk(uint16_t chunkSize, uint8_t *buffer)
-{
+uint16_t CameraHandler::readImageChunk(uint16_t chunkSize, uint8_t* buffer) {
     uint16_t bytesRead = 0;
     // Read until either the requested chunk size is reached or no more bytes.
     for (uint16_t i = 0; i < chunkSize && currentPos < imgLength; i++, currentPos++)
@@ -124,50 +130,12 @@ uint16_t CameraHandler::readImageChunk(uint16_t chunkSize, uint8_t *buffer)
     return bytesRead;
 }
 
-void CameraHandler::finishImageStream()
-{
-    myCAM.CS_HIGH();
+void CameraHandler::finishImageStream() {
+    // empty buffer, then drive CSn.
+    this->myCAM->flush_fifo();
+    this->myCAM->clear_fifo_flag();
+
+    this->myCAM->CS_HIGH();
+
     Serial.println("cutting off stream (ouch)");
-}
-
-/**
- *  TAYLORS VERSION :)
- */
-
-void CameraHandler::getPartialImage(char *buffer, size_t bufferSize)
-{
-    myCAM.CS_LOW();
-    myCAM.set_fifo_burst();
-    for (size_t i = 0; i < bufferSize; i++)
-    {
-        buffer[i] = SPI.transfer(0x00);
-    }
-}
-
-void CameraHandler::getImgSeg()
-{
-    const int chunksize = 250;
-    char buffer[chunksize] = {'\0'};
-
-    // empty fifo buffer
-    myCAM.flush_fifo();
-    myCAM.clear_fifo_flag();
-
-    uint32_t imgSize = myCAM.read_fifo_length();
-
-    int chunk = chunksize;
-
-    // send chunk -> update size -> repeat until empty
-    while (imgSize > 0)
-    {
-        memset(buffer, '\0', chunksize);
-        if (imgSize < chunksize)
-        {
-            chunk = imgSize;
-        }
-        getPartialImage(buffer, chunk);
-        // at this point, buffer contains a bit of the image
-        imgSize -= chunk;
-    }
-    myCAM.clear_fifo_flag();
 }
