@@ -219,20 +219,20 @@ bool getAndSendImg(data &d)
     int chunkSize = imgSize / imDivider;
     uint8_t img[chunkSize];
     int numBytesRead = 1;
+    int currentChunk = 0;
     if (imgSize > 0)
     {
         d.cam->startImageStream(); // this may cause the beginning to repeat.
 
         while (numBytesRead > 0)
         {
+            currentChunk++;
             numBytesRead = d.cam->readImageChunk(chunkSize, img);
             Serial.print((char *)img);
             int encodedLength = Base64.encodedLength(chunkSize);
             char encodedImg[encodedLength + 1];
             Base64.encode(encodedImg, (char *)img, chunkSize);
-            Serial.print(encodedImg);
 
-            /*
             if (d.lora->sendPackets(encodedImg))
             {
                 Serial.println("Chunk:" + String(currentChunk + 1) + " sent");
@@ -242,7 +242,6 @@ bool getAndSendImg(data &d)
                 Serial.println("Failed to send chunk:" + String(currentChunk + 1));
                 return false;
             }
-                */
         }
     }
     else
