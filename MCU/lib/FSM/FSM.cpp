@@ -253,6 +253,28 @@ void getAndSendImg(data &d)
     d.cam->finishImageStream();
 }
 
+
+void temperatureFSM(data &d) {
+    // Read temperature
+    float currentTempC = getTempC();
+    float currentTempF = getTempF();
+    
+    // Print the reading
+    Serial.print("Temperature: ");
+    //Serial.print(currentTempC);
+    //Serial.print(" °C / ");
+    Serial.print(currentTempF);
+    Serial.println(" °F");
+    
+    // Append the reading to the temperature array in d.
+    //d.temp.push_back(currentTempC);
+    d.temp.push_back(currentTempF);
+    
+    
+}
+
+
+
 /*
 Shiz is lowk deprecated but I like the way it looks.
 void getImgSeg()

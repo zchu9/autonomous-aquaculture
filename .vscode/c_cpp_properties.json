@@ -1,0 +1,92 @@
+//
+// !!! WARNING !!! AUTO-GENERATED FILE!
+// PLEASE DO NOT MODIFY IT AND USE "platformio.ini":
+// https://docs.platformio.org/page/projectconf/section_env_build.html#build-flags
+//
+{
+    "configurations": [
+        {
+            "name": "PlatformIO",
+            "includePath": [
+                "C:/Users/acein/Desktop/AquaFarm/autonomous-aquaculture-project/include",
+                "C:/Users/acein/Desktop/AquaFarm/autonomous-aquaculture-project/src",
+                "C:/Users/acein/Desktop/AquaFarm/autonomous-aquaculture-project/.pio/libdeps/mkrnb1500/DallasTemperature",
+                "C:/Users/acein/Desktop/AquaFarm/autonomous-aquaculture-project/.pio/libdeps/mkrnb1500/OneWire",
+                "C:/Users/acein/Desktop/AquaFarm/autonomous-aquaculture-project/.pio/libdeps/mkrnb1500/ArduCAM",
+                "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/Wire",
+                "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/SPI",
+                "C:/Users/acein/.platformio/packages/framework-arduino-samd/cores/arduino/api/deprecated",
+                "C:/Users/acein/.platformio/packages/framework-arduino-samd/cores/arduino/api/deprecated-avr-comp",
+                "C:/Users/acein/.platformio/packages/framework-cmsis/CMSIS/Include",
+                "C:/Users/acein/.platformio/packages/framework-cmsis-atmel/CMSIS/Device/ATMEL",
+                "C:/Users/acein/.platformio/packages/framework-arduino-samd/cores/arduino",
+                "C:/Users/acein/.platformio/packages/framework-arduino-samd/variants/mkrnb1500",
+                "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/HID",
+                "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/I2S/src",
+                "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/SAMD_AnalogCorrection/src",
+                "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/SAMD_BootloaderUpdater/src",
+                "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/SBU/src",
+                "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/SDU/src",
+                "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/SFU/src",
+                "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/SNU/src",
+                "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/SSU/src",
+                "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/USBHost/src",
+                ""
+            ],
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true,
+                "path": [
+                    "C:/Users/acein/Desktop/AquaFarm/autonomous-aquaculture-project/include",
+                    "C:/Users/acein/Desktop/AquaFarm/autonomous-aquaculture-project/src",
+                    "C:/Users/acein/Desktop/AquaFarm/autonomous-aquaculture-project/.pio/libdeps/mkrnb1500/DallasTemperature",
+                    "C:/Users/acein/Desktop/AquaFarm/autonomous-aquaculture-project/.pio/libdeps/mkrnb1500/OneWire",
+                    "C:/Users/acein/Desktop/AquaFarm/autonomous-aquaculture-project/.pio/libdeps/mkrnb1500/ArduCAM",
+                    "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/Wire",
+                    "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/SPI",
+                    "C:/Users/acein/.platformio/packages/framework-arduino-samd/cores/arduino/api/deprecated",
+                    "C:/Users/acein/.platformio/packages/framework-arduino-samd/cores/arduino/api/deprecated-avr-comp",
+                    "C:/Users/acein/.platformio/packages/framework-cmsis/CMSIS/Include",
+                    "C:/Users/acein/.platformio/packages/framework-cmsis-atmel/CMSIS/Device/ATMEL",
+                    "C:/Users/acein/.platformio/packages/framework-arduino-samd/cores/arduino",
+                    "C:/Users/acein/.platformio/packages/framework-arduino-samd/variants/mkrnb1500",
+                    "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/HID",
+                    "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/I2S/src",
+                    "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/SAMD_AnalogCorrection/src",
+                    "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/SAMD_BootloaderUpdater/src",
+                    "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/SBU/src",
+                    "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/SDU/src",
+                    "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/SFU/src",
+                    "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/SNU/src",
+                    "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/SSU/src",
+                    "C:/Users/acein/.platformio/packages/framework-arduino-samd/libraries/USBHost/src",
+                    ""
+                ]
+            },
+            "defines": [
+                "PLATFORMIO=60118",
+                "ARDUINO_SAMD_MKRNB1500",
+                "__SAMD21G18A__",
+                "USE_BQ24195L_PMIC",
+                "USE_ARDUINO_MKR_PIN_LAYOUT",
+                "ARDUINO=10805",
+                "F_CPU=48000000L",
+                "USBCON",
+                "USB_VID=0x2341",
+                "USB_PID=0x8055",
+                "USB_PRODUCT=\"Arduino MKR NB 1500\"",
+                "USB_MANUFACTURER=\"Arduino\"",
+                "ARDUINO_ARCH_SAMD",
+                ""
+            ],
+            "cStandard": "gnu11",
+            "cppStandard": "gnu++11",
+            "compilerPath": "C:/Users/acein/.platformio/packages/toolchain-gccarmnoneeabi/bin/arm-none-eabi-gcc.exe",
+            "compilerArgs": [
+                "-mcpu=cortex-m0plus",
+                "-mthumb",
+                ""
+            ]
+        }
+    ],
+    "version": 4
+}
