@@ -1,6 +1,16 @@
+#ifndef POWERINFO_H
+#define POWERINFO_H
+
+// for accessing renogy MPPT
 #include <renogy.h>
+
+// for accessing victron SmartShunt
 #include <victron.h>
-#include <ArduinoJson.h>
+#include <victronFunctions.h>
+
+// misc info.
+#include <ArduinoJson.h>    // formatting
+
 
 class powerInfo {
 public:
@@ -8,12 +18,7 @@ public:
     ShuntPowerData bms;
     JsonDocument data;
 
-    JsonDocument getData();
+    int getData();
     void formatRenogyData();
 };
-
-void powerInfo::formatRenogyData() {
-    // TODO
-    // this->mppt.renogyData;
-    
-};
+#endif // POWERINFO_H

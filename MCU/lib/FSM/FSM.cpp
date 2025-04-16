@@ -1,5 +1,4 @@
 #include "FSM.h"
-#include "uartSwitch.h"
 
 #define DEBUG_LIFT 1
 
@@ -35,7 +34,7 @@ void initializeStartup(data &d)
     Serial.println("Hard Coded into normal mode");
 
 #endif
-    uartSwitch(d, RADIO, 9600, SERIAL_8N1);
+    // uartSwitch(RADIO, 9600, SERIAL_8N1);
     // should probably be a init data function.
 
     // init the lora class

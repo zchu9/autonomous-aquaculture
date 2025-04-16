@@ -1,5 +1,8 @@
+#pragma once
+
 #ifndef FSM_H
 #define FSM_H
+
 #include <Arduino.h>
 #include <vector>
 #include <ArduinoJson.h>
@@ -11,6 +14,7 @@
 #include "Sensors/pot_handler.h"
 #include "Sensors/temperature_sensor.h"
 #include "winch.h"
+#include "powerInfo.h"  // for all power information
 
 #define DEBUG true
 
@@ -21,13 +25,6 @@ enum State
     NO_CONNECTION,
     LOW_POWER_NO_CONNECTION
 };
-
-enum device
-{
-    RADIO,
-    MPPT,
-    BMS,
-}; // victron bms, renogy mppt, LoRA module.
 
 struct data
 {
@@ -47,8 +44,6 @@ struct data
     std::vector<double> power; // stores power readings for each device
     std::vector<double> temp;  // stores temperature readings for each device
 
-    device currentDevice;
-    ulong lastDevSwitchTime;
     JsonDocument doc;
 };
 

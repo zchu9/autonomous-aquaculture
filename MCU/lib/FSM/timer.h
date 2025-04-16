@@ -1,9 +1,16 @@
-// a simple oneshot timer to dump SAMD_TimerInterupt lib and enable sleep from LowPower and wakeup on RTC events
-// SAMD21 timer/counter starts on p555 of the manual. p559 contains startup details. http://www.technoblogy.com/show?3RC9
+#ifndef TIMERS_H
+#define TIMERS_H
 
 #include <Arduino.h>
+
 volatile static bool one_sec = false;
 
+byte getSeconds();
+byte getMinutes();
+
+// a simple oneshot timer to dump SAMD_TimerInterupt lib and enable sleep from LowPower and wakeup on RTC events
+// SAMD21 timer/counter starts on p555 of the manual. p559 contains startup details. http://www.technoblogy.com/show?3RC9
+// initializes hardware timers; shouldn't be necessary from here on out. TODO: remove in final builds.
 void setupTimer() {
     // Configure asynchronous clock source
     GCLK->CLKCTRL.reg = GCLK_CLKCTRL_ID_TCC2_TC3_Val;    // select TC3 peripheral channel
@@ -52,3 +59,4 @@ void TC3_Handler(void) {
     // Acknowledge the interrupt (clear MC0 interrupt flag to re-arm)
     TC3->COUNT16.INTFLAG.reg |= 0b00010000;
 }
+#endif
