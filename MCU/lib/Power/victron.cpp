@@ -7,8 +7,7 @@ void fetchVictronStats(ShuntPowerData& stats) {
     if (Serial1.available() > 5) {
         Serial1.readBytes(buffer, buffer_size);
         if (!victronChecksum(buffer, buffer_size)) {
-            // TODO
-            // transmission error.
+            // TODO: transmission error.
         }
     }
     victronParse(stats, buffer, buffer_size);
