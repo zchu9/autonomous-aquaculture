@@ -33,7 +33,8 @@ void FSM(data &d)
     updateTime(d);
     int interval = 3;
 
-    if (d.t.seconds != d.last && d.t.seconds % interval == 0) {
+    if (d.t.seconds != d.last && d.t.seconds % interval == 0)
+    {
         testState(d, ds, params);
         d.last = d.t.seconds;
     }
@@ -68,6 +69,7 @@ void initializeStartup(data &d)
     d.lora = new LoraRadio;
     d.winch = new winchData(LIFT_PIN, LOWER_PIN, A0);
     d.liftFlag[0] = 0;
+    d.height[0] = -1;
 
     d.cam = new CameraHandler;
     d.cam->begin();
@@ -93,10 +95,11 @@ void initializeNormalFSM(data &d)
 /**
  * @brief initialize serial communication
  */
-void initializeDebug() {
+void initializeDebug()
+{
     Serial.begin(9600);
     Serial1.begin(9600, SERIAL_8N1);
-    timerInit();    // should be a normal startup component;
+    timerInit(); // should be a normal startup component;
     Serial.println("Debugging Initialized");
 }
 
@@ -120,12 +123,14 @@ void checkPowerHandler(data &d)
 #endif
         setPowerFlag(false);
         double battVoltage = checkPower(d);
-        if(battVoltage < POWER_THRESHOLD){
+        if (battVoltage < POWER_THRESHOLD)
+        {
             getIntoLowPowerMode(d);
             return;
         }
 
-        if(battVoltage >= POWER_THRESHOLD && d.state == LOW_POWER) {
+        if (battVoltage >= POWER_THRESHOLD && d.state == LOW_POWER)
+        {
             getOutOfLowPowerMode(d);
         }
     }
@@ -286,7 +291,7 @@ bool getAndSendImg(data &d)
             currentChunk++;
 
             numBytesRead = d.cam->readImageChunk(chunkSize, img);
-            
+
             int encodedLength = Base64.encodedLength(chunkSize);
             char encodedImg[encodedLength + 1];
 
@@ -341,42 +346,46 @@ void updateTemp(data &d)
 
 #pragma region Debug
 
-void updateTime(data& d) {
+void updateTime(data &d)
+{
     time t = getTime();
     d.t.minutes = t.minutes;
     d.t.seconds = t.seconds;
 }
 
-void testState(data& d, debug_sim ds, std::vector<std::string> params) {
+void testState(data &d, debug_sim ds, std::vector<std::string> params)
+{
     char buffer[80 * 24];
 
     parseParams(d, ds, params);
 
     char output[] = "\033[38;5;%d;80;80mCurrent state : %d\n"
-    "Height: %0.2f\t|\tTemp: %0.2f\n"
-    "Solar_V: %0.2f\t|\tBatt_V: %0.2f\n"
-    "Uptime: %2d:%2d\n"
-    "Last Transmission time:%2d:%2d\n\033[0m";
+                    "Height: %0.2f\t|\tTemp: %0.2f\n"
+                    "Solar_V: %0.2f\t|\tBatt_V: %0.2f\n"
+                    "Uptime: %2d:%2d\n"
+                    "Last Transmission time:%2d:%2d\n\033[0m";
 
     static int color = 16;
-    color += 31;    // comment this out if you hate fun :(
+    color += 31; // comment this out if you hate fun :(
 
-    sprintf(buffer, output, \
-        color, d.state, \
-        d.temp, d.height[0], \
-        d.powerData.solarPanelVoltage, d.powerData.batteryVoltage, \
-        d.t.minutes, d.t.seconds, \
-        0, 0
-    );
+    sprintf(buffer, output,
+            color, d.state,
+            d.height[0], d.temp[0],
+            d.powerData.solarPanelVoltage, d.powerData.batteryVoltage,
+            d.t.minutes, d.t.seconds,
+            0, 0);
     Serial.println(buffer);
 }
 
-void parseParams(data& d, debug_sim ds, std::vector<std::string> params) {
-    for (std::string s : params) {
-        std::string w = s.substr(s.find('=')+1);
-        char* ptr;
-        double value = strtod(w.c_str(),&ptr);
-        switch (s[0]) {
+void parseParams(data &d, debug_sim ds, std::vector<std::string> params)
+{
+    for (std::string s : params)
+    {
+        std::string w = s.substr(s.find('=') + 1);
+        char *ptr;
+        double value = strtod(w.c_str(), &ptr);
+        switch (s[0])
+        {
         case 'h':
             d.height[0] = value;
             ds.height = false;
@@ -385,7 +394,7 @@ void parseParams(data& d, debug_sim ds, std::vector<std::string> params) {
             d.temp[0] = value;
             ds.temp = false;
             break;
-        case 'b':      
+        case 'b':
             d.powerData.batteryVoltage = value;
             ds.battery = false;
             break;
@@ -397,10 +406,22 @@ void parseParams(data& d, debug_sim ds, std::vector<std::string> params) {
     }
 
     // default values to set;
-    if (ds.battery) { d.powerData.batteryVoltage = 12.6; }
-    if (ds.height) { d.height[0] = 3.0; }
-    if (ds.temp) { d.temp[0] = 76.0; }
-    if (ds.solar) { d.powerData.solarPanelVoltage = 12.7; }
+    if (ds.battery)
+    {
+        d.powerData.batteryVoltage = 12.6;
+    }
+    if (ds.height)
+    {
+        d.height[0] = 3.0;
+    }
+    if (ds.temp)
+    {
+        d.temp[0] = 76.0;
+    }
+    if (ds.solar)
+    {
+        d.powerData.solarPanelVoltage = 12.7;
+    }
 };
 
 #pragma endregion Debug
