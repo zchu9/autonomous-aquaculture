@@ -1,9 +1,10 @@
-from controllers import logging, jsonify, request, ObjectId, SystemLevels, convert_to_utc, convert_to_eastern_time
+from controllers import logging, jsonify, request, ObjectId, SystemLevels, RenogyMppt, SmartShunt, convert_to_utc, convert_to_eastern_time
+
 
 # Gets the most recent system level from a farm
 def get_system_levels(id):
     try:
-        data = SystemLevels.objects(farm_id=id).first()
+        data = SystemLevels.objects(farm_id=id).order_by("-created_at").first()
 
         if data:
             sys_data = data.to_mongo()
@@ -19,6 +20,7 @@ def get_system_levels(id):
     except Exception as e:
         logging.error("Failed to get system levels: %s", e)
         return "Error getting system levels data", 500
+
 
 # Get all system levels in a farm
 def get_all_system_levels(id):
@@ -58,11 +60,11 @@ def get_mult_system_levels(id):
             if start_date_utc and end_date_utc:
                 query["created_at__gte"] = start_date_utc.replace(hour=0, minute=0, second=0)
                 query["created_at__lte"] = end_date_utc.replace(hour=23, minute=59, second=59)
-        
+
         else:
             logging.info("User needs to add both start and end dates")
             return "You need to add both a start and end date", 400
-        
+
         logging.info(f"Query for system levels: {query}")
         mult_sys_levels = SystemLevels.objects(**query)
         logging.info(f"Query successful: {mult_sys_levels}")
@@ -73,14 +75,14 @@ def get_mult_system_levels(id):
                 sys_lev_data = system_level.to_mongo()
                 sys_lev_data["_id"] = str(system_level.id)
                 sys_lev_data["farm_id"] = str(system_level.farm_id)
-                
+
                 eastern_time = convert_to_eastern_time(system_level.created_at)
                 if eastern_time:
                     sys_lev_data["created_at"] = eastern_time.strftime('%Y-%m-%d %H:%M:%S EST')
-                
+
                 sys_lev_list.append(sys_lev_data)
-                
-            logging.info(f"Found all system levels within the specfied date range")
+
+            logging.info("Found all system levels within the specfied date range")
             return jsonify(sys_lev_list), 200
         else:
             logging.info("Can not find the system levels in specified dates")
@@ -94,12 +96,13 @@ def add_system_levels(id):
     system_level = request.json
 
     try:
-        new_data = SystemLevels (
-            farm_id = ObjectId(id),
-            solar_panel_power = system_level.get("solar_panel_power"),
-            battery_voltage = system_level.get("battery_voltage"),
-            battery_temp = system_level.get("battery_temp"),
-            battery_time = system_level.get("battery_time")
+        shunt = SmartShunt(**system_level.get("smart_shunt", {}))
+        mppt = RenogyMppt(**system_level.get("renogy_mppt", {}))
+        
+        new_data = SystemLevels(
+            farm_id=ObjectId(id),
+            smart_shunt=[shunt],
+            renogy_mppt=[mppt]
         )
         new_data.save()
         logging.info(f"System levels created for farm {id}: {system_level}")
@@ -110,12 +113,13 @@ def add_system_levels(id):
         eastern_time = convert_to_eastern_time(new_data.created_at)
         if eastern_time:
             sys_response["created_at"] = eastern_time.strftime("%Y-%m-%d %H:%M:%S EST")
-        
+
         return jsonify(sys_response), 201
-    
+
     except Exception as e:
         logging.error("Failed to create sensor data: %s", e)
         return "Error creating sensor data", 500
+
 
 # Deletes every system level document in specified farm
 def delete_system_levels(id):
