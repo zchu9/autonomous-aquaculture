@@ -15,6 +15,7 @@
 #include "Sensors/temperature_sensor.h"
 #include "winch.h"
 #include "powerInfo.h"  // for all power information
+#include "timer.h"
 
 #define DEBUG true
 
@@ -45,9 +46,13 @@ struct data
     std::vector<double> temp;  // stores temperature readings for each device
 
     JsonDocument doc;
+
+    powerInfo powerData;    // stores power readings for each device
+    time t;                 // a value in minutes and seconds; need a better representation maybe.
+    byte last;
 };
 
-#define POWER_THRESHOLD 0.5
+#define POWER_THRESHOLD 11.8
 #define MAX_HEIGHT 3.5
 
 // Emergency Lift Lowering
@@ -114,7 +119,29 @@ bool getAndSendImg(data &d);
 // Temp sensor
 void updateTemp(data &d);
 
-// Winch Controls
+// DEBUG CONTROLS
+typedef struct debug_sim {
+    bool battery;
+    bool solar;
+    bool height;
+    bool temp;
+} ds;
+
+/**
+ * @brief a function to test the FSM
+ *
+ * @param d FSM data struct
+ * @param ds decide whether to simulate values in place of missing systems. values are power and sensors.
+ * @param params in the form p=#
+ *      h - height
+ *      t - temp
+ *      b - battery
+ *      s = solar PV
+ */
+void testState(data& d, debug_sim ds, std::vector<std::string> params);
+void parseParams(data& d, debug_sim ds, std::vector<std::string> params);
+void updateTime(data& d);
+
 
 // Debugging
 void initializeDebug();

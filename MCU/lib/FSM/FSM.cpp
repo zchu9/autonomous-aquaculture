@@ -12,7 +12,34 @@ void FSM(data &d)
     d.lora->receiveMsg(d.doc);
     checkPowerHandler(d);
     commsHandler(d);
-    //  emergencyLiftHandler(d);
+
+#if DEBUG
+    debug_sim ds;
+    std::vector<std::string> params;
+
+    // battery
+    ds.battery = false;
+    char buf[30];
+    double num = analogRead(A3);
+    num /= analogRead(A4);
+    num *= 14.0;
+    sprintf(buf, "b=%f", num);
+    params.push_back(buf);
+
+    ds.height = true;
+    ds.temp = true;
+    ds.solar = true;
+
+    updateTime(d);
+    int interval = 3;
+
+    if (d.t.seconds != d.last && d.t.seconds % interval == 0) {
+        testState(d, ds, params);
+        d.last = d.t.seconds;
+    }
+
+    params.clear();
+#endif
 }
 
 #pragma region Initialize
@@ -32,8 +59,8 @@ void initializeStartup(data &d)
     initializeDebug();
     initializeNormalFSM(d);
     Serial.println("Hard Coded into normal mode");
-
 #endif
+
     // uartSwitch(RADIO, 9600, SERIAL_8N1);
     // should probably be a init data function.
 
@@ -69,6 +96,7 @@ void initializeNormalFSM(data &d)
 void initializeDebug() {
     Serial.begin(9600);
     Serial1.begin(9600, SERIAL_8N1);
+    timerInit();    // should be a normal startup component;
     Serial.println("Debugging Initialized");
 }
 
@@ -91,13 +119,23 @@ void checkPowerHandler(data &d)
         Serial.println("Power check function");
 #endif
         setPowerFlag(false);
-        // checkPower(d);
+        double battVoltage = checkPower(d);
+        if(battVoltage < POWER_THRESHOLD){
+            getIntoLowPowerMode(d);
+            return;
+        }
+
+        if(battVoltage >= POWER_THRESHOLD && d.state == LOW_POWER) {
+            getOutOfLowPowerMode(d);
+        }
     }
 }
 
 //////////////////////////////////////////
 //          Comms stuff
 //////////////////////////////////////////
+
+#pragma region Comms
 
 void commsHandler(data &d)
 {
@@ -175,6 +213,8 @@ bool sendData(data &d)
     delete[] buffer; // Free the allocated memory
     return success;
 }
+
+#pragma endregion Comms
 
 void getIntoLowPowerMode(data &d)
 {
@@ -298,10 +338,77 @@ void updateTemp(data &d)
 ////////////////////////////////////////////////////////////////////////////
 // Zach's House
 ////////////////////////////////////////////////////////////////////////////
+
+#pragma region Debug
+
+void updateTime(data& d) {
+    time t = getTime();
+    d.t.minutes = t.minutes;
+    d.t.seconds = t.seconds;
+}
+
+void testState(data& d, debug_sim ds, std::vector<std::string> params) {
+    char buffer[80 * 24];
+
+    parseParams(d, ds, params);
+
+    char output[] = "\033[38;5;%d;80;80mCurrent state : %d\n"
+    "Height: %0.2f\t|\tTemp: %0.2f\n"
+    "Solar_V: %0.2f\t|\tBatt_V: %0.2f\n"
+    "Uptime: %2d:%2d\n"
+    "Last Transmission time:%2d:%2d\n\033[0m";
+
+    static int color = 16;
+    color += 31;    // comment this out if you hate fun :(
+
+    sprintf(buffer, output, \
+        color, d.state, \
+        d.temp, d.height[0], \
+        d.powerData.solarPanelVoltage, d.powerData.batteryVoltage, \
+        d.t.minutes, d.t.seconds, \
+        0, 0
+    );
+    Serial.println(buffer);
+}
+
+void parseParams(data& d, debug_sim ds, std::vector<std::string> params) {
+    for (std::string s : params) {
+        std::string w = s.substr(s.find('=')+1);
+        char* ptr;
+        double value = strtod(w.c_str(),&ptr);
+        switch (s[0]) {
+        case 'h':
+            d.height[0] = value;
+            ds.height = false;
+            break;
+        case 't':
+            d.temp[0] = value;
+            ds.temp = false;
+            break;
+        case 'b':      
+            d.powerData.batteryVoltage = value;
+            ds.battery = false;
+            break;
+        case 's':
+            d.powerData.solarPanelVoltage = value;
+            ds.solar = false;
+            break;
+        }
+    }
+
+    // default values to set;
+    if (ds.battery) { d.powerData.batteryVoltage = 12.6; }
+    if (ds.height) { d.height[0] = 3.0; }
+    if (ds.temp) { d.temp[0] = 76.0; }
+    if (ds.solar) { d.powerData.solarPanelVoltage = 12.7; }
+};
+
+#pragma endregion Debug
+
 double checkPower(data &d)
 {
-    // double ret = messageTest(d);
-    return 0;
+    // getPowerInfo();
+    return d.powerData.batteryVoltage;
 };
 /*
       `'::::.

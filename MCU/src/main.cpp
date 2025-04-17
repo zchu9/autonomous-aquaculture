@@ -1,7 +1,6 @@
 #include "FSM.h"
 #include "SAMDTimerInterrupt.h"
 data d;
-static int oggg = 1;
 
 void setup()
 {
@@ -13,14 +12,5 @@ void setup()
 
 void loop()
 {
-  // Test get and send image
-  if (oggg == 1)
-  {
-    getAndSendImg(d);
-    oggg = 0;
-  }
-  Serial.println("done");
-  delay(10000);
-
-  //  FSM(d);
+   FSM(d);
 }

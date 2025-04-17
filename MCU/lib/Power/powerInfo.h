@@ -14,6 +14,9 @@
 
 class powerInfo {
 public:
+    double batteryVoltage;
+    double solarPanelVoltage;
+
     RenogyMPPT mppt;
     ShuntPowerData bms;
     JsonDocument data;
