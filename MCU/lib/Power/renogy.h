@@ -6,6 +6,9 @@
 #include <Arduino.h>
 #include <ModbusMaster.h>
 
+#define RENOGY_BAUD 9600
+#define RENOGY_CONFIG SERIAL_8N1    // although the modbusRTU spec differs, their implementation is simple.
+
 // A struct to hold the controller data
 struct Controller_data {
     uint8_t battery_soc;               // percent

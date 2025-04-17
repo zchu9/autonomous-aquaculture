@@ -16,6 +16,7 @@
 #include "winch.h"
 #include "powerInfo.h"  // for all power information
 #include "timer.h"
+#include "uartSwitch.h"
 
 #define DEBUG true
 

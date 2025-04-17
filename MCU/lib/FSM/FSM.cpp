@@ -23,7 +23,7 @@ void FSM(data &d)
     double num = analogRead(A3);
     num /= analogRead(A4);
     num *= 14.0;
-    sprintf(buf, "b=%f", num);
+    snprintf(buf, 30, "b=%f", num);
     params.push_back(buf);
 
     ds.height = true;
@@ -407,8 +407,9 @@ void parseParams(data& d, debug_sim ds, std::vector<std::string> params) {
 
 double checkPower(data &d)
 {
-    // getPowerInfo();
-    return d.powerData.batteryVoltage;
+    d.powerData.getData();      // update all power values;
+    uartSwitch(RADIO, 9600, SERIAL_8N1);    // in the event of failure, reconnect the radio;
+    return d.powerData.batteryVoltage;  
 };
 /*
       `'::::.

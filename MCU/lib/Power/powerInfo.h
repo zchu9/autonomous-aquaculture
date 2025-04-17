@@ -12,6 +12,10 @@
 #include <ArduinoJson.h>    // formatting
 
 
+#include "uartSwitch.h"
+
+
+
 class powerInfo {
 public:
     double batteryVoltage;
@@ -23,5 +27,7 @@ public:
 
     int getData();
     void formatRenogyData();
+    void formatVictronData();
+
 };
 #endif // POWERINFO_H
