@@ -4,10 +4,11 @@ import { useEffect } from "react";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import Grid from "@mui/material/Grid2";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
 
 import IOSSwitch from "../comm/Switch";
 
@@ -17,6 +18,13 @@ import { styled } from "@mui/material/styles";
 import DeviceData from "../comm/DeviceDataInterface";
 
 const base_url = `${import.meta.env.VITE_API_URL}`;
+
+interface ScheduleList {
+  command: Boolean;
+  date: Date;
+  duration: number;
+  status: string;
+}
 
 interface DeviceInfoPaneProps {
   uuid: string;
@@ -35,6 +43,7 @@ const InfoPaneRow = styled(Box)(({ theme }) => ({
 
 export default function DeviceInfoPane(props: DeviceInfoPaneProps) {
   const [objectData, setObjectData] = React.useState<DeviceData>();
+  const [scheduleList, setSchedules] = React.useState<ScheduleList[]>();
 
   async function fetchFarmData() {
     console.log(`Fetching device data from ${base_url}...`);
@@ -56,13 +65,50 @@ export default function DeviceInfoPane(props: DeviceInfoPaneProps) {
     }
   }
 
+  async function fetchSchedule() {
+    console.log(`Fetching schedules from ${base_url}...`);
+
+    try {
+      const response = await fetch(
+        base_url + "/farm/" + props.uuid + "/getAllActiveLiftSchedule",
+        {
+          method: "GET",
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      const temp = data.map((item: any) => {
+        const thing = item.schedule[0].dates.map(() => {
+          return {
+            date: new Date(item.created_at),
+            command: item.schedule[0].command,
+            duration: item.schedule[0].duration,
+            status: item.schedule[0].status,
+          };
+        });
+        return thing;
+      });
+
+      setSchedules(temp.flat());
+    } catch (error) {
+      console.error("Error fetching sensor data:", error);
+    }
+  }
+
   useEffect(() => {
     fetchFarmData();
+    fetchSchedule();
 
-    const intervalId = setInterval(fetchFarmData, 60000);
+    const intervalId1 = setInterval(fetchFarmData, 60000);
+    const intervalId2 = setInterval(fetchSchedule, 60000);
 
     return () => {
-      clearInterval(intervalId);
+      clearInterval(intervalId1);
+      clearInterval(intervalId2);
     };
   }, []);
 
@@ -134,14 +180,37 @@ export default function DeviceInfoPane(props: DeviceInfoPaneProps) {
           <Grid size={6}>
             <InfoPaneRow>
               <Typography variant="subtitle2" fontWeight="bold">
-                Next Scheduled Operation:
+                Next Scheduled Operation(s):
               </Typography>
-              <Typography variant="body1">—</Typography>
+              {scheduleList?.length === 0 ? (
+                <Typography variant="body1">—</Typography>
+              ) : (
+                scheduleList?.map((schedule: ScheduleList, idx: number) => {
+                  return (
+                    <List>
+                      <ListItem key={idx}>
+                        <div key={idx}>
+                          {schedule.date.toLocaleString()} -{" "}
+                          {schedule.command ? "Up" : "Down"} for{" "}
+                          {schedule.duration} minutes
+                        </div>
+                      </ListItem>
+                    </List>
+                  );
+                })
+              )}
+            </InfoPaneRow>
+          </Grid>
+          <Grid>
+            <InfoPaneRow>
+              <Typography variant="subtitle2" fontWeight="bold">
+                Schedule an Operation:
+              </Typography>
             </InfoPaneRow>
           </Grid>
         </Grid>
 
-        <Grid container spacing={2}>
+        {/* <Grid container spacing={2}>
           <Grid size={2}>
             <Typography variant="subtitle2" fontWeight="bold">
               Active
@@ -154,7 +223,7 @@ export default function DeviceInfoPane(props: DeviceInfoPaneProps) {
               ></FormControlLabel>
             </Box>
           </Grid>
-        </Grid>
+        </Grid> */}
       </Stack>
     </InfoPane>
   );

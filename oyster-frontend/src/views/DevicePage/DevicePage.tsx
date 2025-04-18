@@ -55,16 +55,18 @@ export default function DevicePage() {
           sx={{ marginTop: 2, flexGrow: 1, display: "flex" }}
         >
           <Grid
-            item
             size={6}
             sx={{ display: "flex", flexDirection: "column", flexGrow: 1 }}
           >
             <DeviceInfoPane uuid={uuid} />
           </Grid>
           <Grid
-            item
             size={6}
-            sx={{ display: "flex", flexDirection: "column", flexGrow: 1 }}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              flexGrow: 1,
+            }}
           >
             <DeviceDataPane uuid={uuid} />
           </Grid>
