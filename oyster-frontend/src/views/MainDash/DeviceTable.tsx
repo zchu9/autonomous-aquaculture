@@ -107,8 +107,8 @@ export default function DeviceTable(props: DeviceTableProps) {
   );
 
   return (
-    <Box sx={{ width: "100%" }}>
-      <Paper sx={{ width: "100%", mb: 2 }}>
+    <Box sx={{ width: "100%", justifyContent: "center", display: "flex" }}>
+      <Paper sx={{ width: "100%", mb: 2, padding: 2 }}>
         <EnhancedTableToolbar
           numSelected={selected.length}
           selectedDevices={selected.map((idx) => {
@@ -117,7 +117,7 @@ export default function DeviceTable(props: DeviceTableProps) {
         />
 
         <TableContainer>
-          <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
+          <Table sx={{ width: "100%" }} aria-labelledby="tableTitle">
             <EnhancedTableHead
               numSelected={selected.length}
               order={order}

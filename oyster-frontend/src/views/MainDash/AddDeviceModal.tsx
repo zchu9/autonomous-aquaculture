@@ -66,8 +66,8 @@ export default function AddDeviceModal(props: AddDeviceModalProps) {
   return (
     <>
       <ModalTemplate label="Add new Device">
-        <Grid container>
-          <Grid size={5}>
+        <Grid container spacing={2}>
+          <Grid item xs={5}>
             <Stack spacing={2}>
               <div>Enter device details</div>
               <FormLabel>Device Name</FormLabel>
@@ -129,17 +129,18 @@ export default function AddDeviceModal(props: AddDeviceModalProps) {
               </Button>
             </Stack>
           </Grid>
-          <Grid size={1}>
+          <Grid item xs={1}>
             <Divider orientation="vertical" variant="middle" />
           </Grid>
-          <Grid size={5}>
-            <List>
+          <Grid item xs={6}>
+            <List sx={{ width: "100%" }}>
               <ListItem disablePadding>
-                1. Use the form to the left to enter your device's details.
+                1. Use the form on the left to enter your device's details.
               </ListItem>
               <ListItem disablePadding>
-                2. Click confirm to register the device and generate a config
-                file. The config file will be dowwnloaded automatically.
+                2. Click confirm to register the device and generate a
+                configuration file. The configuration file will be downloaded
+                automatically.
               </ListItem>
               <ListItem disablePadding>
                 3. Copy the config file to the microcontroller code's include
