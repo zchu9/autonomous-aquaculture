@@ -28,11 +28,22 @@ interface SensorData {
   temperature: number;
 }
 
-interface SystemLevels {
-  battery_temp: number;
-  battery_time: Date;
-  battery_voltage: number;
+interface SolarPanelData {
+  created_at: Date;
+  controller_temp: number;
+  load_voltage: number;
+  solar_panel_current: number;
   solar_panel_power: number;
+  solar_panel_voltage: number;
+}
+
+interface BatteryData {
+  created_at: Date;
+  battery_current: number;
+  battery_temp: number;
+  battery_voltage: number;
+  power: number;
+  state_of_charge: number;
 }
 
 const DataPane = styled(Paper)(({ theme }) => ({
@@ -45,7 +56,8 @@ const DataPane = styled(Paper)(({ theme }) => ({
 
 export function DeviceDataPane(props: DeviceDataPaneProps) {
   const [objectData, setObjectData] = React.useState<SensorData>();
-  const [systemLevels, setSystemLevels] = React.useState<SystemLevels>();
+  const [solarPanelData, setSolarPanelData] = React.useState<SolarPanelData>();
+  const [batteryData, setBatteryData] = React.useState<BatteryData>();
   const [cameraStr, setCameraStr] = React.useState<string>("");
 
   async function fetchSensorData() {
@@ -94,17 +106,31 @@ export function DeviceDataPane(props: DeviceDataPaneProps) {
 
       const data = await response.json();
 
-      console.log(data);
-
-      setSystemLevels(
+      await setSolarPanelData(
         data.map((item: any) => {
           return {
             created_at: new Date(item.created_at),
-            battery_temp: item.battery_temp,
-            battery_time: new Date(item.battery_time),
-            battery_voltage: item.battery_voltage,
-            solar_panel_power: item.solar_panel_power,
+            controller_temp: item.renogy_mppt[0].controller_temp,
+            load_voltage: item.renogy_mppt[0].load_voltage,
+            solar_panel_current: item.renogy_mppt[0].solar_panel_current,
+            solar_panel_power: item.renogy_mppt[0].solar_panel_power,
+            solar_panel_voltage: item.renogy_mppt[0].solar_panel_voltage,
           };
+        })
+      );
+
+      await setBatteryData(
+        data.map((item: any) => {
+          var thing = {
+            created_at: new Date(item.created_at),
+            battery_current: item.smart_shunt[0].battery_current,
+            battery_temp: item.smart_shunt[0].battery_temp,
+            battery_voltage: item.smart_shunt[0].battery_voltage,
+            power: item.smart_shunt[0].power,
+            state_of_charge: item.smart_shunt[0].state_of_charge,
+          };
+          console.log(thing);
+          return thing;
         })
       );
     } catch (error) {
@@ -173,34 +199,63 @@ export function DeviceDataPane(props: DeviceDataPaneProps) {
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={objectData} margin={{ top: 5, right: 5, left: 5 }}>
             <CartesianGrid stroke="#f5f5f5" />
-            <XAxis
-              dataKey="date"
-              angle={0}
-              interval={"preserveStartEnd"}
-              position="bottom"
-            />
+            <XAxis dataKey="created_at" hide={true} />
             <YAxis yAxisId={0} />
-            <Tooltip offset={-100} />
+            <Tooltip />
             <Legend verticalAlign="top" height={36} />
             <Line type="monotone" dataKey="temperature" stroke="#8884d8" />
             <Line type="monotone" dataKey="height" stroke="#82ca9d" />
           </LineChart>
         </ResponsiveContainer>
 
+        <Typography variant="h5" fontWeight="bold">
+          Solar Panel Data
+        </Typography>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={systemLevels} margin={{ top: 5, right: 5, left: 5 }}>
+          <LineChart
+            data={solarPanelData}
+            margin={{ top: 5, right: 5, left: 5 }}
+          >
             <CartesianGrid stroke="#f5f5f5" />
-            <XAxis
-              dataKey="date"
-              angle={0}
-              interval={"preserveStartEnd"}
-              position="bottom"
+            <XAxis dataKey="created_at" hide={true} />
+            <YAxis yAxisId={0} />
+            <Tooltip />
+            <Legend verticalAlign="top" height={36} />
+            <Line type="monotone" dataKey="controller_temp" stroke="#8884d8" />
+            <Line type="monotone" dataKey="load_voltage" stroke="#82ca9d" />
+            <Line
+              type="monotone"
+              dataKey="solar_panel_current"
+              stroke="#ff7300"
             />
+            <Line
+              type="monotone"
+              dataKey="solar_panel_power"
+              stroke="#387908"
+            />
+            <Line
+              type="monotone"
+              dataKey="solar_panel_voltage"
+              stroke="#df1849"
+            />
+          </LineChart>
+        </ResponsiveContainer>
+
+        <Typography variant="h5" fontWeight="bold">
+          Battery Data
+        </Typography>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={batteryData} margin={{ top: 5, right: 5, left: 5 }}>
+            <CartesianGrid stroke="#f5f5f5" />
+            <XAxis dataKey="created_at" hide={true} />
             <YAxis yAxisId={0} />
             <Tooltip offset={-100} />
             <Legend verticalAlign="top" height={36} />
-            <Line type="monotone" dataKey="battery_temp" stroke="#8884d8" />
-            <Line type="monotone" dataKey="battery_voltage" stroke="#82ca9d" />
+            <Line type="monotone" dataKey="battery_current" stroke="#8884d8" />
+            <Line type="monotone" dataKey="battery_temp" stroke="#82ca9d" />
+            <Line type="monotone" dataKey="battery_voltage" stroke="#ff7300" />
+            <Line type="monotone" dataKey="power" stroke="#387908" />
+            <Line type="monotone" dataKey="state_of_charge" stroke="#df1849" />
           </LineChart>
         </ResponsiveContainer>
 

@@ -54,7 +54,7 @@ Content-Type: application/json
 }
 
 ### Sensor Tests
-GET http://localhost:3000/farm/67f966b2b9c6c0d234547e30/getSensorData
+GET http://localhost:3000/farm/68029efecb480f3fb7c499cf/getSensorData
 Content-Type: application/json
 
 {
@@ -62,7 +62,7 @@ Content-Type: application/json
 }
 
 ###
-GET http://localhost:3000/farm/67f966b2b9c6c0d234547e30/getAllSensorData
+GET http://localhost:3000/farm/68029efecb480f3fb7c499cf/getAllSensorData
 Content-Type: application/json
 
 {
@@ -78,17 +78,17 @@ Content-Type: application/json
 }
 
 ###
-POST http://localhost:3000/farm/67f966b2b9c6c0d234547e30/addSensorData
+POST http://localhost:3000/farm/6802bc6da642e2e0cfd37cb0/addSensorData
 Content-Type: application/json
 
 {
-    "temperature": 123232,
-    "height": 252225,
-    "camera": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AApEB9U1jRb4AAAAASUVORK5CYII="
+    "temperature": 21,
+    "height": 0,
+    "camera": ""
 }
 
 ###
-DELETE http://localhost:3000/farm/67f966b2b9c6c0d234547e30/deleteSensorData
+DELETE http://localhost:3000/farm/6802bc6da642e2e0cfd37cb0/deleteSensorData
 Content-Type: application/json
 
 {
@@ -96,14 +96,14 @@ Content-Type: application/json
 }
 
 ###
-GET http://localhost:3000/farm/67f966b2b9c6c0d234547e30/sensorImage
+GET http://localhost:3000/farm/68029efecb480f3fb7c499cf/sensorImage
 
 {
 
 }
 
 ### System Level Tests
-GET http://localhost:3000/farm/67f966b2b9c6c0d234547e30/getSystemLevels
+GET http://localhost:3000/farm/67faa966ef159124a495fc47/getSystemLevels
 Content-Type: application/json
 
 {
@@ -111,7 +111,7 @@ Content-Type: application/json
 }
 
 ###
-GET http://localhost:3000/farm/67f966b2b9c6c0d234547e30/getAllSystemLevels
+GET http://localhost:3000/farm/68029efecb480f3fb7c499cf/getAllSystemLevels
 Content-Type: application/json
 
 {
@@ -127,28 +127,28 @@ Content-Type: application/json
 }
 
 ###
-POST http://localhost:3000/farm/67f966b2b9c6c0d234547e30/addSystemLevels
+POST http://localhost:3000/farm/6802bc6da642e2e0cfd37cb0/addSystemLevels
 Content-Type: application/json
 
 {
     "smart_shunt": {
-        "battery_voltage": 12.7,
-        "battery_current": 3.2,
-        "battery_temp": 25.0,
-        "power": 38.5,
-        "state_of_charge": 88.0
+        "battery_voltage": 12.2,
+        "battery_current": 2.7,
+        "battery_temp": 25,
+        "power": 32.3,
+        "state_of_charge": 75.4
     },
     "renogy_mppt": {
-        "solar_panel_power": 1.0,
-        "solar_panel_voltage": 12.5,
-        "solar_panel_current": 0.8,
-        "controller_temp": 22.0,
-        "load_voltage": 12.5
+        "solar_panel_power": 0.6,
+        "solar_panel_voltage": 11.5,
+        "solar_panel_current": 1.2,
+        "controller_temp": 20.7,
+        "load_voltage": 12.2
     }
 }
 
 ###
-DELETE http://localhost:3000/farm/67f966b2b9c6c0d234547e30/deleteSystemLevels
+DELETE http://localhost:3000/farm/67faa966ef159124a495fc47/deleteSystemLevels
 Content-Type: application/json
 
 {
