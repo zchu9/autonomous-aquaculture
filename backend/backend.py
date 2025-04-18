@@ -7,14 +7,16 @@ backend.py: The backend service for the oyster application
 
 import logging
 import json
+from bson import ObjectId
+from datetime import datetime
 from flask import Flask, request
 from flask_mqtt import Mqtt
-from clock import get_utc_timestamp
+from clock import get_utc_timestamp, convert_to_eastern_time
 from datetime import timedelta
-from controllers.sensor_controller import add_sensor_data
-from controllers.system_level_controller import add_system_levels
 from models.lift_schedules import LiftActiveSchedule, LiftArchiveSchedule
 from models.farms import Farm
+from models.sensor_data import SensorData
+from models.system_levels import SystemLevels, RenogyMppt, SmartShunt
 from flask_cors import CORS
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
@@ -46,23 +48,14 @@ def handle_connect(client, userdata, flags, rc):
     # Setup for Last Will and Testament message for farm status
     farm_id = client._client_id
     client.will_set(f"farm/{farm_id}/status", payload="disconnected", qos=1, retain=True)
-
+    
     mqtt.subscribe('test/topic/1')
     mqtt.subscribe('farm')
-    mqtt.subscribe('farm/+/status')
     mqtt.subscribe('farm/+/sensorData')
     mqtt.subscribe('farm/+/systemLevels')
 
-    commands = request.json
-
-    for id in commands["ids"]:
-        cmd = {"command": commands['command']}
-        mqtt.publish(f'farm/{id}/cage', json.dumps(cmd))
-
-
 @mqtt.on_message()
 def handle_mqtt_message(client, userdata, message):
-    logging.info(f"Received message from MQTT broker on {MQTT_HOST_NAME}:{MQTT_PORT_NUM}")
     logging.info(f"Received message from MQTT broker on {MQTT_HOST_NAME}:{MQTT_PORT_NUM}")
 
     try:
@@ -78,8 +71,21 @@ def handle_mqtt_message(client, userdata, message):
             logging.info(f"Farm ID: {farm_id}")
             logging.info(f"Sensor Data: {data}")
 
-            # result = add_sensor_data(farm_id, data)
-            # logging.info(f"Sensor data added to collection succesfully: {result}")
+            try:
+                new_data = SensorData(
+                    farm_id=ObjectId(farm_id),
+                    temperature=data.get("temperature"),
+                    height=data.get("height"),
+                    camera=data.get("camera")
+                )
+                new_data.save()
+                logging.info(f"Sensor data added to collection succesfully for farm {farm_id}: {new_data}")
+
+                Farm.objects(id=ObjectId(farm_id)).update_one(set__status=True)
+                logging.info(f"Farm {farm_id} status updated to connected")
+            except Exception as e:
+                logging.error("Failed to create sensor data: %s", e)
+                return "Error creating sensor data", 500
 
         elif "systemLevels" in topic:
             logging.info("Writing new system levels")
@@ -87,8 +93,23 @@ def handle_mqtt_message(client, userdata, message):
             logging.info(f"Farm ID: {farm_id}")
             logging.info(f"System Levels: {data}")
 
-            # result = add_system_levels(farm_id, data)
-            # logging.info(f"System levels added to collection succesfully: {result}")
+            try:
+                smart_shunt = SmartShunt(**data.get("smart_shunt", {}))
+                renogy_mppt = RenogyMppt(**data.get("renogy_mppt", {}))
+
+                new_data = SystemLevels(
+                    farm_id=ObjectId(farm_id),
+                    smart_shunt=[smart_shunt],
+                    renogy_mppt=[renogy_mppt]
+                )
+                new_data.save()
+                logging.info(f"System levels added to collection succesfully for farm {farm_id}: {new_data}")
+
+                Farm.objects(id=ObjectId(farm_id)).update_one(set__status=True)
+                logging.info(f"Farm {farm_id} status updated to connected")
+            except Exception as e:
+                logging.error("Failed to create sensor data: %s", e)
+                return "Error creating sensor data", 500
 
     except Exception as e:
         logging.error(f"Failed to handle message for topic {message.topic}:", e)
@@ -116,61 +137,80 @@ def farm_lift_cages():
 def check_and_publish_lift():
     try:
         farms = Farm.objects.all()
+        current_time = get_utc_timestamp()
+        logging.info(f"Current time: {current_time}")
+        logging.info(f"Current time in EST: {convert_to_eastern_time(current_time)}")
 
         for farm in farms:
             documents = LiftActiveSchedule.objects(farm_id=farm.id)
 
-            if documents:
-                logging.info(f"Documents in active lift schedule collection for farm {farm.id}")
-
-                for schedule in documents:
-                    for lift_command in schedule.schedule:
-                        dates = lift_command.dates
-                        command = lift_command.command
-                        duration = lift_command.duration
-                        status = lift_command.status
-                    
-                        for date in dates:
-                            current_time = get_utc_timestamp()
-                            if current_time >= date and status != "completed":
-                                logging.info(f"It is time to perform a lift for farm {farm.id}")
-                                logging.info(f"This the lift command: {lift_command}")
-
-                                mqtt.publish(f"farm/{farm.id}/cage", json.dumps({"command": lift_command.command}))
+            for schedule in documents:
+                logging.info(f"Schedule: {schedule.schedule}")
+                for lift_command in schedule.schedule:
+                    for date in lift_command.dates:
+                        schedule_date = datetime.strptime(str(date), '%Y-%m-%d %H:%M:%S')
+                        logging.info(f"Lift command date: {schedule_date}")
+                        logging.info(f"Lift command date in EST: {convert_to_eastern_time(schedule_date)}")
+                        
+                        # Stage 1: Start Lift
+                        if lift_command.status == "pending" and current_time.replace(tzinfo=None) >= schedule_date:
+                            logging.info(f"It is time to perform a lift for farm {farm.id} and here is the command {lift_command.command}")
+                            mqtt.publish(f"farm/{farm.id}/cage", json.dumps({"command": lift_command.command}))
+                            
+                            if lift_command.duration:
                                 lift_command.status = "in progress"
+                                logging.info(f"Lift command status: {lift_command.status}")
+                                lift_command.lift_end_time = current_time + timedelta(minutes=lift_command.duration)
+                                logging.info(f"Lift command end time: {lift_command.lift_end_time}")
+                                logging.info(f"Lift command end time in EST: {convert_to_eastern_time(lift_command.lift_end_time)}")
                                 lift_command.command = not lift_command.command
+                                logging.info(f"Lift command: {lift_command.command}")
                                 schedule.save()
+                            else:
+                                lift_command.status = "completed"
+                                logging.info(f"Lift is completed without duration")
+                                LiftArchiveSchedule(
+                                    farm_id=farm.id,
+                                    archived_schedules=[lift_command],
+                                    archived_at=current_time
+                                ).save()
+                                schedule.schedule.remove(lift_command)
 
-                                lift_end_time = current_time + timedelta(minutes=duration)
-                                logging.info(f"Lift started, it will be raised after {duration} minutes")
-                                schedule_lift_back_up(farm, lift_end_time, schedule, lift_command)
+                                if len(schedule.schedule) == 0:
+                                    schedule.delete()
+                                    logging.info(f"Deleted empty LiftActiveSchedule for farm {farm.id}")
+                                else:
+                                    schedule.save()
+                                    logging.info(f"Lift command removed from schedule for farm {farm.id}")
 
+                        # Stage 2: Check if lift duration has expired
+                        elif lift_command.status == "in progress" and hasattr(lift_command, 'lift_end_time'):
+                            if current_time.replace(tzinfo=None) >= lift_command.lift_end_time.replace(tzinfo=None):
+                                logging.info(f"Duration has expired")
+                                logging.info(f"Current time in UTC: {current_time}")
+                                logging.info(f"Lift command end time in UTC: {lift_command.lift_end_time}")
+                                logging.info(f"Lift command end time in EST: {convert_to_eastern_time(lift_command.lift_end_time)}")
+                                mqtt.publish(f"farm/{farm.id}/cage", json.dumps({"command": lift_command.command}))
+                                lift_command.status = "completed"
+
+                                LiftArchiveSchedule(
+                                    farm_id=farm.id,
+                                    archived_schedules=[lift_command],
+                                    archived_at=current_time
+                                ).save()
+
+                                schedule.schedule.remove(lift_command)
+
+                                if len(schedule.schedule) == 0:
+                                    schedule.delete()
+                                    logging.info(f"Deleted empty LiftActiveSchedule for farm {farm.id}")
+                                else:
+                                    schedule.save()
+                                    logging.info(f"Lift command removed from schedule for farm {farm.id}")
     except Exception as e:
         logging.error(f"Error while checking and publishing lift: {e}")
 
-def schedule_lift_back_up(farm, lift_end_time, schedule, lift_command):
-    try:
-        current_time = get_utc_timestamp()
-        if current_time >= lift_end_time and lift_command.status == "in progress":
-            logging.info(f"Lift duration has expired for farm {farm.id}, raising the lift back up")
-            mqtt.publish(f"farm/{farm.id}/cage", json.dumps({"command": lift_command.command}))
-            lift_command.status = "completed"
 
-            archived_schedule = LiftArchiveSchedule(
-                farm_id = farm.id,
-                archived_schedules = [lift_command],
-                archived_at = get_utc_timestamp()
-            )
-            archived_schedule.save()
-
-            schedule.schedule.remove(lift_command)
-            schedule.save()
-
-            logging.info(f"Lift for farm {farm.id} completed and archived")
-
-    except Exception as e:
-        logging.error(f"Error while scheduling lift back up: {e}")
-        
 scheduler.add_job(
     func=check_and_publish_lift,
     trigger=IntervalTrigger(minutes=1),

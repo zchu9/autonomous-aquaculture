@@ -9,8 +9,9 @@ from clock import get_utc_timestamp
 class LiftCommand(EmbeddedDocument):
     dates = ListField(DateTimeField())
     command = BooleanField()    # Up is 1, Down is 0
-    duration = IntField()
-    status = StringField(choices=["pending", "in progess", "completed", "failed"])
+    duration = IntField(defualt=None)
+    status = StringField(choices=["pending", "in progress", "completed", "failed"])
+    lift_end_time = DateTimeField(defualt=None)
 
 
 class LiftActiveSchedule(Document):

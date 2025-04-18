@@ -5,6 +5,7 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 
+
 def get_utc_timestamp():
     client = ntplib.NTPClient()
 
@@ -14,18 +15,19 @@ def get_utc_timestamp():
 
         utc_time = datetime.fromtimestamp(response.tx_time, timezone.utc)
         logging.info(f"UTC time fetched: {utc_time}")
-        return utc_time        
+        return utc_time
 
     except Exception as e:
         logging.error(f"Error fetching time from NTP server: {e}")
         return None
+
 
 def convert_to_eastern_time(utc_time):
     try:
         if utc_time is None:
             logging.error("Need utc_time from database")
             return None
-        
+
         if isinstance(utc_time, str):
             try:
                 utc_time = datetime.strptime(utc_time, '%Y-%m-%d %H:%M:%S')
@@ -33,7 +35,7 @@ def convert_to_eastern_time(utc_time):
             except ValueError as e:
                 logging.error(f"Error parsing string as datetime: {e}")
                 return None
-            
+
         if isinstance(utc_time, datetime):
             eastern_time = pytz.timezone('US/Eastern')
             eastern_time = utc_time.astimezone(eastern_time)
@@ -41,10 +43,11 @@ def convert_to_eastern_time(utc_time):
             return eastern_time
         else:
             logging.error(f"Expected utc_time to be a datetime object, its {utc_time}")
-    
+
     except Exception as e:
         logging.error(f"Error converting UTC to Eastern Time: {e}")
         return None
+
 
 def convert_to_utc(est_time):
     try:
@@ -52,9 +55,9 @@ def convert_to_utc(est_time):
             logging.error("Need EST from API route")
             return None
         
-        if isinstance(est_time, str):
-            eastern_time = pytz.timezone('US/Eastern')
+        eastern_time = pytz.timezone('US/Eastern')
 
+        if isinstance(est_time, str):
             try:
                 est_time_obj = datetime.strptime(est_time, '%Y-%m-%d %H:%M:%S')
                 logging.info(f"Parsed time with (Y-M-D H:M:S) format : {est_time_obj}")
@@ -67,15 +70,20 @@ def convert_to_utc(est_time):
                 except ValueError:
                     logging.error(f"Invalid date format: {est_time}")
                     return None
-
-            est_time_obj = eastern_time.localize(est_time_obj)
-            utc_time = est_time_obj.astimezone(pytz.utc)
-            logging.info(f"Converted EST time to UTC: {utc_time}")
-            return utc_time
+        
+        elif isinstance(est_time, datetime):
+            est_time_obj = eastern_time.localize(est_time)
 
         else:
-            logging.error(f"Expected utc_time to be a string, got {type(utc_time)}")
+            logging.error(f"Expected utc_time to be a datetime or string, got {type(est_time)}")
             return None
+
+        if est_time_obj.tzinfo is None:
+            est_time_obj = eastern_time.localize(est_time_obj)
+
+        utc_time = est_time_obj.astimezone(pytz.utc)
+        logging.info(f"Converted EST time to UTC: {utc_time}")
+        return utc_time
     
     except Exception as e:
         logging.error(f"Error converting EST to UTC: {e}")

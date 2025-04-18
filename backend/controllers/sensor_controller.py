@@ -1,14 +1,15 @@
 from controllers import logging, request, jsonify, ObjectId, SensorData, convert_to_utc, convert_to_eastern_time
 
+
 # Gets the most recent sensor data in a farm
 def get_sensor_data(id):
     try:
-        data = SensorData.objects(farm_id=ObjectId(id)).first()
+        data = SensorData.objects(farm_id=ObjectId(id)).order_by("-created_at").first()
 
         if data:
             sensor_data = data.to_mongo()
             sensor_data["_id"] = str(data.id)
-            sensor_data["farm_id"] = str(data.id)
+            sensor_data["farm_id"] = str(data.farm_id)
             eastern_time = convert_to_eastern_time(data.created_at)
             if eastern_time:
                 sensor_data["created_at"] = eastern_time.strftime('%Y-%m-%d %H:%M:%S EST')
@@ -129,10 +130,10 @@ def get_sensor_image(id):
     try:
         farm_id = ObjectId(id)
         logging.info(f"This is the farm ID: {farm_id}")
-        active_data = SensorData.objects(farm_id=farm_id).first()
+        active_data = SensorData.objects(farm_id=farm_id).order_by('-created_at').first()
 
         if active_data and active_data.camera:
-            return jsonify({"camera": active_data.camera}), 200
+            return jsonify({"camera": f"data:image/jpeg;base64,{active_data.camera}"}), 200
         else:
             return "No image found", 404
 
