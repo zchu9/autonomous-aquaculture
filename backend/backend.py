@@ -71,12 +71,17 @@ def handle_mqtt_message(client, userdata, message):
             logging.info(f"Farm ID: {farm_id}")
             logging.info(f"Sensor Data: {data}")
 
+            camera_data = "data:image/jpeg;base64,"
+            image = data.get("camera", {})
+            image = str(image)
+            camera_data += image
+
             try:
                 new_data = SensorData(
                     farm_id=ObjectId(farm_id),
                     temperature=data.get("temperature"),
                     height=data.get("height"),
-                    camera=data.get("camera")
+                    camera=camera_data
                 )
                 new_data.save()
                 logging.info(f"Sensor data added to collection succesfully for farm {farm_id}: {new_data}")

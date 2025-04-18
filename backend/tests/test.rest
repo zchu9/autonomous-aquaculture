@@ -3,8 +3,8 @@ POST http://localhost:3000/addFarm
 Content-Type: application/json
 
 {
-    "location": "VA Beach",
-    "farm_name": "MONEY MAKER"
+    "location": "BITVH",
+    "farm_name": "BOIII"
 }
 
 ###
@@ -14,7 +14,7 @@ Content-Type: application/json
 
 {
     "status": true,
-    "farm_name": "SUPER MONEY MAKER",
+    "farm_name": "I FUCKING DID IT",
     "cage_position": false 
 }
 
@@ -54,7 +54,7 @@ Content-Type: application/json
 }
 
 ### Sensor Tests
-GET http://localhost:3000/farm/67f966b2b9c6c0d234547e30/getSensorData
+GET http://localhost:3000/farm/67f966e7b9c6c0d234547e34/getSensorData
 Content-Type: application/json
 
 {
@@ -62,7 +62,7 @@ Content-Type: application/json
 }
 
 ###
-GET http://localhost:3000/farm/67f966b2b9c6c0d234547e30/getAllSensorData
+GET http://localhost:3000/farm/67f966e7b9c6c0d234547e34/getAllSensorData
 Content-Type: application/json
 
 {
@@ -70,7 +70,7 @@ Content-Type: application/json
 }
 
 ###
-GET http://localhost:3000/farm/67f966b2b9c6c0d234547e30/getMultSensorData?start_date=2025-04-17&end_date=2025-04-17
+GET http://localhost:3000/farm/67f966e7b9c6c0d234547e34/getMultSensorData?start_date=2025-04-11&end_date=2025-04-11
 
 Content-Type: application/json
 {
@@ -78,17 +78,18 @@ Content-Type: application/json
 }
 
 ###
-POST http://localhost:3000/farm/67f966b2b9c6c0d234547e30/addSensorData
+POST http://localhost:3000/farm/67f966e7b9c6c0d234547e34/addSensorData
 Content-Type: application/json
 
 {
     "temperature": 123232,
     "height": 252225,
-    "camera": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AApEB9U1jRb4AAAAASUVORK5CYII="
+    "camera": "https://i.pinimg.com/originals/75/f6/35/75f6354f76f157a343326cb48a0949f7.jpg",
+    "created_at": "2025-04-18 15:54:33 EST"
 }
 
 ###
-DELETE http://localhost:3000/farm/67f966b2b9c6c0d234547e30/deleteSensorData
+DELETE http://localhost:3000/farm/67f966e7b9c6c0d234547e34/deleteSensorData
 Content-Type: application/json
 
 {
@@ -96,7 +97,7 @@ Content-Type: application/json
 }
 
 ###
-GET http://localhost:3000/farm/67f966b2b9c6c0d234547e30/sensorImage
+GET http://localhost:3000/farm/67f966e7b9c6c0d234547e34/sensorImage
 
 {
 
@@ -119,7 +120,7 @@ Content-Type: application/json
 }
 
 ###
-GET http://localhost:3000/farm/67f966b2b9c6c0d234547e30/getMultSystemLevels?start_date=2025-04-17&end_date=2025-04-17
+GET http://localhost:3000/farm/67f966b2b9c6c0d234547e30/getMultSystemLevels?start_date=2025-04-11&end_date=2025-04-12
 
 Content-Type: application/json
 {
@@ -131,20 +132,10 @@ POST http://localhost:3000/farm/67f966b2b9c6c0d234547e30/addSystemLevels
 Content-Type: application/json
 
 {
-    "smart_shunt": {
-        "battery_voltage": 12.7,
-        "battery_current": 3.2,
-        "battery_temp": 25.0,
-        "power": 38.5,
-        "state_of_charge": 88.0
-    },
-    "renogy_mppt": {
-        "solar_panel_power": 1.0,
-        "solar_panel_voltage": 12.5,
-        "solar_panel_current": 0.8,
-        "controller_temp": 22.0,
-        "load_voltage": 12.5
-    }
+    "solar_panel_power": 1,
+    "battery_voltage": 1.5,
+    "battery_temp": 1.1,
+    "battery_time": "2025-03-20"
 }
 
 ###
@@ -172,12 +163,13 @@ Content-Type: application/json
 
 {
     "farm_ids": [
-        "67f966b2b9c6c0d234547e30", "67f966e7b9c6c0d234547e34"
+        "67f966b2b9c6c0d234547e30"
     ],
     "schedule": [
         {
-            "dates": ["2025-04-17 11:02:00"],
+            "dates": ["2025-04-13 11:29:00"],
             "command": 1,
+            "duration": 60,
             "status": "pending"
         }
     ]
@@ -200,7 +192,7 @@ Content-Type: application/json
 }
 
 ###
-GET http://localhost:3000/farm/67f966b2b9c6c0d234547e30/getMultActiveLiftSchedule?start_date=2025-04-16&end_date=2025-04-17
+GET http://localhost:3000/farm/67f454ea1d88591a57cef9e0/getMultActiveLiftSchedule?start_date=2025-04-11&end_date=2025-04-20
 Content-Type: application/json
 
 {
@@ -218,34 +210,17 @@ Content-Type: application/json
     ],
     "schedule": [
         {
-            "dates": ["2025-04-18 15:23:00", "2025-04-14 18:56:00", "2025-04-20 17:35:00"],
+            "dates": ["2025-04-18 15:54:33", "2025-04-20 5:55:33"],
             "command": 1,
-            "duration": 4,
-            "status": "pending",
-            "lift_end_time": "2025-04-20 15:23:00"
+            "duration": 60,
+            "status": "pending"
         }
     ]
     
 }
 
 ###
-GET http://localhost:3000/farm/67f966b2b9c6c0d234547e30/getArchiveLiftSchedule
-Content-Type: application/json
-
-{
-
-}
-
-###
-GET http://localhost:3000/farm/67f966e7b9c6c0d234547e34/getAllArchiveLiftSchedule
-Content-Type: application/json
-
-{
-
-}
-
-###
-GET http://localhost:3000/farm/67f966e7b9c6c0d234547e34/getMultArchiveLiftSchedule?start_date=2025-04-17&end_date=2025-04-17
+GET http://localhost:3000/farm/67f454ea1d88591a57cef9e0/getArchiveLiftSchedule
 Content-Type: application/json
 
 {
@@ -261,7 +236,7 @@ Content-Type: application/json
 }
 
 ###
-DELETE http://localhost:3000/farm/67f966b2b9c6c0d234547e30/deleteArchiveLiftSchedule
+DELETE http://localhost:3000/farm/67dd82c0583ddb4a70757e64/deleteArchiveLiftSchedule
 Content-Type: application/json
 
 {
