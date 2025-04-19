@@ -36,7 +36,7 @@ bool LoraRadio::setupLoRa()
     Serial.println("Transceiver setup complete!!! :D");
     delay(setupDelay);
     //"handshake packet" to make sure the server knows the farm ID that corresponds to the LoRa address
-    sendHandshake();
+    // sendHandshake(); put this in the initialize to take advantage of the bool
     return true;
 }
 

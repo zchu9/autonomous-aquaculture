@@ -12,7 +12,6 @@ static bool noConnectionMode = false;
 void FSM(data &d)
 {
     // this should be in the comms handler.
-    d.lora->receiveMsg(d.doc);
     checkPowerHandler(d);
     loraListen(d);
 
@@ -69,6 +68,7 @@ void initializeStartup(data &d)
 
     // init the lora class
     d.lora = new LoraRadio;
+    noConnectionMode = d.lora->sendHandshake();
     d.winch = new winchData(LIFT_PIN, LOWER_PIN, A0);
     d.liftFlag[0] = 0;
     d.height[0] = -1;
@@ -127,13 +127,13 @@ void checkPowerHandler(data &d)
         double battVoltage = checkPower(d);
         if (battVoltage < POWER_THRESHOLD)
         {
-            getIntoLowPowerMode(d);
+            lowPowerMode = true;
             return;
         }
 
-        if (battVoltage >= POWER_THRESHOLD && d.state == LOW_POWER)
+        if (battVoltage >= POWER_THRESHOLD)
         {
-            getOutOfLowPowerMode(d);
+            lowPowerMode = false;
         }
     }
 }
