@@ -1,3 +1,4 @@
+
 import paho.mqtt.client as mqtt
 import serial
 import time
@@ -10,7 +11,7 @@ import os
 
 MQTT_BROKER = "mqtt" #fixed assuming you're running this on the same device as the server
 MQTT_PORT = 1883 #fixed port for MQTT with TLS
-LORA_PORT = '/dev/serial0' #change if hooked directly to serial rather than via the USB-to-UART adapter
+LORA_PORT = '/dev/serial/by-id/' #change if hooked directly to serial rather than via the USB-to-UART adapter
 SAVE_FILE = "address_lookup.json" #the file name for where we're storing the address map
 BAUD_RATE = 9600 #customizeable, but I'd suggest you keep it low
 LORA_PASSWORD = "A3F7B9C2" # 00000000 to FFFFFFFF 
@@ -73,7 +74,7 @@ def send_command(command):
         line += char
         if char == b'\n':
             break
-    logging.info(f"Command sent to LoRa: {(line.decode("utf-8").strip())}")
+    logging.info(f"Command sent to LoRa: {(line.decode('utf-8').strip())}")
     lora.flushInput()
 
 def configure_lora():
@@ -86,7 +87,6 @@ def configure_lora():
     send_command(f"AT+CPIN={LORA_PASSWORD}")
     logging.info("LoRa module configured.")
 
-logging.info("I am alive.")
 load_addresses()
 configure_lora()
 
@@ -187,8 +187,8 @@ def reconstruct_message(address):
             data = json.loads(full_message)
             if "farm_id" in data:
                 logging.info("Recieved Handshake Packet")
-                logging.info(f"Farm ID: {data.get("farm_id")}")
-                logging.info(f"Farm LoRa Address: {data.get("LoRa_address")}")
+                logging.info(f"Farm ID: {data.get('farm_id')}")
+                logging.info(f"Farm LoRa Address: {data.get('LoRa_address')}")
                 add_address(data.get("farm_id"),data.get("LoRa_address"))
             else:
                 logging.info("Recieved Data Packet")
@@ -196,6 +196,7 @@ def reconstruct_message(address):
                 farm_id=get_id_by_address(address)
                 logging.info(f"Corresponding Farm ID: {farm_id}")
                 mqtt_client.publish(f"farm/{farm_id}/sensorData", full_message)
+                mqtt_client.publish(f"farm/{farm_id}/status", "1")
         except json.JSONDecodeError as e:
             logging.error(f"JSON decoding failed: {e}")
     else:
@@ -212,21 +213,25 @@ def reconstruct_message(address):
             logging.info("Image end detected.")
             image_data_base64 += full_message
             try:
-                #timestamp = time.strftime("%Y%m%d-%H%M%S")
-                #filename = f"image_base64_{timestamp}.txt"
-                #with open(filename, "w") as f:
-                    #f.write(image_data_base64)
+                    full_decoded_message=base64.b64decode(image_data_base64)
+                    if ((b'\xFF\xD8' in full_decoded_message) and (b'\xFF\xD8' in full_decoded_message)):
+                        #timestamp = time.strftime("%Y%m%d-%H%M%S")
+                        #filename = f"image_base64_{timestamp}.txt"
+                        #with open(filename, "w") as f:
+                            #f.write(image_data_base64)
 
-                json_document = {
-                    "camera": image_data_base64
-                }
-                json_string = json.dumps(json_document)
-                farm_id=get_id_by_address(address)
-                mqtt_client.publish("farm/{farm_id}/sensorData", json_string)
+                        json_document = {
+                            "camera": image_data_base64
+                        }
+                        json_string = json.dumps(json_document)
+                        farm_id=get_id_by_address(address)
+                        mqtt_client.publish(f"farm/{farm_id}/sensorData", json_string)
 
-                #image_data = base64.b64decode(image_data_base64)
-                #image = Image.open(BytesIO(image_data))
-                #image.show()
+                        #image_data = base64.b64decode(image_data_base64)
+                        #image = Image.open(BytesIO(image_data))
+                        #image.show()
+
+                        mqtt_client.publish(f"farm/{farm_id}/status", "1")
 
             except Exception as e:
                 logging.error(f"Failed to decode or show image: {e}")
@@ -236,14 +241,13 @@ def reconstruct_message(address):
             logging.info("Image middle chunk.")
             image_data_base64 += full_message
         
-logging.info("Attempting MQTT connection.")
+
 mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "LoRa_Bridge")
 mqtt_client.on_connect = lambda client, userdata, flags, rc, properties: client.subscribe("farm/+/cage")
 mqtt_client.on_message = on_message
 mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
 mqtt_client.loop_start()
 
-logging.info("Entering main loop.")
 buffer = ""
 while True:
     if (mqtt_task_list):
