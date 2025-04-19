@@ -17,7 +17,7 @@ mqttc = mqtt.Client()
 mqttc.on_connect = on_connect
 mqttc.on_message = on_message
 
-mqttc.connect("mqtt", 1883, 60)
+mqttc.connect("localhost", 1883, 60)
 
 # Test Sensor Data Payload
 sensor_data = {

@@ -53,6 +53,7 @@ def handle_connect(client, userdata, flags, rc):
     mqtt.subscribe('farm')
     mqtt.subscribe('farm/+/sensorData')
     mqtt.subscribe('farm/+/systemLevels')
+    # mqtt.subscribe('farm/+/status')
 
 @mqtt.on_topic('farm/+/sensorData')
 def handleSensorData(client, userdata, message):
@@ -120,7 +121,18 @@ def handleSystemLevels(client, userdata, message):
     except Exception as e:
         logging.error("Failed to create sensor data: %s", e)
         return "Error creating sensor data", 500
-    
+   
+@mqtt.on_topic('farm/+/status')
+def handleStatus(client, userdata, message):
+    topic = message.topic
+    topic_split = topic.split("/")
+    payload = message.payload.decode("utf-8")
+    data = int(payload)
+
+    logging.info("Got new device status")
+    farm_id = topic_split[1]
+    logging.info(f"Farm ID: {farm_id}")
+
 
 """ Rotues dedicated to just lift schedule collections """
 @app.route("/farm/cage", methods=['PUT', 'POST'])
