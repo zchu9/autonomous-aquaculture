@@ -40,6 +40,7 @@ app.config['MQTT_BROKER_PORT'] = MQTT_PORT_NUM
 app.config['MQTT_REFRESH_TIME'] = 60.0  # refresh time in seconds
 
 mqtt = Mqtt(app)
+app.mqtt = mqtt
 
 @mqtt.on_connect()
 def handle_connect(client, userdata, flags, rc):
@@ -156,84 +157,85 @@ def farm_lift_cages():
 scheduler = APScheduler()
 scheduler.init_app(app)
 scheduler.start()
+app.scheduler = scheduler
 
 
-@scheduler.task('interval', id='lift_check', seconds=60, misfire_grace_time=3600)
-def check_and_publish_lift():
-    try:
-        farms = Farm.objects.all()
-        current_time = get_utc_timestamp()
-        logging.info(f"Current time: {current_time}")
-        logging.info(f"Current time in EST: {convert_to_eastern_time(current_time)}")
+# @scheduler.task('interval', id='lift_check', seconds=60, misfire_grace_time=3600)
+# def check_and_publish_lift():
+#     try:
+#         farms = Farm.objects.all()
+#         current_time = get_utc_timestamp()
+#         logging.info(f"Current time: {current_time}")
+#         logging.info(f"Current time in EST: {convert_to_eastern_time(current_time)}")
 
-        for farm in farms:
-            documents = LiftActiveSchedule.objects(farm_id=farm.id)
+#         for farm in farms:
+#             documents = LiftActiveSchedule.objects(farm_id=farm.id)
 
-            for schedule in documents:
-                logging.info(f"Schedule: {schedule.schedule}")
-                for lift_command in schedule.schedule:
-                    for date in lift_command.dates:
-                        schedule_date = datetime.strptime(str(date), '%Y-%m-%d %H:%M:%S')
-                        logging.info(f"Lift command date: {schedule_date}")
-                        logging.info(f"Lift command date in EST: {convert_to_eastern_time(schedule_date)}")
+#             for schedule in documents:
+#                 logging.info(f"Schedule: {schedule.schedule}")
+#                 for lift_command in schedule.schedule:
+#                     for date in lift_command.dates:
+#                         schedule_date = datetime.strptime(str(date), '%Y-%m-%d %H:%M:%S')
+#                         logging.info(f"Lift command date: {schedule_date}")
+#                         logging.info(f"Lift command date in EST: {convert_to_eastern_time(schedule_date)}")
                         
-                        # Stage 1: Start Lift
-                        if lift_command.status == "pending" and current_time.replace(tzinfo=None) >= schedule_date:
-                            logging.info(f"It is time to perform a lift for farm {farm.id} and here is the command {lift_command.command}")
-                            mqtt.publish(f"farm/{farm.id}/cage", json.dumps({"command": lift_command.command}))
+#                         # Stage 1: Start Lift
+#                         if lift_command.status == "pending" and current_time.replace(tzinfo=None) >= schedule_date:
+#                             logging.info(f"It is time to perform a lift for farm {farm.id} and here is the command {lift_command.command}")
+#                             mqtt.publish(f"farm/{farm.id}/cage", json.dumps({"command": lift_command.command}))
                             
-                            if lift_command.duration:
-                                lift_command.status = "in progress"
-                                logging.info(f"Lift command status: {lift_command.status}")
-                                lift_command.lift_end_time = current_time + timedelta(minutes=lift_command.duration)
-                                logging.info(f"Lift command end time: {lift_command.lift_end_time}")
-                                logging.info(f"Lift command end time in EST: {convert_to_eastern_time(lift_command.lift_end_time)}")
-                                lift_command.command = not lift_command.command
-                                logging.info(f"Lift command: {lift_command.command}")
-                                schedule.save()
-                            else:
-                                lift_command.status = "completed"
-                                logging.info(f"Lift is completed without duration")
-                                LiftArchiveSchedule(
-                                    farm_id=farm.id,
-                                    archived_schedules=[lift_command],
-                                    archived_at=current_time
-                                ).save()
-                                schedule.schedule.remove(lift_command)
+#                             if lift_command.duration:
+#                                 lift_command.status = "in progress"
+#                                 logging.info(f"Lift command status: {lift_command.status}")
+#                                 lift_command.lift_end_time = current_time + timedelta(minutes=lift_command.duration)
+#                                 logging.info(f"Lift command end time: {lift_command.lift_end_time}")
+#                                 logging.info(f"Lift command end time in EST: {convert_to_eastern_time(lift_command.lift_end_time)}")
+#                                 lift_command.command = not lift_command.command
+#                                 logging.info(f"Lift command: {lift_command.command}")
+#                                 schedule.save()
+#                             else:
+#                                 lift_command.status = "completed"
+#                                 logging.info(f"Lift is completed without duration")
+#                                 LiftArchiveSchedule(
+#                                     farm_id=farm.id,
+#                                     archived_schedules=[lift_command],
+#                                     archived_at=current_time
+#                                 ).save()
+#                                 schedule.schedule.remove(lift_command)
 
-                                if len(schedule.schedule) == 0:
-                                    schedule.delete()
-                                    logging.info(f"Deleted empty LiftActiveSchedule for farm {farm.id}")
-                                else:
-                                    schedule.save()
-                                    logging.info(f"Lift command removed from schedule for farm {farm.id}")
+#                                 if len(schedule.schedule) == 0:
+#                                     schedule.delete()
+#                                     logging.info(f"Deleted empty LiftActiveSchedule for farm {farm.id}")
+#                                 else:
+#                                     schedule.save()
+#                                     logging.info(f"Lift command removed from schedule for farm {farm.id}")
 
-                        # Stage 2: Check if lift duration has expired
-                        elif lift_command.status == "in progress" and hasattr(lift_command, 'lift_end_time'):
-                            if current_time.replace(tzinfo=None) >= lift_command.lift_end_time.replace(tzinfo=None):
-                                logging.info(f"Duration has expired")
-                                logging.info(f"Current time in UTC: {current_time}")
-                                logging.info(f"Lift command end time in UTC: {lift_command.lift_end_time}")
-                                logging.info(f"Lift command end time in EST: {convert_to_eastern_time(lift_command.lift_end_time)}")
-                                mqtt.publish(f"farm/{farm.id}/cage", json.dumps({"command": lift_command.command}))
-                                lift_command.status = "completed"
+#                         # Stage 2: Check if lift duration has expired
+#                         elif lift_command.status == "in progress" and hasattr(lift_command, 'lift_end_time'):
+#                             if current_time.replace(tzinfo=None) >= lift_command.lift_end_time.replace(tzinfo=None):
+#                                 logging.info(f"Duration has expired")
+#                                 logging.info(f"Current time in UTC: {current_time}")
+#                                 logging.info(f"Lift command end time in UTC: {lift_command.lift_end_time}")
+#                                 logging.info(f"Lift command end time in EST: {convert_to_eastern_time(lift_command.lift_end_time)}")
+#                                 mqtt.publish(f"farm/{farm.id}/cage", json.dumps({"command": lift_command.command}))
+#                                 lift_command.status = "completed"
 
-                                LiftArchiveSchedule(
-                                    farm_id=farm.id,
-                                    archived_schedules=[lift_command],
-                                    archived_at=current_time
-                                ).save()
+#                                 LiftArchiveSchedule(
+#                                     farm_id=farm.id,
+#                                     archived_schedules=[lift_command],
+#                                     archived_at=current_time
+#                                 ).save()
 
-                                schedule.schedule.remove(lift_command)
+#                                 schedule.schedule.remove(lift_command)
 
-                                if len(schedule.schedule) == 0:
-                                    schedule.delete()
-                                    logging.info(f"Deleted empty LiftActiveSchedule for farm {farm.id}")
-                                else:
-                                    schedule.save()
-                                    logging.info(f"Lift command removed from schedule for farm {farm.id}")
-    except Exception as e:
-        logging.error(f"Error while checking and publishing lift: {e}")
+#                                 if len(schedule.schedule) == 0:
+#                                     schedule.delete()
+#                                     logging.info(f"Deleted empty LiftActiveSchedule for farm {farm.id}")
+#                                 else:
+#                                     schedule.save()
+#                                     logging.info(f"Lift command removed from schedule for farm {farm.id}")
+#     except Exception as e:
+#         logging.error(f"Error while checking and publishing lift: {e}")
 
 
 if __name__ == "__main__":

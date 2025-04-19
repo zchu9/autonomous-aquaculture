@@ -74,7 +74,9 @@ export default function ScheduleOpModal(props: ScheduleModalProps) {
           farm_ids: ids,
           schedule: [
             {
-              dates: [formatDate(scheduleDate!)],
+              dates: [
+                doSendNow ? formatDate(new Date()) : formatDate(scheduleDate!),
+              ],
               command: operation,
               duration: duration,
               status: "pending",
@@ -171,7 +173,7 @@ export default function ScheduleOpModal(props: ScheduleModalProps) {
             />
           </Box>
 
-          <Box sx>
+          <Box>
             <Typography>Set Duration: </Typography>
             <TextField
               id="outlined-basic"

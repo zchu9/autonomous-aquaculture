@@ -3,12 +3,22 @@ from controllers import (
     LiftArchiveSchedule, LiftCommand, convert_to_eastern_time, convert_to_utc
 )
 from pytz import utc
+from flask import current_app
 
+def lift_task(id, command):
+    logging.info(f'Executing {command} for {id} ')
+
+    result = LiftActiveSchedule.objects(farm_id=id).delete()
 
 def add_active_lift_schdeule():
     active_lift = request.json
 
+    logging.info(active_lift)
+
     try:
+        scheduler = current_app.scheduler
+        mqtt = current_app.mqtt
+
         lift_requests = []
 
         for farm_id in active_lift["farm_ids"]:
@@ -42,12 +52,21 @@ def add_active_lift_schdeule():
                 )
                 new_schedule.save()
                 logging.info(f"Active lift schedule created for farm {farm_id}")
+                
+                for date in dates_utc:
+                    scheduler.add_job(func=lift_task, trigger='date', id=f'{farm_id}', run_date=date, args=[farm_id, schedule_item.get("command")])
+                logging.info(f"Lift tasks scheduled")
 
                 lift_response = new_schedule.to_mongo()
                 lift_response["_id"] = str(new_schedule.id)
                 lift_response["farm_id"] = str(new_schedule.farm_id)
                 eastern_time = convert_to_eastern_time(new_schedule.created_at)
                 if eastern_time:
+                    if not (scheduler.get_job(farm_id) == None):
+                        scheduler.remove_job(farm_id)
+                        
+                        result = LiftActiveSchedule.objects(farm_id=id).delete()
+                    
                     lift_response["created_at"] = eastern_time.strftime("%Y-%m-%d %H:%M:%S EST")
 
                 for command in lift_response.get("schedule", []):

@@ -193,7 +193,15 @@ Content-Type: application/json
 }
 
 ###
-GET http://localhost:3000/farm/67f966b2b9c6c0d234547e30/getAllActiveLiftSchedule
+GET http://localhost:3000/farm/68029efecb480f3fb7c499cf/getAllActiveLiftSchedule
+Content-Type: application/json
+
+{
+
+}
+
+###
+DELETE  http://localhost:3000/farm/68029efecb480f3fb7c499cf/deleteActiveLiftSchedule
 Content-Type: application/json
 
 {
