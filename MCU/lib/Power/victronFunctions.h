@@ -1,3 +1,6 @@
+#ifndef VICTRONF_H
+#define VICTRONF_H
+
 #include <vector>
 #include <string>
 
@@ -6,9 +9,6 @@
 #define TAB '\t'        // 0x09
 #define VICTRON_BAUD 19200
 #define VICTRON_CONFIG SERIAL_8N1
-
-#ifndef VICTRONF_H
-#define VICTRONF_H
 
 // labels can be found in documentation.
 // TODO: only return data of interest
