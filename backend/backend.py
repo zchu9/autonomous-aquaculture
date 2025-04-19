@@ -39,11 +39,7 @@ app.config['MQTT_BROKER_URL'] = MQTT_HOST_NAME
 app.config['MQTT_BROKER_PORT'] = MQTT_PORT_NUM
 app.config['MQTT_REFRESH_TIME'] = 60.0  # refresh time in seconds
 
-scheduler = APScheduler()
 mqtt = Mqtt(app)
-
-scheduler.init_app(app)
-scheduler.start()
 
 @mqtt.on_connect()
 def handle_connect(client, userdata, flags, rc):
@@ -71,13 +67,10 @@ def handleSensorData(client, userdata, message):
     logging.info(f"Farm ID: {farm_id}")
     logging.info(f"Sensor Data: {data}")
 
-    camera_data = "data:image/jpeg;base64,"
     image = data.get("camera")
     logging.info(f"This is the original data sent: {image}")
     image = str(image)
     logging.info(f"Image as a sting: {image}")
-    camera_data += image
-    logging.info(f"camer_data: {camera_data}")
 
     try:
         new_data = SensorData(
@@ -146,6 +139,12 @@ def farm_lift_cages():
         mqtt.publish(f'farm/{id}/cage', json.dumps(cmd))
 
     return f"Requested to thing"
+
+# Initialize APScheduler here to let MQTT run first
+scheduler = APScheduler()
+scheduler.init_app(app)
+scheduler.start()
+
 
 @scheduler.task('interval', id='lift_check', seconds=60, misfire_grace_time=3600)
 def check_and_publish_lift():
