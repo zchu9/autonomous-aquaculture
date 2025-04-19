@@ -11,14 +11,13 @@ bool victronChecksum(uint8_t* serialData, size_t dataSize) {
         }
     }
     return (!checksum);
-};
+}
 
 // Clear the stale smartshunt data before reading new data.
 void clear(ShuntPowerData& data) {
     data.fields.clear();
     data.labels.clear();
 }
-
 
 void victronParse(ShuntPowerData& data, uint8_t* buffer, size_t buffer_size) {
     std::string label = "";
