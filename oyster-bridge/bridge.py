@@ -11,7 +11,7 @@ import os
 
 MQTT_BROKER = "mqtt" #fixed assuming you're running this on the same device as the server
 MQTT_PORT = 1883 #fixed port for MQTT with TLS
-LORA_PORT = '/dev/serial/by-id/' #change if hooked directly to serial rather than via the USB-to-UART adapter
+LORA_PORT = '/dev/serial0' #change if hooked directly to serial rather than via the USB-to-UART adapter
 SAVE_FILE = "address_lookup.json" #the file name for where we're storing the address map
 BAUD_RATE = 9600 #customizeable, but I'd suggest you keep it low
 LORA_PASSWORD = "A3F7B9C2" # 00000000 to FFFFFFFF 
