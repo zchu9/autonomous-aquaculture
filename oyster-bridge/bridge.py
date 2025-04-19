@@ -214,7 +214,7 @@ def reconstruct_message(address):
             image_data_base64 += full_message
             try:
                     full_decoded_message=base64.b64decode(image_data_base64)
-                    if ((b'\xFF\xD8' in full_decoded_message) and (b'\xFF\xD8' in full_decoded_message)):
+                    if ((b'\xFF\xD8' in full_decoded_message) and (b'\xFF\xD9' in full_decoded_message)):
                         #timestamp = time.strftime("%Y%m%d-%H%M%S")
                         #filename = f"image_base64_{timestamp}.txt"
                         #with open(filename, "w") as f:
