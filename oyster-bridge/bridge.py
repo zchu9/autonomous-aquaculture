@@ -1,13 +1,15 @@
+
 import paho.mqtt.client as mqtt
 import serial
 import time
 import json
 import base64
+import logging
 from io import BytesIO
 from PIL import Image, ImageFile
 import os
 
-MQTT_BROKER = "127.0.0.1" #fixed assuming you're running this on the same device as the server
+MQTT_BROKER = "mqtt" #fixed assuming you're running this on the same device as the server
 MQTT_PORT = 1883 #fixed port for MQTT with TLS
 LORA_PORT = '/dev/serial0' #change if hooked directly to serial rather than via the USB-to-UART adapter
 SAVE_FILE = "address_lookup.json" #the file name for where we're storing the address map
@@ -72,7 +74,7 @@ def send_command(command):
         line += char
         if char == b'\n':
             break
-    print(line.decode("utf-8").strip())
+    logging.info(f"Command sent to LoRa: {(line.decode("utf-8").strip())}")
     lora.flushInput()
 
 def configure_lora():
@@ -83,7 +85,7 @@ def configure_lora():
     send_command("AT+PARAMETER=9,7,1,12")
     send_command("AT+ADDRESS=1")
     send_command(f"AT+CPIN={LORA_PASSWORD}")
-    print("LoRa module configured.")
+    logging.info("LoRa module configured.")
 
 load_addresses()
 configure_lora()
@@ -103,13 +105,13 @@ def send_fragmented_message(message, address):
         
         retries = 0
         while retries < RETRY_LIMIT:
-            print(f"Sending: {packet}")
+            logging.info(f"Sending: {packet}")
             send_command(command)
             if wait_for_ack(i):
                 break
             retries += 1
         else:
-            print(f"Failed to receive ACK for packet {i}")
+            logging.info(f"Failed to receive ACK for packet {i}")
             return
 
 def wait_for_ack(expected_id):
@@ -119,12 +121,12 @@ def wait_for_ack(expected_id):
         if lora.in_waiting:
             char = lora.read().decode("utf-8")
             if char == '\n':
-                print(f"Received buffer: {buffer.strip()}")
+                logging.info(f"Received buffer: {buffer.strip()}")
                 
                 if "ACK:" in buffer:
                     ack_id = int(buffer.split("ACK:")[1].split(",")[0].strip())
                     if ack_id == expected_id:
-                        print(f"Received ACK for packet {expected_id}")
+                        logging.info(f"Received ACK for packet {expected_id}")
                         return True
                 buffer = ""
             else:
@@ -133,19 +135,19 @@ def wait_for_ack(expected_id):
 
 def on_message(client, userdata, msg):
     message = msg.payload.decode("utf-8")
-    print(f"Received MQTT message: {message}")
-    print(f"Received MQTT message: {msg.topic}")
+    logging.info(f"Received MQTT message: {message}")
+    logging.info(f"Received MQTT message: {msg.topic}")
     topic_parts = msg.topic.split("/")
-    print(topic_parts)
+    logging.info(f"Received MQTT message: {topic_parts}")
     address=get_address(topic_parts[1])
-    print(address)
+    logging.info(f"LoRa address of Farm ID {address}")
     if address:
             mqtt_task_list.append((message, address))
-            print(f"Appended task with address {address}")
+            logging.info(f"Appended task with address {address}")
 
 def process_received_data(received):
     global total_packets
-    print(f"Processing: {received}")
+    logging.info(f"Processing: {received}")
     if not received.startswith("+RCV="):
         return
     parts = received.split(",")
@@ -159,14 +161,14 @@ def process_received_data(received):
         for i in range(packet_id, MAX_PACKETS):
             received_packets[i] = ""
         received_packets[packet_id] = message_data
-        print(f"Storing Packet {packet_id + 1} of {total_packets}: {message_data}")
+        logging.info(f"Storing Packet {packet_id + 1} of {total_packets}: {message_data}")
         ack_message = f"ACK:{packet_id}"
-        print("sending ack")
+        logging.info("sending ack")
         send_command(f"AT+SEND={address},{len(ack_message)},{ack_message}")
         if all_packets_received():
             reconstruct_message(address)
     except ValueError:
-        print("Error parsing received data")
+        logging.error("Error parsing received data")
 
 def all_packets_received():
     if total_packets == -1:
@@ -175,38 +177,39 @@ def all_packets_received():
 
 def reconstruct_message(address):
     global total_packets, received_packets, image_data_base64, i_hate_this
-    print("Reassembling message...")
+    logging.info("Reassembling message...")
     full_message = "".join(received_packets[:total_packets])
-    print(f"Final Reconstructed Message: {full_message}")
+    logging.info(f"Final Reconstructed Message: {full_message}")
     received_packets = ["" for _ in range(MAX_PACKETS)]
     total_packets = -1
     if full_message.strip().startswith("{"):
         try:
             data = json.loads(full_message)
             if "farm_id" in data:
-                print(data.get("farm_id"))
-                print(data.get("LoRa_address"))
+                logging.info("Recieved Handshake Packet")
+                logging.info(f"Farm ID: {data.get("farm_id")}")
+                logging.info(f"Farm LoRa Address: {data.get("LoRa_address")}")
                 add_address(data.get("farm_id"),data.get("LoRa_address"))
             else:
-                print(address)
+                logging.info("Recieved Data Packet")
+                logging.info(f"LoRa address: {address}")
                 farm_id=get_id_by_address(address)
-                print(farm_id)
+                logging.info(f"Corresponding Farm ID: {farm_id}")
                 mqtt_client.publish(f"farm/{farm_id}/sensorData", full_message)
         except json.JSONDecodeError as e:
-            print(f"JSON decoding failed: {e}")
-        print(get_address(data.get("farm_id")))
+            logging.error(f"JSON decoding failed: {e}")
     else:
         try:
             decoded_chunk = base64.b64decode(full_message.strip())
         except Exception as e:
-            print(f"Failed to decode chunk, skipping: {e}")
+            logging.error(f"Failed to decode chunk, skipping: {e}")
             return
-
+        logging.info("Recieved Image Packet")
         if b'\xFF\xD8' in decoded_chunk:
-            print("Image start detected.")
+            logging.info("Image start detected.")
             image_data_base64 = full_message
         elif b'\xFF\xD9' in decoded_chunk:
-            print("Image end detected.")
+            logging.info("Image end detected.")
             image_data_base64 += full_message
             try:
                 #timestamp = time.strftime("%Y%m%d-%H%M%S")
@@ -226,11 +229,11 @@ def reconstruct_message(address):
                 #image.show()
 
             except Exception as e:
-                print(f"Failed to decode or show image: {e}")
+                logging.error(f"Failed to decode or show image: {e}")
                       
             image_data_base64 = "" 
         else:
-            print("Image middle chunk.")
+            logging.info("Image middle chunk.")
             image_data_base64 += full_message
         
 
@@ -249,7 +252,6 @@ while True:
     else:
         if lora.in_waiting:
             char = lora.read().decode("utf-8")
-            #print(char)
             if char == '\n':
                 process_received_data(buffer.strip())
                 buffer = ""
