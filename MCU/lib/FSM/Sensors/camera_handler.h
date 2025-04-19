@@ -10,8 +10,6 @@ class CameraHandler
 public:
     CameraHandler();
 
-    ArduCAM* myCAM;
-
     // Initialize SPI, I2C, and the camera module.
     void begin();
 

@@ -11,7 +11,7 @@
 // Create an instance of the ArduCAM class.
 // We use OV2640 (a valid numeric constant defined in ArduCAM.h) as the sensor model.
 // The memorysaver.h file configures the module as OV2640 Mini 2MP Plus.
-
+ArduCAM myCAM{OV2640, CS_PIN};
 // Resolution selection – choose your desired resolution.
 // Uncomment the one you wish to use.
 // #define JPEG_RESOLUTION OV2640_160x120     // 160 x 120 resolution
@@ -25,7 +25,6 @@
 
 CameraHandler::CameraHandler()
 {
-    this->myCAM = new ArduCAM(OV2640, CS_PIN);
 }
 
 void CameraHandler::begin()
@@ -41,23 +40,23 @@ void CameraHandler::begin()
     Wire.begin();
 
     // Test communication with the camera module.
-    this->myCAM->write_reg(ARDUCHIP_TEST1, 0x55);
-    if (this->myCAM->read_reg(ARDUCHIP_TEST1) != 0x55)
+    myCAM.write_reg(ARDUCHIP_TEST1, 0x55);
+    if (myCAM.read_reg(ARDUCHIP_TEST1) != 0x55)
     {
         Serial.println("ArduCAM init failed. Communication error.");
     }
 
     // Set the image format to JPEG.
-    this->myCAM->set_format(JPEG);
+    myCAM.set_format(JPEG);
 
     // Initialize the camera. Uses I2C.
-    this->myCAM->InitCAM();
+    myCAM.InitCAM();
     // Configure the sensor resolution. Also uses I2C.
-    this->myCAM->OV2640_set_JPEG_size(JPEG_RESOLUTION);
+    myCAM.OV2640_set_JPEG_size(JPEG_RESOLUTION);
 
-    this->myCAM->CS_LOW();
-    this->myCAM->clear_fifo_flag(); // Uses SPI!
-    this->myCAM->CS_HIGH();
+    myCAM.CS_LOW();
+    myCAM.clear_fifo_flag(); // Uses SPI!
+    myCAM.CS_HIGH();
 
     Serial.println("ArduCAM OV2640 Mini 2MP Plus initialized.");
 }
@@ -69,21 +68,21 @@ uint32_t CameraHandler::captureImage()
     imgLength = 0;
     currentPos = 0;
 
-    this->myCAM->CS_LOW();
+    myCAM.CS_LOW();
 
     // Flush any residual data and clear FIFO flags.
-    this->myCAM->flush_fifo();
-    this->myCAM->clear_fifo_flag();
+    myCAM.flush_fifo();
+    myCAM.clear_fifo_flag();
 
     // Start image capture.
-    this->myCAM->start_capture();
+    myCAM.start_capture();
     Serial.println("Capturing image...");
 
     // Wait until capture is complete (with a timeout).
     const unsigned long timeout = 5000; // 5000 ms timeout.
     unsigned long startTime = millis();
 
-    while (!this->myCAM->get_bit(ARDUCHIP_TRIG, CAP_DONE_MASK))
+    while (!myCAM.get_bit(ARDUCHIP_TRIG, CAP_DONE_MASK))
     {
         if (millis() - startTime > timeout)
         {
@@ -94,7 +93,7 @@ uint32_t CameraHandler::captureImage()
 
     // Retrieve the length (in bytes) of the captured image.
     // This function returns (value & 0x07fffff).
-    imgLength = this->myCAM->read_fifo_length();
+    imgLength = myCAM.read_fifo_length();
 
     if (!imgLength)
     {
@@ -114,8 +113,8 @@ void CameraHandler::startImageStream()
     // Reset the current position.
     this->currentPos = 0;
     // Begin burst read from FIFO.
-    this->myCAM->CS_LOW();
-    this->myCAM->set_fifo_burst(); // equivalent to SPI.transfer(0x3C) or SPI.transfer(BURST_FIFO_READ);
+    myCAM.CS_LOW();
+    myCAM.set_fifo_burst(); // equivalent to SPI.transfer(0x3C) or SPI.transfer(BURST_FIFO_READ);
 
     Serial.println("start reading pal");
 }
@@ -135,10 +134,10 @@ uint16_t CameraHandler::readImageChunk(uint16_t chunkSize, uint8_t *buffer)
 void CameraHandler::finishImageStream()
 {
     // empty buffer, then drive CSn.
-    this->myCAM->flush_fifo();
-    this->myCAM->clear_fifo_flag();
+    myCAM.flush_fifo();
+    myCAM.clear_fifo_flag();
 
-    this->myCAM->CS_HIGH();
+    myCAM.CS_HIGH();
 
     Serial.println("cutting off stream (ouch)");
 }

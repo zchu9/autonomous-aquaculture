@@ -66,7 +66,7 @@ void initializeStartup(data &d)
     // should probably be a init data function.
 
     // init the lora class
-    d.lora = new LoraRadio;
+    // d.lora = new LoraRadio;
     d.winch = new winchData(LIFT_PIN, LOWER_PIN, A0);
     d.liftFlag[0] = 0;
     d.height[0] = -1;
@@ -428,9 +428,9 @@ void parseParams(data &d, debug_sim ds, std::vector<std::string> params)
 
 double checkPower(data &d)
 {
-    d.powerData.getData();      // update all power values;
-    uartSwitch(RADIO, 9600, SERIAL_8N1);    // in the event of failure, reconnect the radio;
-    return d.powerData.batteryVoltage;  
+    d.powerData.getData();               // update all power values;
+    uartSwitch(RADIO, 9600, SERIAL_8N1); // in the event of failure, reconnect the radio;
+    return d.powerData.batteryVoltage;
 };
 /*
       `'::::.
