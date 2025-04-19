@@ -18,8 +18,9 @@ from models.farms import Farm
 from models.sensor_data import SensorData
 from models.system_levels import SystemLevels, RenogyMppt, SmartShunt
 from flask_cors import CORS
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.interval import IntervalTrigger
+# from apscheduler.schedulers.background import BackgroundScheduler
+# from apscheduler.triggers.interval import IntervalTrigger
+from flask_apscheduler import APScheduler
 from mongoengine import connect
 from routes import main_blueprint
 import os
@@ -37,8 +38,11 @@ CORS(app, origin=["http://localhost:5173"])
 app.config['MQTT_BROKER_URL'] = MQTT_HOST_NAME
 app.config['MQTT_BROKER_PORT'] = MQTT_PORT_NUM
 app.config['MQTT_REFRESH_TIME'] = 60.0  # refresh time in seconds
+
+scheduler = APScheduler()
 mqtt = Mqtt(app)
-scheduler = BackgroundScheduler()
+
+scheduler.init_app(app)
 scheduler.start()
 
 @mqtt.on_connect()
@@ -54,71 +58,76 @@ def handle_connect(client, userdata, flags, rc):
     mqtt.subscribe('farm/+/sensorData')
     mqtt.subscribe('farm/+/systemLevels')
 
-@mqtt.on_message()
-def handle_mqtt_message(client, userdata, message):
-    logging.info(f"Received message from MQTT broker on {MQTT_HOST_NAME}:{MQTT_PORT_NUM}")
+@mqtt.on_topic('farm/+/sensorData')
+def handleSensorData(client, userdata, message):
+    topic = message.topic
+    topic_split = topic.split("/")
+    payload = message.payload.decode("utf-8")
+    data = json.loads(payload)
+    farm_id = topic_split[1]
+
+
+    logging.info("Writing new sensor data")
+    logging.info(f"Farm ID: {farm_id}")
+    logging.info(f"Sensor Data: {data}")
+
+    camera_data = "data:image/jpeg;base64,"
+    image = data.get("camera")
+    logging.info(f"This is the original data sent: {image}")
+    image = str(image)
+    logging.info(f"Image as a sting: {image}")
+    camera_data += image
+    logging.info(f"camer_data: {camera_data}")
 
     try:
-        topic = message.topic
-        payload = message.payload.decode("utf-8")
-        data = json.loads(payload)
-        logging.info(f"Decoded topic: {topic}")
-        logging.info(f"Decoded message: {data}")
+        new_data = SensorData(
+            farm_id=ObjectId(farm_id),
+            temperature=data.get("temperature"),
+            height=data.get("height"),
+            camera=image
+        )
+        new_data.save()
+        logging.info(f"Sensor data added to collection succesfully for farm {farm_id}: {new_data}")
 
-        if "sensorData" in topic:
-            logging.info("Writing new sensor data")
-            farm_id = topic.split("/")[1]
-            logging.info(f"Farm ID: {farm_id}")
-            logging.info(f"Sensor Data: {data}")
-
-            camera_data = "data:image/jpeg;base64,"
-            image = data.get("camera", {})
-            image = str(image)
-            camera_data += image
-
-            try:
-                new_data = SensorData(
-                    farm_id=ObjectId(farm_id),
-                    temperature=data.get("temperature"),
-                    height=data.get("height"),
-                    camera=camera_data
-                )
-                new_data.save()
-                logging.info(f"Sensor data added to collection succesfully for farm {farm_id}: {new_data}")
-
-                Farm.objects(id=ObjectId(farm_id)).update_one(set__status=True)
-                logging.info(f"Farm {farm_id} status updated to connected")
-            except Exception as e:
-                logging.error("Failed to create sensor data: %s", e)
-                return "Error creating sensor data", 500
-
-        elif "systemLevels" in topic:
-            logging.info("Writing new system levels")
-            farm_id = topic.split("/")[1]
-            logging.info(f"Farm ID: {farm_id}")
-            logging.info(f"System Levels: {data}")
-
-            try:
-                smart_shunt = SmartShunt(**data.get("smart_shunt", {}))
-                renogy_mppt = RenogyMppt(**data.get("renogy_mppt", {}))
-
-                new_data = SystemLevels(
-                    farm_id=ObjectId(farm_id),
-                    smart_shunt=[smart_shunt],
-                    renogy_mppt=[renogy_mppt]
-                )
-                new_data.save()
-                logging.info(f"System levels added to collection succesfully for farm {farm_id}: {new_data}")
-
-                Farm.objects(id=ObjectId(farm_id)).update_one(set__status=True)
-                logging.info(f"Farm {farm_id} status updated to connected")
-            except Exception as e:
-                logging.error("Failed to create sensor data: %s", e)
-                return "Error creating sensor data", 500
-
+        Farm.objects(id=ObjectId(farm_id)).update_one(set__status=True)
+        logging.info(f"Farm {farm_id} status updated to connected")
     except Exception as e:
-        logging.error(f"Failed to handle message for topic {message.topic}:", e)
+        logging.error("Failed to create sensor data: %s", e)
+        return "Error creating sensor data", 500
+    
 
+@mqtt.on_topic('farm/+/systemLevels')
+def handleSystemLevels(client, userdata, message):
+    topic = message.topic
+    topic_split = topic.split("/")
+    payload = message.payload.decode("utf-8")
+    data = json.loads(payload)
+    farm_id = topic_split[1]
+
+
+    logging.info("Writing new system levels")
+    farm_id = topic_split[1]
+    logging.info(f"Farm ID: {farm_id}")
+    logging.info(f"System Levels: {data}")
+
+    try:
+        smart_shunt = SmartShunt(**data.get("smart_shunt", {}))
+        renogy_mppt = RenogyMppt(**data.get("renogy_mppt", {}))
+
+        new_data = SystemLevels(
+            farm_id=ObjectId(farm_id),
+            smart_shunt=[smart_shunt],
+            renogy_mppt=[renogy_mppt]
+        )
+        new_data.save()
+        logging.info(f"System levels added to collection succesfully for farm {farm_id}: {new_data}")
+
+        Farm.objects(id=ObjectId(farm_id)).update_one(set__status=True)
+        logging.info(f"Farm {farm_id} status updated to connected")
+    except Exception as e:
+        logging.error("Failed to create sensor data: %s", e)
+        return "Error creating sensor data", 500
+    
 
 """ Rotues dedicated to just lift schedule collections """
 @app.route("/farm/cage", methods=['PUT', 'POST'])
@@ -138,7 +147,7 @@ def farm_lift_cages():
 
     return f"Requested to thing"
 
-
+@scheduler.task('interval', id='lift_check', seconds=60, misfire_grace_time=3600)
 def check_and_publish_lift():
     try:
         farms = Farm.objects.all()
@@ -215,14 +224,6 @@ def check_and_publish_lift():
     except Exception as e:
         logging.error(f"Error while checking and publishing lift: {e}")
 
-
-scheduler.add_job(
-    func=check_and_publish_lift,
-    trigger=IntervalTrigger(minutes=1),
-    id='lift_check',
-    replace_existing=True,
-    misfire_grace_time=3600    # Handles missed lifts within an hour if the computer crashes
-)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=PORT_NUM)

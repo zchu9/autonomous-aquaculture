@@ -45,9 +45,9 @@ system_level_data = {
 
 # Publish Sensor Data
 print("Publishing Sensor Data...")
-mqttc.publish("farm/67f966b2b9c6c0d234547e30/sensorData", json.dumps(sensor_data))
+mqttc.publish("farm/6802d1c8c3e488d72cea23bb/sensorData", json.dumps(sensor_data))
 time.sleep(60)
 
 # Publish System Level Data
 print("Publishing System Level Data...")
-mqttc.publish("farm/67f966b2b9c6c0d234547e30/systemLevels", json.dumps(system_level_data))
+mqttc.publish("farm/6802d1c8c3e488d72cea23bb/systemLevels", json.dumps(system_level_data))

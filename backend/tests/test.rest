@@ -78,18 +78,17 @@ Content-Type: application/json
 }
 
 ###
-POST http://localhost:3000/farm/67f966e7b9c6c0d234547e34/addSensorData
+POST http://localhost:3000/farm/6802bc6da642e2e0cfd37cb0/addSensorData
 Content-Type: application/json
 
 {
-    "temperature": 123232,
-    "height": 252225,
-    "camera": "https://i.pinimg.com/originals/75/f6/35/75f6354f76f157a343326cb48a0949f7.jpg",
-    "created_at": "2025-04-18 15:54:33 EST"
+    "temperature": 21,
+    "height": 0,
+    "camera": ""
 }
 
 ###
-DELETE http://localhost:3000/farm/67f966e7b9c6c0d234547e34/deleteSensorData
+DELETE http://localhost:3000/farm/6802bc6da642e2e0cfd37cb0/deleteSensorData
 Content-Type: application/json
 
 {
@@ -104,7 +103,7 @@ GET http://localhost:3000/farm/67f966e7b9c6c0d234547e34/sensorImage
 }
 
 ### System Level Tests
-GET http://localhost:3000/farm/67f966b2b9c6c0d234547e30/getSystemLevels
+GET http://localhost:3000/farm/67faa966ef159124a495fc47/getSystemLevels
 Content-Type: application/json
 
 {
@@ -112,7 +111,7 @@ Content-Type: application/json
 }
 
 ###
-GET http://localhost:3000/farm/67f966b2b9c6c0d234547e30/getAllSystemLevels
+GET http://localhost:3000/farm/68029efecb480f3fb7c499cf/getAllSystemLevels
 Content-Type: application/json
 
 {
@@ -128,18 +127,28 @@ Content-Type: application/json
 }
 
 ###
-POST http://localhost:3000/farm/67f966b2b9c6c0d234547e30/addSystemLevels
+POST http://localhost:3000/farm/6802bc6da642e2e0cfd37cb0/addSystemLevels
 Content-Type: application/json
 
 {
-    "solar_panel_power": 1,
-    "battery_voltage": 1.5,
-    "battery_temp": 1.1,
-    "battery_time": "2025-03-20"
+    "smart_shunt": {
+        "battery_voltage": 12.2,
+        "battery_current": 2.7,
+        "battery_temp": 25,
+        "power": 32.3,
+        "state_of_charge": 75.4
+    },
+    "renogy_mppt": {
+        "solar_panel_power": 0.6,
+        "solar_panel_voltage": 11.5,
+        "solar_panel_current": 1.2,
+        "controller_temp": 20.7,
+        "load_voltage": 12.2
+    }
 }
 
 ###
-DELETE http://localhost:3000/farm/67f966b2b9c6c0d234547e30/deleteSystemLevels
+DELETE http://localhost:3000/farm/67faa966ef159124a495fc47/deleteSystemLevels
 Content-Type: application/json
 
 {

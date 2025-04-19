@@ -16,6 +16,7 @@ import Stack from "@mui/material/Stack";
 import Chip from "@mui/material/Chip";
 import { styled } from "@mui/material/styles";
 import DeviceData from "./DeviceDataInterface";
+import TextField from "@mui/material/TextField";
 
 const base_url = `${import.meta.env.VITE_API_URL}`;
 
@@ -35,10 +36,22 @@ export default function ScheduleOpModal(props: ScheduleModalProps) {
     React.useState<boolean>(false);
   const [scheduleDate, setScheduleDate] = React.useState<Date>();
   const [operation, setOperation] = React.useState<number>();
+  const [duration, setDuration] = React.useState<number>();
 
   const [devices, setDevices] = React.useState<readonly DeviceData[]>(
     props.devices
   );
+
+  function formatDate(date: Date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const seconds = String(date.getSeconds()).padStart(2, "0");
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  }
 
   const handleDelete = (chipToDelete: DeviceData) => () => {
     setDevices((chips) =>
@@ -52,15 +65,21 @@ export default function ScheduleOpModal(props: ScheduleModalProps) {
     });
 
     try {
-      const response = await fetch(base_url + "/farm/cage", {
+      const response = await fetch(base_url + "/farm/cage/addActiveSchedule", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          ids: ids,
-          date: scheduleDate,
-          command: operation,
+          farm_ids: ids,
+          schedule: [
+            {
+              dates: [formatDate(scheduleDate!)],
+              command: operation,
+              duration: duration,
+              status: "pending",
+            },
+          ],
         }),
       });
       if (!response.ok) {
@@ -103,11 +122,15 @@ export default function ScheduleOpModal(props: ScheduleModalProps) {
     console.log(isValidOpSelected);
   };
 
+  const handleDuration = (event: SelectChangeEvent, child?: object) => {
+    setDuration(parseInt(event.target.value));
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <ModalTemplate label="Schedule Bulk Operation">
         <Stack spacing={2}>
-          <h3>Selected Devices:</h3>
+          <Typography>Selected Devices:</Typography>
 
           <Box
             sx={{
@@ -129,7 +152,7 @@ export default function ScheduleOpModal(props: ScheduleModalProps) {
             })}
           </Box>
 
-          <h3>Choose Date/Time:</h3>
+          <Typography>Choose Date/Time: </Typography>
 
           <DateTimePicker
             disablePast
@@ -137,8 +160,8 @@ export default function ScheduleOpModal(props: ScheduleModalProps) {
             onAccept={handleDateTimeChosen}
           />
 
-          <Box sx={{ minWidth: 120 }}>
-            <h3>Send Now</h3>
+          <Box sx={{ minWidth: 500 }}>
+            <Typography>Send Now: </Typography>
             <Checkbox
               color="primary"
               onChange={handleSendNowClicked}
@@ -148,7 +171,19 @@ export default function ScheduleOpModal(props: ScheduleModalProps) {
             />
           </Box>
 
-          <h3>Choose Operation:</h3>
+          <Box sx>
+            <Typography>Set Duration: </Typography>
+            <TextField
+              id="outlined-basic"
+              label="Duration (in minutes)"
+              variant="outlined"
+              type="number"
+              sx={{ width: "100%", marginTop: 2 }}
+              onChange={handleDuration}
+            />
+          </Box>
+
+          <Typography>Choose Operation: </Typography>
 
           <FormControl fullWidth>
             <InputLabel id="operation-select-label">Operation</InputLabel>
@@ -167,7 +202,9 @@ export default function ScheduleOpModal(props: ScheduleModalProps) {
           <Button
             variant="contained"
             startIcon={<SendIcon />}
-            disabled={!((dateIsValid || doSendNow) && isValidOpSelected)}
+            disabled={
+              !((dateIsValid || doSendNow) && isValidOpSelected && duration)
+            }
             onClick={handleConfirm}
           >
             Send

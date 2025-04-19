@@ -1,8 +1,10 @@
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 
 import DeviceTable from "./DeviceTable";
 import DeviceData from "../comm/DeviceDataInterface";
+import { Box, Container } from "@mui/material";
+import Bar from "../comm/Bar";
 
 const base_url = `${import.meta.env.VITE_API_URL}`;
 
@@ -46,11 +48,29 @@ function MainDash() {
 
   return (
     <>
-      <h1>Main Dashboard</h1>
-
-      <div className="card">
-        <DeviceTable rows={data} />
-      </div>
+      <Box
+        sx={{
+          flexGrow: 1,
+          height: "100vh",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <Bar title="Main Dashboard" />
+        <Container
+          sx={{
+            marginTop: 4,
+            flexGrow: 1,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "flex-start",
+            alignItems: "stretch",
+            padding: 0,
+          }}
+        >
+          <DeviceTable rows={data} />
+        </Container>
+      </Box>
     </>
   );
 }
