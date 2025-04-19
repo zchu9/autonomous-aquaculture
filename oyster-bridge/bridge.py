@@ -1,4 +1,3 @@
-
 import paho.mqtt.client as mqtt
 import serial
 import time
@@ -87,6 +86,7 @@ def configure_lora():
     send_command(f"AT+CPIN={LORA_PASSWORD}")
     logging.info("LoRa module configured.")
 
+logging.info("I am alive.")
 load_addresses()
 configure_lora()
 
@@ -236,13 +236,14 @@ def reconstruct_message(address):
             logging.info("Image middle chunk.")
             image_data_base64 += full_message
         
-
+logging.info("Attempting MQTT connection.")
 mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "LoRa_Bridge")
 mqtt_client.on_connect = lambda client, userdata, flags, rc, properties: client.subscribe("farm/+/cage")
 mqtt_client.on_message = on_message
 mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
 mqtt_client.loop_start()
 
+logging.info("Entering main loop.")
 buffer = ""
 while True:
     if (mqtt_task_list):
