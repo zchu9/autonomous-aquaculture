@@ -11,7 +11,6 @@
 // misc info.
 #include <ArduinoJson.h>    // formatting
 
-
 #include "uartSwitch.h"
 
 
@@ -26,8 +25,12 @@ public:
     JsonDocument data;
 
     int getData();
+private:
+    // 
+    bool error(uint8_t index);
     void formatRenogyData();
     void formatVictronData();
+    void hStatsVictron(uint8_t index);
 
 };
 #endif // POWERINFO_H

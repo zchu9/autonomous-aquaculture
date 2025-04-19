@@ -63,8 +63,8 @@ struct Controller_info {
 class RenogyMPPT {
 public:
     RenogyMPPT(int modbus_address = 255);
-    void renogy_read_data_registers();
-    void renogy_read_info_registers();
+    uint8_t rdDataRegisters();
+    uint8_t rdInfoRegisters();
     
     Controller_data renogyData;
     Controller_info renogyInfo;

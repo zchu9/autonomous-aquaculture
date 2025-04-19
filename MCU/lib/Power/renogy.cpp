@@ -3,20 +3,17 @@
 RenogyMPPT::RenogyMPPT(int modbus_address) {
 
     node.begin(modbus_address, Serial);
-    // set word 0 of TX buffer to least-significant word of counter (bits 15..0)
-    node.setTransmitBuffer(0, lowWord(0));
-    // set word 1 of TX buffer to most-significant word of counter (bits 31..16)
-    node.setTransmitBuffer(1, highWord(0));
+    node.setTransmitBuffer(0, lowWord(0));  // set word 0 of TX buffer to least-significant word of counter (bits 15..0)
+    node.setTransmitBuffer(1, highWord(0)); // set word 1 of TX buffer to most-significant word of counter (bits 31..16)
 }
 
-void RenogyMPPT::renogy_read_data_registers() {
-
+// TODO - validate the registers
+uint8_t RenogyMPPT::rdDataRegisters() {
     uint8_t result;
     uint16_t data_registers[num_data_registers];
 
     result = node.readHoldingRegisters(0x103, num_data_registers);
-    if (result == node.ku8MBSuccess)
-    {
+    if (result == node.ku8MBSuccess) {
 
         this->renogyData.battery_soc = data_registers[0];
         this->renogyData.battery_voltage = data_registers[1] * .1; // will it crash if data_registers[1] doesn't exist?
@@ -28,7 +25,7 @@ void RenogyMPPT::renogy_read_data_registers() {
         uint16_t raw_data = data_registers[3]; // eg 5913
         this->renogyData.controller_temperature = raw_data / 256;
         this->renogyData.battery_temperature = raw_data % 256;
-        // for convenience, fahrenheit versions of the temperatures
+        //// for convenience, fahrenheit versions of the temperatures
         this->renogyData.controller_temperatureF = (this->renogyData.controller_temperature * 1.8) + 32;
         this->renogyData.battery_temperatureF = (this->renogyData.battery_temperature * 1.8) + 32;
 
@@ -38,7 +35,7 @@ void RenogyMPPT::renogy_read_data_registers() {
         this->renogyData.solar_panel_voltage = data_registers[7] * .1;
         this->renogyData.solar_panel_amps = data_registers[8] * .01;
         this->renogyData.solar_panel_watts = data_registers[9];
-        //Register 0x10A - Turn on load, write register, unsupported in wanderer - 10
+        //// Register 0x10A - Turn on load, write register, unsupported in wanderer - 10
         this->renogyData.min_battery_voltage_today = data_registers[11] * .1;
         this->renogyData.max_battery_voltage_today = data_registers[12] * .1;
         this->renogyData.max_charging_amps_today = data_registers[13] * .01;
@@ -62,6 +59,7 @@ void RenogyMPPT::renogy_read_data_registers() {
         // Register  0x120 - Load Status, Load Brightness, Charging State - 32    
         // Registers 0x121 to 0x122 - Controller fault codes - 33/34
     }
+#ifdef DEBUG
     else
     {
         if (result == 0xE2) {
@@ -72,11 +70,11 @@ void RenogyMPPT::renogy_read_data_registers() {
             Serial.println(result, HEX); // E2 is timeout
         }
     }
-
-
+#endif
+    return result;
 }
 
-void RenogyMPPT::renogy_read_info_registers() {
+uint8_t RenogyMPPT::rdInfoRegisters() {
     int num_info_registers = this->num_info_registers;
     uint8_t result;
     uint16_t info_registers[num_info_registers];
@@ -128,6 +126,7 @@ void RenogyMPPT::renogy_read_info_registers() {
         this->renogyInfo.modbus_address = info_registers[16];
         this->renogyInfo.last_update_time = millis();
     }
+#ifdef DEBUG
     else
     {
         if (result == 0xE2)
@@ -140,4 +139,6 @@ void RenogyMPPT::renogy_read_info_registers() {
             Serial.println(result, HEX); // E2 is timeout
         }
     }
+#endif
+    return result;
 };
