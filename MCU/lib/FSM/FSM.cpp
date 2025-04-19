@@ -2,6 +2,8 @@
 
 #define DEBUG_LIFT 1
 
+static int commsFlag = 0;
+
 /**
  * @brief
  *
@@ -11,7 +13,7 @@ void FSM(data &d)
     // this should be in the comms handler.
     d.lora->receiveMsg(d.doc);
     checkPowerHandler(d);
-    commsHandler(d);
+    loraListen(d);
 
 #if DEBUG
     debug_sim ds;
@@ -61,12 +63,13 @@ void initializeStartup(data &d)
     initializeNormalFSM(d);
     Serial.println("Hard Coded into normal mode");
 #endif
-
+    // initialize serial receive interrupt
+    attachInterrupt(digitalPinToInterrupt(SERIAL_PIN), commsHandler, RISING);
     // uartSwitch(RADIO, 9600, SERIAL_8N1);
     // should probably be a init data function.
 
     // init the lora class
-    // d.lora = new LoraRadio;
+    d.lora = new LoraRadio;
     d.winch = new winchData(LIFT_PIN, LOWER_PIN, A0);
     d.liftFlag[0] = 0;
     d.height[0] = -1;
@@ -141,15 +144,19 @@ void checkPowerHandler(data &d)
 //////////////////////////////////////////
 
 #pragma region Comms
-
-void commsHandler(data &d)
+void commsHandler()
 {
-    if (getCommsFlag() == 1)
+    commsFlag = 1;
+}
+
+void loraListen(data &d)
+{
+    if (commsFlag == 1)
     {
 #if DEBUG
         Serial.println("Comms Module Interrupt");
 #endif
-        setCommsFlag(false);
+        commsFlag = 0;
         d.lora->receiveMsg(d.doc);
         runCommands(d);
     }

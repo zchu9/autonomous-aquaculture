@@ -8,7 +8,7 @@
 // assume this stuff is provided by a config file
 #define LORA_ADDRESS 42069       // 0 to 65535
 #define LORA_PASSWORD "A3F7B9C2" // 00000001 to FFFFFFFF
-#define FARM_ID "67fc0059859ec93796b14af4"
+#define FARM_ID "6803b540c9dd79fcdfc62192"
 
 #define TARGET_ADDRESS "1"
 #define PACKET_SIZE 100

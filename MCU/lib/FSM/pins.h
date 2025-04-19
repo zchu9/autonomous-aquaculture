@@ -11,6 +11,7 @@
 
 #define WINCH_ACTIVATE 0
 
+#define SERIAL_PIN 13
 // Above is potentially depricated
 
 #define LIFT_PIN 4

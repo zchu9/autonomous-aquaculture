@@ -7,10 +7,16 @@ void setup()
   // my current file structure makes my interrupts awkwardly be in main
   // to avoid a dependency loop
   initializeStartup(d);
-  setupInterrupts();
 }
-
+static int firstrunna = 0;
 void loop()
 {
-   FSM(d);
+
+  if (firstrunna == 0)
+  {
+    // getAndSendImg(d);
+    firstrunna++;
+  }
+
+  FSM(d);
 }

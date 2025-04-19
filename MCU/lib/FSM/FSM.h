@@ -8,13 +8,12 @@
 #include <ArduinoJson.h>
 #include "pins.h"
 #include <Base64.h>
-#include "interrupts.h"
 #include "LoRa.h"
 #include "Sensors/camera_handler.h"
 #include "Sensors/pot_handler.h"
 #include "Sensors/temperature_sensor.h"
 #include "winch.h"
-#include "powerInfo.h"  // for all power information
+#include "powerInfo.h" // for all power information
 #include "timer.h"
 #include "uartSwitch.h"
 
@@ -48,8 +47,8 @@ struct data
 
     JsonDocument doc;
 
-    powerInfo powerData;    // stores power readings for each device
-    time t;                 // a value in minutes and seconds; need a better representation maybe.
+    powerInfo powerData; // stores power readings for each device
+    time t;              // a value in minutes and seconds; need a better representation maybe.
     byte last;
 };
 
@@ -77,19 +76,53 @@ void initializeEmergencyLiftLowering();
 // Main Loop
 void sleep();
 void checkPowerHandler(data &d);
-void commsHandler(data &d);
+/**
+ * @brief Calls the lora recieve message function given the comms interrupt hits
+ *
+ * @param d
+ */
+void loraListen(data &d);
+
+/**
+ * @brief Called when the device is in low power mode and no connection mode for 6 hours.n
+ *
+ * @param d
+ */
 void emergencyLiftHandler(data &d);
 
 // power helpers
+/**
+ * @brief updates the power data struct with the current power readings.\n
+ *
+ * @param d
+ * @return double The current battery voltage
+ */
 double checkPower(data &d);
 
+/**
+ * @brief Get the Into Low Power Mode
+ *
+ * @param d
+ */
 void getIntoLowPowerMode(data &d);
+/**
+ * @brief Get the Out Of Low Power Mode
+ *
+ * @param d
+ */
 void getOutOfLowPowerMode(data &d);
 
 void powerStateChange(data &d);
 
 // comms helpers
 void RFConnectedCase(data &d);
+/**
+ * @brief Called on serial edge Rising interrupt
+ *
+ * @param d data struct
+ */
+void commsHandler();
+
 /**
  * @brief TODO: Disconnected state will occur when the device fails to recieve a transmission within
  * SIGN_OF_LIFE_TIMEOUT.\n
@@ -121,7 +154,8 @@ bool getAndSendImg(data &d);
 void updateTemp(data &d);
 
 // DEBUG CONTROLS
-typedef struct debug_sim {
+typedef struct debug_sim
+{
     bool battery;
     bool solar;
     bool height;
@@ -139,10 +173,9 @@ typedef struct debug_sim {
  *      b - battery
  *      s = solar PV
  */
-void testState(data& d, debug_sim ds, std::vector<std::string> params);
-void parseParams(data& d, debug_sim ds, std::vector<std::string> params);
-void updateTime(data& d);
-
+void testState(data &d, debug_sim ds, std::vector<std::string> params);
+void parseParams(data &d, debug_sim ds, std::vector<std::string> params);
+void updateTime(data &d);
 
 // Debugging
 void initializeDebug();
