@@ -219,7 +219,6 @@ def reconstruct_message(address):
                         #filename = f"image_base64_{timestamp}.txt"
                         #with open(filename, "w") as f:
                             #f.write(image_data_base64)
-
                         json_document = {
                             "camera": image_data_base64
                         }
