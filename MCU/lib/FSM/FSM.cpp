@@ -3,7 +3,8 @@
 #define DEBUG_LIFT 1
 
 static int commsFlag = 0;
-
+static bool lowPowerMode = false;
+static bool noConnectionMode = false;
 /**
  * @brief
  *
@@ -63,10 +64,8 @@ void initializeStartup(data &d)
     initializeNormalFSM(d);
     Serial.println("Hard Coded into normal mode");
 #endif
-    // initialize serial receive interrupt
-    attachInterrupt(digitalPinToInterrupt(SERIAL_PIN), commsHandler, RISING);
-    // uartSwitch(RADIO, 9600, SERIAL_8N1);
-    // should probably be a init data function.
+
+    attachInterrupt(digitalPinToInterrupt(RX_INTERRUPT), commsHandler, RISING);
 
     // init the lora class
     d.lora = new LoraRadio;
@@ -146,7 +145,10 @@ void checkPowerHandler(data &d)
 #pragma region Comms
 void commsHandler()
 {
-    commsFlag = 1;
+    if (commsFlag == 0)
+    {
+        commsFlag = 1;
+    }
 }
 
 void loraListen(data &d)
@@ -156,9 +158,11 @@ void loraListen(data &d)
 #if DEBUG
         Serial.println("Comms Module Interrupt");
 #endif
-        commsFlag = 0;
+        detachInterrupt(digitalPinToInterrupt(RX_INTERRUPT));
         d.lora->receiveMsg(d.doc);
         runCommands(d);
+        commsFlag = 0;
+        attachInterrupt(digitalPinToInterrupt(RX_INTERRUPT), commsHandler, RISING);
     }
 }
 
@@ -171,14 +175,26 @@ int runCommands(data &d)
     }
     if (d.doc["command"] == 1)
     {
-        d.winch->lift(3);
-        // winchControl(d);
+        if (lowPowerMode == true)
+        {
+            sendError(d);
+        }
+        else
+        {
+            d.winch->lift(1);
+        }
         Serial.println(">>>>>Lift command received");
     }
     if (d.doc["command"] == 0)
     {
-        d.winch->lower(0.8);
-        // winchControl(d);
+        if (lowPowerMode == true)
+        {
+            sendError(d);
+        }
+        else
+        {
+            d.winch->lift(0.8);
+        }
         Serial.println(">>>>>Lower command received");
     }
     // clear the json doc
@@ -216,6 +232,21 @@ bool sendData(data &d)
 {
     // Convert the data struct to JSON
     JsonDocument doc = jsonify(d);
+    size_t len = measureJson(doc);
+    char *buffer = new char[len + 1]; // +1 for null terminator
+    serializeJson(doc, buffer, len + 1);
+    // Send the JSON over LoRa
+    bool success = d.lora->sendPackets(buffer);
+    Serial.print("made it out 100");
+    delete[] buffer; // Free the allocated memory
+    return success;
+}
+
+bool sendError(data &d)
+{
+    // Convert the data struct to JSON
+    JsonDocument doc = jsonify(d);
+    doc["state"] = "Winch Operation Error: Low Power Mode";
     size_t len = measureJson(doc);
     char *buffer = new char[len + 1]; // +1 for null terminator
     serializeJson(doc, buffer, len + 1);
@@ -358,6 +389,7 @@ void updateTime(data &d)
     time t = getTime();
     d.t.minutes = t.minutes;
     d.t.seconds = t.seconds;
+    d.t.hours = t.hours;
 }
 
 void testState(data &d, debug_sim ds, std::vector<std::string> params)

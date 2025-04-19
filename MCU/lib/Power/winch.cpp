@@ -48,7 +48,7 @@ bool winchData::lower(double desiredHeight)
     selectWinchLine(false);
 
     pin_size_t lowerPin = this->winchLowerPin;
-    
+
     while (getHeight() > desiredHeight)
     {
         digitalWrite(lowerPin, HIGH);
@@ -77,11 +77,11 @@ bool winchData::lift(double desiredHeight)
     selectWinchLine(true);
 
     pin_size_t liftPin = this->winchLiftPin;
-    
+
     while (getHeight() < desiredHeight)
     {
         digitalWrite(liftPin, HIGH);
-        Serial.println(getHeight());
+        // Serial.println(getHeight());
         if (numIterations % 25 == 0)
         {
             if (beginningHeight - getHeight() < 0.1)

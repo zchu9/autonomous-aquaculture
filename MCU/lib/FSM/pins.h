@@ -10,8 +10,9 @@
 #define MUX_DISABLE_2 5 // Winch
 
 #define WINCH_ACTIVATE 0
+#define RX_INTERRUPT 0
 
-#define SERIAL_PIN 13
+#define RX_PIN 13
 // Above is potentially depricated
 
 #define LIFT_PIN 4

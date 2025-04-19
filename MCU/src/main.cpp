@@ -12,11 +12,7 @@ static int firstrunna = 0;
 void loop()
 {
 
-  if (firstrunna == 0)
-  {
-    // getAndSendImg(d);
-    firstrunna++;
-  }
+  loraListen(d);
 
-  FSM(d);
+  // FSM(d);
 }

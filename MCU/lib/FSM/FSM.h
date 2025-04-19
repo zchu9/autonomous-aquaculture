@@ -58,6 +58,8 @@ struct data
 // Emergency Lift Lowering
 #define TIME_UNTIL_EMERGENCY_LIFT_LOWER_HRS 4
 
+
+
 // main function
 void FSM(data &d);
 
@@ -132,6 +134,7 @@ void commsHandler();
 void RFDisconnectedCase(data &d);
 
 bool sendData(data &d);
+bool sendError(data &d);
 
 /**
  * @brief Reads Json and runs the commands in the json doc.\n
