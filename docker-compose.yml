@@ -36,3 +36,11 @@ services:
     volumes:
       - ./oyster-frontend:/usr/src/app
       - /usr/src/app/node_modules
+  bridge:
+    container_name: oyster-bridge
+    image: oyster-bridge
+    build: ./oyster-bridge
+    links:
+      - mqtt
+    devices:
+      - "/dev/serial0:/dev/serial0"
