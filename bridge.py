@@ -221,9 +221,9 @@ def reconstruct_message(address):
                 farm_id=get_id_by_address(address)
                 mqtt_client.publish("farm/{farm_id}/sensorData", json_string)
 
-                image_data = base64.b64decode(image_data_base64)
-                image = Image.open(BytesIO(image_data))
-                image.show()
+                #image_data = base64.b64decode(image_data_base64)
+                #image = Image.open(BytesIO(image_data))
+                #image.show()
 
             except Exception as e:
                 print(f"Failed to decode or show image: {e}")
