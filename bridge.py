@@ -7,7 +7,7 @@ from io import BytesIO
 from PIL import Image, ImageFile
 import os
 
-MQTT_BROKER = "172.29.40.158" #fixed assuming you're running this on the same device as the server
+MQTT_BROKER = "127.0.0.1" #fixed assuming you're running this on the same device as the server
 MQTT_PORT = 1883 #fixed port for MQTT with TLS
 LORA_PORT = '/dev/serial0' #change if hooked directly to serial rather than via the USB-to-UART adapter
 SAVE_FILE = "address_lookup.json" #the file name for where we're storing the address map
