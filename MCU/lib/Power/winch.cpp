@@ -7,6 +7,7 @@ winchData::winchData(pin_size_t winchLiftPin, pin_size_t winchLowerPin, pin_size
     this->heightSensorPin = heightSensorPin;
     this->currentHeight = 0;
     this->winchID = 0;
+    analogReadResolution(12);
     pinMode(this->winchLiftPin, OUTPUT);
     pinMode(this->winchLowerPin, OUTPUT);
     pinMode(this->heightSensorPin, INPUT);
