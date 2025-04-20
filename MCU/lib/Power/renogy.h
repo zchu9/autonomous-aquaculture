@@ -79,7 +79,7 @@ public:
      *
      * @return Returns the Modbus error code. 0xE2 is the most common; Timeout generally means the device is disconnected.
      */
-    uint8_t wrLoadControlMode(uint16_t mode);
+    uint8_t wrLoadControlMode(uint16_t mode = 0xF1);
     
     controllerData renogyData;
     controllerInfo renogyInfo;

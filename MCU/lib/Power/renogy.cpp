@@ -8,7 +8,7 @@ RenogyMPPT::RenogyMPPT(int modbus_address) {
     wrLoadControlMode();    // defaults to always on.
 }
 
-uint8_t RenogyMPPT::wrLoadControlMode(uint16_t mode = 0xF1) {
+uint8_t RenogyMPPT::wrLoadControlMode(uint16_t mode) {
     uint8_t result = node.writeSingleRegister(0x10A, mode);
     return result;
 }
