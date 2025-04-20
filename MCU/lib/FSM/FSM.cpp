@@ -36,13 +36,13 @@ void initializeStartup(data &d)
     // init the heap pointers (jayson said that we should do this)
     d.powerData = new powerInfo;
     d.lora = new LoraRadio;
-    d.winch = new winchData(LIFT_PIN, LOWER_PIN, A0);
+    d.winch = new winchData(LIFT_PIN, LOWER_PIN, POT_PIN);
     d.cam = new CameraHandler;
     d.powerData = new powerInfo;
 
     Serial1.begin(9600, SERIAL_8N1);
     timerInit(); 
-    
+
     d.cam->begin();
     noConnectionMode = d.lora->sendHandshake();
 }
