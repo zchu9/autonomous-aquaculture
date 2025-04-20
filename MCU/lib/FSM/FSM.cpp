@@ -1,7 +1,5 @@
 #include "FSM.h"
 
-#define DEBUG_LIFT 1
-
 static int commsFlag = 0;
 static bool lowPowerMode = false;
 static bool noConnectionMode = false;
@@ -60,15 +58,19 @@ void initializeDebug()
 
 #pragma region Power
 
-void checkPowerHandler(data &d)
-{
+void checkPowerHandler(data& d) {
     if (getPowerFlag() == 1)
     {
 #if DEBUG
         Serial.println("Power check function");
 #endif
         setPowerFlag(false);
-        double battVoltage = checkPower(d);
+
+        d.powerData->updateData();              // fetch new data from the controllers;
+        uartSwitch(RADIO, 9600, SERIAL_8N1);    // in the event of failure, reconnect the radio;
+
+        double battVoltage = d.powerData->getBatteryVoltage();
+
         if (battVoltage < POWER_THRESHOLD)
         {
             lowPowerMode = true;
@@ -80,6 +82,7 @@ void checkPowerHandler(data &d)
             lowPowerMode = false;
         }
     }
+
     if (noConnectionMode = sendData(d))
     {
         // do something dependent on if the data was sent or not.
@@ -321,12 +324,6 @@ void testState(data &d)
 
 #pragma endregion Debug
 
-double checkPower(data &d)
-{
-    d.powerData->getData();              // update all power values;
-    uartSwitch(RADIO, 9600, SERIAL_8N1); // in the event of failure, reconnect the radio;
-    return d.powerData->batteryVoltage;
-};
 /*
       `'::::.
         _____A_

@@ -13,8 +13,6 @@
 
 #include "uartSwitch.h"
 
-
-
 class powerInfo {
 public:
     double batteryVoltage;
@@ -24,9 +22,9 @@ public:
     ShuntPowerData bms;
     JsonDocument data;
 
-    int getData();
+    int updateData();
+    double getBatteryVoltage();
 private:
-    // 
     bool error(uint8_t index);
     void formatRenogyData();
     void formatVictronData();

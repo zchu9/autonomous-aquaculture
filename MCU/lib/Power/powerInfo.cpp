@@ -1,13 +1,17 @@
+/**
+ * @file powerInfo.cpp
+ * @brief Handles the collection and formatting of data from the Victron SmartShunt and Renogy MPPT Solar controller.`
+ * @version 0.1
+ * @date 2025-04-20
+ * 
+ * @copyright Copyright (c) 2025
+ * 
+ */
+
 #include <Arduino.h>
 #include "powerInfo.h"
 #include "timer.h"
 
-void powerInfo::formatRenogyData() {
-    // TODO: unsure if this is needed.
-    // this->mppt.renogyData;
-};
-
-//! WIP
 // stats come in two packets: one is primarily H##, the other is mixed.
 void powerInfo::formatVictronData() {
     for (size_t i = 0; i < this->bms.labels.size(); i++) {
@@ -50,7 +54,7 @@ void powerInfo::formatVictronData() {
 
 // collect power data from each source, format it as needed.
 // handles all serial line switching, as needed.
-int powerInfo::getData() {
+int powerInfo::updateData() {
     // this should not take more than 60 seconds, timeout if needed.
     time t = getTime();
     int timeoutM = (t.minutes + 1) % 60;
@@ -58,6 +62,8 @@ int powerInfo::getData() {
 
     int successfulReads = 0;
     uint8_t ret;
+
+    // Read from the SmartShunt
     uartSwitch(BMS, VICTRON_BAUD, VICTRON_CONFIG);
     while (successfulReads > 2) {
         ret = fetchVictronStats(this->bms);
@@ -71,7 +77,8 @@ int powerInfo::getData() {
             return 1;   // timeout error
         }
     }
-
+    
+    // Read data from the MPPT
     uartSwitch(MPPT, RENOGY_BAUD, RENOGY_CONFIG);
     while (successfulReads > 3) {
         ret = this->mppt.rdDataRegisters();
@@ -85,6 +92,7 @@ int powerInfo::getData() {
         }
     }
 
+    // Read info from the MPPT
     while (successfulReads > 4) {
         ret = this->mppt.rdInfoRegisters();
         if (!error(ret)) {
@@ -175,4 +183,9 @@ bool powerInfo::error(uint8_t ret) {
         }
     }
     return false;
+}
+
+double powerInfo::getBatteryVoltage() {
+    this->batteryVoltage = this->mppt.renogyData.batteryVoltage;
+    return this->batteryVoltage;
 }
