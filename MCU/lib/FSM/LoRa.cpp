@@ -33,6 +33,13 @@ bool LoraRadio::setupLoRa()
     delay(setupDelay);
     Serial1.println("AT+CPIN?");
     delay(setupDelay);
+    bool success = sendHandshake();
+    if (!success)
+    {
+        Serial.println("Handshake failed");
+        return false;
+    }
+
     Serial.println("Transceiver setup complete!!! :D");
     delay(setupDelay);
     //"handshake packet" to make sure the server knows the farm ID that corresponds to the LoRa address

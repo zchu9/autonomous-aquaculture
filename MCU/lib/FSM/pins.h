@@ -2,15 +2,14 @@
  * @brief Defines the usage of Arduino pins
  *
  */
-// = = = = = = = = = = = = = = 
+// = = = = = = = = = = = = = =
 // DIGITAL PINS
-// = = = = = = = = = = = = = = 
-
+// = = = = = = = = = = = = = =
 
 // output is equvalent to the binary value; ie output 5 = 0b101.
-#define MUX_SEL_0 0
-#define MUX_SEL_1 1
-#define MUX_SEL_2 A3    // previously competed with temp sensors; not applicable to the prototype.
+#define MUX_SEL_0 1
+#define MUX_SEL_1 0
+#define MUX_SEL_2 A3 // previously competed with temp sensors; not applicable to the prototype.
 
 // DS18B20 OneWire data pin
 #define ONE_WIRE_BUS 2
@@ -24,12 +23,12 @@
 #define CS_PIN 7
 
 // PINS OVER 7 are reserved for SPI, I2C and UART respectively.
-#define RX_INTERRUPT 0  // TODO
+#define RX_INTERRUPT 5
 #define RX_PIN 13
 
-// = = = = = = = = = = = = = = 
+// = = = = = = = = = = = = = =
 //  ANALOG PINS
-// = = = = = = = = = = = = = = 
+// = = = = = = = = = = = = = =
 
 // Potentiometer analog input
 #define POT_PIN A0

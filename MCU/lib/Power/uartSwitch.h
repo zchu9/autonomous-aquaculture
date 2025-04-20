@@ -13,6 +13,8 @@ enum device
     BMS,
 }; // LoRA module, renogy mppt, victron bms.
 
+void initMuxPins();
+
 void uartSwitch(device dev, long baud, uint16_t config);
 
 #endif // SWITCH_H

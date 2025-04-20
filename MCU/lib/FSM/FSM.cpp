@@ -34,6 +34,7 @@ void initializeStartup(data &d)
     attachInterrupt(digitalPinToInterrupt(RX_INTERRUPT), commsHandler, RISING);
 
     // init the heap pointers (jayson said that we should do this)
+    initMuxPins();
     d.powerData = new powerInfo;
     d.lora = new LoraRadio;
     d.winch = new winchData(LIFT_PIN, LOWER_PIN, A0);
@@ -58,7 +59,8 @@ void initializeDebug()
 
 #pragma region Power
 
-void checkPowerHandler(data& d) {
+void checkPowerHandler(data &d)
+{
     if (getPowerFlag() == 1)
     {
 #if DEBUG
@@ -66,8 +68,8 @@ void checkPowerHandler(data& d) {
 #endif
         setPowerFlag(false);
 
-        d.powerData->updateData();              // fetch new data from the controllers;
-        uartSwitch(RADIO, 9600, SERIAL_8N1);    // in the event of failure, reconnect the radio;
+        d.powerData->updateData();           // fetch new data from the controllers;
+        uartSwitch(RADIO, 9600, SERIAL_8N1); // in the event of failure, reconnect the radio;
 
         double battVoltage = d.powerData->getBatteryVoltage();
 
