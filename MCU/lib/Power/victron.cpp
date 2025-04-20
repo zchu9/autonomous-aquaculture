@@ -3,9 +3,19 @@
 int fetchVictronStats(ShuntPowerData& stats) {
     const size_t buffer_size = 256; // SAMD RX buffer is 256 total.
     uint8_t buffer[buffer_size] = { '\0' };   // checksum byte is not guaranteed to be ascii
+    int index = 0;
 
-    if (Serial1.available() > 5) {
-        Serial1.readBytes(buffer, buffer_size);
+    while (Serial1.available()) {
+        buffer[index] = Serial1.read();
+        index++;
+        if (!victronChecksum(buffer, buffer_size)) {
+            return 2;   // transmission error
+        }
+    }
+    delay(100);
+    while (Serial1.available()) {
+        buffer[index] = Serial1.read();
+        index++;
         if (!victronChecksum(buffer, buffer_size)) {
             return 2;   // transmission error
         }
