@@ -1,9 +1,11 @@
 /**
- * @brief Defines the usage of Arduino
+ * @brief Defines the usage of Arduino pins
  *
  */
 // = = = = = = = = = = = = = = 
 // DIGITAL PINS
+// = = = = = = = = = = = = = = 
+
 
 // output is equvalent to the binary value; ie output 5 = 0b101.
 #define MUX_SEL_0 0
@@ -27,6 +29,7 @@
 
 // = = = = = = = = = = = = = = 
 //  ANALOG PINS
+// = = = = = = = = = = = = = = 
 
 // Potentiometer analog input
 #define POT_PIN A0
