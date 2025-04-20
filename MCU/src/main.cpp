@@ -11,9 +11,5 @@ void setup()
 static int firstrunna = 0;
 void loop()
 {
-
-  Serial.println(getRawPotValue());
-  Serial.println(getHeight());
-  delay(100);
-  // FSM(d);
+  FSM(d);
 }

@@ -31,8 +31,8 @@ void initializeStartup(data &d)
     initializeDebug();
 #endif
 
-    attachInterrupt(digitalPinToInterrupt(RX_INTERRUPT), commsHandler, RISING);
-    // init the heap pointers (jayson said that we should do this)
+    // attachInterrupt(digitalPinToInterrupt(RX_INTERRUPT), commsHandler, RISING);
+    //  init the heap pointers (jayson said that we should do this)
     Serial1.begin(9600, SERIAL_8N1);
     timerInit();
     initMuxPins();
@@ -43,7 +43,7 @@ void initializeStartup(data &d)
     d.powerData = new powerInfo;
 
     d.cam->begin();
-    noConnectionMode = d.lora->sendHandshake();
+    // noConnectionMode = d.lora->sendHandshake();
 }
 
 /**
@@ -83,11 +83,10 @@ void checkPowerHandler(data &d)
         {
             lowPowerMode = false;
         }
-    }
-
-    if (noConnectionMode == sendData(d))
-    {
-        // do something dependent on if the data was sent or not.
+        if ((noConnectionMode = sendData(d)))
+        {
+            // do something dependent on if the data was sent or not.
+        }
     }
 }
 
