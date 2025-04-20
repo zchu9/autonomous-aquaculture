@@ -7,9 +7,9 @@
 #include "pot_handler.h"
 #include "pins.h"
 
-static int zeroPosition = 0;
-static int maxHeight = 960;
-static int minHeight = 200;
+static int zeroPosition = 800;
+static int maxHeight = 3700;
+static int minHeight = 800;
 static float maxHeightFt = 4.0; // default max height in feet
 
 void initPot()
