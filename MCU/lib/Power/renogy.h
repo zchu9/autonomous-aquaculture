@@ -10,70 +10,83 @@
 #define RENOGY_CONFIG SERIAL_8N1    // although the modbusRTU spec differs, their implementation is simple.
 
 // A struct to hold the controller data
-struct Controller_data {
-    uint8_t battery_soc;               // percent
-    float battery_voltage;             // volts
-    float battery_charging_amps;       // amps
-    uint8_t battery_temperature;       // celcius
-    uint8_t controller_temperature;    // celcius
-    float load_voltage;                // volts
-    float load_amps;                   // amps
-    uint8_t load_watts;                // watts
-    float solar_panel_voltage;         // volts
-    float solar_panel_amps;            // amps
-    uint8_t solar_panel_watts;         // watts
-    float min_battery_voltage_today;   // volts
-    float max_battery_voltage_today;   // volts
-    float max_charging_amps_today;     // amps
-    float max_discharging_amps_today;  // amps
-    uint8_t max_charge_watts_today;    // watts
-    uint8_t max_discharge_watts_today; // watts
-    uint8_t charge_amphours_today;     // amp hours
-    uint8_t discharge_amphours_today;  // amp hours
-    uint8_t charge_watthours_today;    // watt hours
-    uint8_t discharge_watthours_today; // watt hours
-    uint8_t controller_uptime_days;    // days
-    uint8_t total_battery_overcharges; // count
-    uint8_t total_battery_fullcharges; // count
+struct controllerData {
+    uint8_t batterySoc;               // percent
+    float batteryVoltage;             // volts
+    float batteryChargingAmps;       // amps
+
+    uint8_t batteryTemperature;       // celcius
+    uint8_t controllerTemperature;    // celcius
+
+    float loadVoltage;                // volts
+    float loadAmps;                   // amps
+    uint8_t loadWatts;                // watts
+
+    float solarPanelVoltage;         // volts
+    float solarPanelAmps;            // amps
+    uint8_t solarPanelWatts;         // watts
+
+    float minBatteryVoltageToday;   // volts
+    float maxBatteryVoltageToday;   // volts
+    float maxChargingAmpsToday;     // amps
+    float maxDischargingAmpsToday;  // amps
+
+    uint8_t maxChargeWattsToday;    // watts
+    uint8_t maxDischargeWattsToday; // watts
+    uint8_t chargeAmphoursToday;     // amp hours
+    uint8_t dischargeAmphoursToday;  // amp hours
+
+    uint8_t chargeWatthoursToday;    // watt hours
+    uint8_t dischargeWatthoursToday; // watt hours
+
+    uint8_t controllerUptimeDays;    // days
+    uint8_t totalBatteryOvercharges; // count
+    uint8_t totalBatteryFullcharges; // count
 
     // convenience values
-    float battery_temperatureF;        // fahrenheit
-    float controller_temperatureF;     // fahrenheit
-    float battery_charging_watts;      // watts. 
-    long last_update_time;             // millis() of last update time
-    bool controller_connected;         // bool if we successfully read data from the controller
+    float batteryTemperatureF;        // fahrenheit
+    float controllerTemperatureF;     // fahrenheit
+    float batteryChargingWatts;      // watts. 
+    long lastUpdateTime;             // millis() of last update time
+    bool controllerConnected;         // bool if we successfully read data from the controller
 };
 
 // A struct to hold the controller info params
-struct Controller_info {
-    uint8_t voltage_rating;            // volts
-    uint8_t amp_rating;                // amps
-    uint8_t discharge_amp_rating;      // amps
+struct controllerInfo {
+    uint8_t voltageRating;            // volts
+    uint8_t ampRating;                // amps
+    uint8_t dischargeAmpRating;      // amps
     uint8_t type;
-    uint8_t controller_name;
-    char software_version[40];
-    char hardware_version[40];
-    char serial_number[40];
-    uint8_t modbus_address;
+    uint8_t controllerName;
+    char softwareVersion[40];
+    char hardwareVersion[40];
+    char serialNumber[40];
+    uint8_t modbusAddress;
 
-    float wattage_rating;
-    long last_update_time;           // millis() of last update time
+    float wattageRating;
+    long lastUpdateTime;           // millis() of last update time
 };
 
 class RenogyMPPT {
 public:
-    RenogyMPPT(int modbus_address = 255);
+    RenogyMPPT(int modbusAddress = 255);
     uint8_t rdDataRegisters();
     uint8_t rdInfoRegisters();
+
+    /**
+     * @brief Writes the load control mode for the Renogy Rover MPPT.
+     * @param mode The working modes for the Rover can be found in the Modbus documentation. Useful values are 0x0 (on when the solar panel is on) and 0xF1 (Always on).
+     *
+     * @return Returns the Modbus error code. 0xE2 is the most common; Timeout generally means the device is disconnected.
+     */
+    uint8_t wrLoadControlMode(uint16_t mode);
     
-    Controller_data renogyData;
-    Controller_info renogyInfo;
+    controllerData renogyData;
+    controllerInfo renogyInfo;
 private:
     ModbusMaster node;
-    const uint32_t num_data_registers = 35;
-    const uint32_t num_info_registers = 17;
+    const uint32_t numDataRegisters = 35; // registers are read sequentially from 0x103 on the Rover EEPROM.
+    const uint32_t numInfoRegisters = 17; // info registers are from 0x00A. These contain device info.
 };
-
-// TODO: LOAD CONTROLLER
 
 #endif // RENOGY_H

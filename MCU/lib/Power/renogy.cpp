@@ -1,63 +1,78 @@
 #include "renogy.h"
 
 RenogyMPPT::RenogyMPPT(int modbus_address) {
-
-    node.begin(modbus_address, Serial);
+    node.begin(modbus_address, Serial1);
     node.setTransmitBuffer(0, lowWord(0));  // set word 0 of TX buffer to least-significant word of counter (bits 15..0)
     node.setTransmitBuffer(1, highWord(0)); // set word 1 of TX buffer to most-significant word of counter (bits 31..16)
+    delay(10);
+    wrLoadControlMode();    // defaults to always on.
 }
 
-// TODO - validate the registers
+uint8_t RenogyMPPT::wrLoadControlMode(uint16_t mode = 0xF1) {
+    uint8_t result = node.writeSingleRegister(0x10A, mode);
+    return result;
+}
+
 uint8_t RenogyMPPT::rdDataRegisters() {
     uint8_t result;
-    uint16_t data_registers[num_data_registers];
+    uint16_t dataRegisters[numDataRegisters];
 
-    result = node.readHoldingRegisters(0x103, num_data_registers);
+    result = node.readHoldingRegisters(0x103, numDataRegisters);
     if (result == node.ku8MBSuccess) {
 
-        this->renogyData.battery_soc = data_registers[0];
-        this->renogyData.battery_voltage = data_registers[1] * .1;
-        this->renogyData.battery_charging_amps = data_registers[2] * .1;
+        this->renogyData.batterySoc = dataRegisters[0];
+        this->renogyData.batteryVoltage = dataRegisters[1] * .1;
+        this->renogyData.batteryChargingAmps = dataRegisters[2] * .1;
 
-        this->renogyData.battery_charging_watts = this->renogyData.battery_voltage * this->renogyData.battery_charging_amps;
+        this->renogyData.batteryChargingWatts = this->renogyData.batteryVoltage * this->renogyData.batteryChargingAmps;
 
         //0x103 returns two bytes, one for battery and one for controller temp in c
-        uint16_t raw_data = data_registers[3]; // eg 5913
-        this->renogyData.controller_temperature = raw_data / 256;
-        this->renogyData.battery_temperature = raw_data % 256;
-        //// for convenience, fahrenheit versions of the temperatures
-        this->renogyData.controller_temperatureF = (this->renogyData.controller_temperature * 1.8) + 32;
-        this->renogyData.battery_temperatureF = (this->renogyData.battery_temperature * 1.8) + 32;
+        uint16_t raw_data = dataRegisters[3]; // eg 5913
+        this->renogyData.controllerTemperature = raw_data / 256;    //* Maybe change to a bitmask for readability.
+        this->renogyData.batteryTemperature = raw_data % 256;
 
-        this->renogyData.load_voltage = data_registers[4] * .1;
-        this->renogyData.load_amps = data_registers[5] * .01;
-        this->renogyData.load_watts = data_registers[6];
-        this->renogyData.solar_panel_voltage = data_registers[7] * .1;
-        this->renogyData.solar_panel_amps = data_registers[8] * .01;
-        this->renogyData.solar_panel_watts = data_registers[9];
-        //// Register 0x10A - Turn on load, write register, unsupported in wanderer - 10
-        this->renogyData.min_battery_voltage_today = data_registers[11] * .1;
-        this->renogyData.max_battery_voltage_today = data_registers[12] * .1;
-        this->renogyData.max_charging_amps_today = data_registers[13] * .01;
-        this->renogyData.max_discharging_amps_today = data_registers[14] * .1;
-        this->renogyData.max_charge_watts_today = data_registers[15];
-        this->renogyData.max_discharge_watts_today = data_registers[16];
-        this->renogyData.charge_amphours_today = data_registers[17];
-        this->renogyData.discharge_amphours_today = data_registers[18];
-        this->renogyData.charge_watthours_today = data_registers[19];
-        this->renogyData.discharge_watthours_today = data_registers[20];
-        this->renogyData.controller_uptime_days = data_registers[21];
-        this->renogyData.total_battery_overcharges = data_registers[22];
-        this->renogyData.total_battery_fullcharges = data_registers[23];
-        this->renogyData.last_update_time = millis();
+        this->renogyData.controllerTemperatureF = (this->renogyData.controllerTemperature * 1.8) + 32;
+        this->renogyData.batteryTemperatureF = (this->renogyData.batteryTemperature * 1.8) + 32;
 
-        // Add these registers:
-        // Registers 0x118 to 0x119- Total Charging Amp-Hours - 24/25    
-        // Registers 0x11A to 0x11B- Total Discharging Amp-Hours - 26/27    
-        // Registers 0x11C to 0x11D- Total Cumulative power generation (kWH) - 28/29    
-        // Registers 0x11E to 0x11F- Total Cumulative power consumption (kWH) - 30/31    
-        // Register  0x120 - Load Status, Load Brightness, Charging State - 32    
-        // Registers 0x121 to 0x122 - Controller fault codes - 33/34
+        // load stats
+        this->renogyData.loadVoltage = dataRegisters[4] * .1;
+        this->renogyData.loadAmps = dataRegisters[5] * .01;
+        this->renogyData.loadWatts = dataRegisters[6];
+
+        // solar panel stats
+        this->renogyData.solarPanelVoltage = dataRegisters[7] * .1;
+        this->renogyData.solarPanelAmps = dataRegisters[8] * .01;
+        this->renogyData.solarPanelWatts = dataRegisters[9];
+        // data_registers[10] is a write only register
+
+        // daily information
+        this->renogyData.minBatteryVoltageToday = dataRegisters[11] * .1;
+        this->renogyData.maxBatteryVoltageToday = dataRegisters[12] * .1;
+        this->renogyData.maxChargingAmpsToday = dataRegisters[13] * .01;
+        this->renogyData.maxDischargingAmpsToday = dataRegisters[14] * .1;
+
+        this->renogyData.maxChargeWattsToday = dataRegisters[15];
+        this->renogyData.maxDischargeWattsToday = dataRegisters[16];
+
+        this->renogyData.chargeAmphoursToday = dataRegisters[17];
+        this->renogyData.dischargeAmphoursToday = dataRegisters[18];
+
+        this->renogyData.chargeWatthoursToday = dataRegisters[19];
+        this->renogyData.dischargeWatthoursToday = dataRegisters[20];
+
+        this->renogyData.controllerUptimeDays = dataRegisters[21];
+        this->renogyData.totalBatteryOvercharges = dataRegisters[22];
+        this->renogyData.totalBatteryFullcharges = dataRegisters[23];
+        this->renogyData.lastUpdateTime = millis();
+        /*
+        Add these registers:
+        Registers 0x118 to 0x119- Total Charging Amp-Hours - 24/25
+        Registers 0x11A to 0x11B- Total Discharging Amp-Hours - 26/27
+        Registers 0x11C to 0x11D- Total Cumulative power generation (kWH) - 28/29
+        Registers 0x11E to 0x11F- Total Cumulative power consumption (kWH) - 30/31
+        Register  0x120 - Load Status, Load Brightness, Charging State - 32
+        Registers 0x121 to 0x122 - Controller fault codes - 33/34
+        */
     }
 #ifdef DEBUG
     else
@@ -75,49 +90,49 @@ uint8_t RenogyMPPT::rdDataRegisters() {
 }
 
 uint8_t RenogyMPPT::rdInfoRegisters() {
-    int num_info_registers = this->num_info_registers;
+    int numInfoRegisters = this->numInfoRegisters;
     uint8_t result;
-    uint16_t info_registers[num_info_registers];
+    uint16_t infoRegisters[numInfoRegisters];
     char buffer1[40], buffer2[40];
     uint8_t raw_data;
 
-    result = node.readHoldingRegisters(0x00A, num_info_registers);
+    result = node.readHoldingRegisters(0x00A, numInfoRegisters);
     if (result == node.ku8MBSuccess)
     {
         // read and process each value
         // Register 0x0A - Controller voltage and Current Rating - 0
-        raw_data = info_registers[0];
-        this->renogyInfo.voltage_rating = raw_data / 256;
-        this->renogyInfo.amp_rating = raw_data % 256;
-        this->renogyInfo.wattage_rating = this->renogyInfo.voltage_rating * this->renogyInfo.amp_rating;
+        raw_data = infoRegisters[0];
+        this->renogyInfo.voltageRating = raw_data / 256;
+        this->renogyInfo.ampRating = raw_data % 256;
+        this->renogyInfo.wattageRating = this->renogyInfo.voltageRating * this->renogyInfo.ampRating;
 
         //Register 0x0B - Controller discharge current and type - 1
-        raw_data = info_registers[1];
-        this->renogyInfo.discharge_amp_rating = raw_data / 256; // not sure if this should be /256 or /100
+        raw_data = infoRegisters[1];
+        this->renogyInfo.dischargeAmpRating = raw_data / 256; // not sure if this should be /256 or /100
         this->renogyInfo.type = raw_data % 256; // not sure if this should be /256 or /100
 
         //Registers 0x0C to 0x13 - Product Model String - 2-9
 
         //Registers 0x014 to 0x015 - Software Version - 10-11
-        itoa(info_registers[10], buffer1, 10);
-        itoa(info_registers[11], buffer2, 10);
+        itoa(infoRegisters[10], buffer1, 10);
+        itoa(infoRegisters[11], buffer2, 10);
         strcat(buffer1, buffer2);
-        strcpy(this->renogyInfo.software_version, buffer1);
+        strcpy(this->renogyInfo.softwareVersion, buffer1);
 
         //Registers 0x016 to 0x017 - Hardware Version - 12-13
-        itoa(info_registers[12], buffer1, 10);
-        itoa(info_registers[13], buffer2, 10);
+        itoa(infoRegisters[12], buffer1, 10);
+        itoa(infoRegisters[13], buffer2, 10);
         strcat(buffer1, buffer2);
-        strcpy(this->renogyInfo.hardware_version, buffer1);
+        strcpy(this->renogyInfo.hardwareVersion, buffer1);
 
         //Registers 0x018 to 0x019 - Product Serial Number - 14-15
-        itoa(info_registers[14], buffer1, 10);
-        itoa(info_registers[15], buffer2, 10);
+        itoa(infoRegisters[14], buffer1, 10);
+        itoa(infoRegisters[15], buffer2, 10);
         strcat(buffer1, buffer2);
-        strcpy(this->renogyInfo.serial_number, buffer1);
+        strcpy(this->renogyInfo.serialNumber, buffer1);
 
-        this->renogyInfo.modbus_address = info_registers[16];
-        this->renogyInfo.last_update_time = millis();
+        this->renogyInfo.modbusAddress = infoRegisters[16];
+        this->renogyInfo.lastUpdateTime = millis();
     }
 #ifdef DEBUG
     else
