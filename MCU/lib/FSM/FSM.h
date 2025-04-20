@@ -19,14 +19,6 @@
 
 #define DEBUG true
 
-enum State
-{
-    NORMAL,
-    LOW_POWER,
-    NO_CONNECTION,
-    LOW_POWER_NO_CONNECTION
-};
-
 struct data
 {
     // Assuming the size of the array is 10, you can adjust it as needed
@@ -36,14 +28,7 @@ struct data
     winchData *winch;
     CameraHandler *cam;
 
-    bool liftFlag[numWinches];
-    bool liftStarted;
-    // bool lowerFlag[numWinches];
-    State state;
-
-    double height[numWinches];
-    std::vector<double> power; // stores power readings for each device
-    std::vector<double> temp;  // stores temperature readings for each device
+    std::vector<double> temp; // stores temperature readings for each device
 
     JsonDocument doc;
 
@@ -58,25 +43,16 @@ struct data
 // Emergency Lift Lowering
 #define TIME_UNTIL_EMERGENCY_LIFT_LOWER_HRS 4
 
-
-
 // main function
 void FSM(data &d);
 
 // initialization functions
 void initializeStartup(data &d);
-void initializeNormalFSM(data &d);
-void initializeLPM(data &d);
-void initializeNCM(data &d);
-void initializeLPMandNCM(data &d);
-
-// interrupt initialization functions
-void initializeCheckPower();
-void initializeReconnection();
-void initializeEmergencyLiftLowering();
-
-// Main Loop
-void sleep();
+/**
+ * @brief
+ *
+ * @param d
+ */
 void checkPowerHandler(data &d);
 /**
  * @brief Calls the lora recieve message function given the comms interrupt hits
@@ -102,36 +78,11 @@ void emergencyLiftHandler(data &d);
 double checkPower(data &d);
 
 /**
- * @brief Get the Into Low Power Mode
- *
- * @param d
- */
-void getIntoLowPowerMode(data &d);
-/**
- * @brief Get the Out Of Low Power Mode
- *
- * @param d
- */
-void getOutOfLowPowerMode(data &d);
-
-void powerStateChange(data &d);
-
-// comms helpers
-void RFConnectedCase(data &d);
-/**
  * @brief Called on serial edge Rising interrupt
  *
  * @param d data struct
  */
 void commsHandler();
-
-/**
- * @brief TODO: Disconnected state will occur when the device fails to recieve a transmission within
- * SIGN_OF_LIFE_TIMEOUT.\n
- *
- * @param d
- */
-void RFDisconnectedCase(data &d);
 
 bool sendData(data &d);
 bool sendError(data &d);
@@ -148,7 +99,12 @@ int runCommands(data &d);
 
 JsonDocument jsonify(data &d);
 
-bool sendImage(data &d);
+/**
+ * @brief Get the State object
+ *
+ * @return std::string
+ */
+std::string getState();
 
 // Sensor Controls
 bool getAndSendImg(data &d);
@@ -157,13 +113,6 @@ bool getAndSendImg(data &d);
 void updateTemp(data &d);
 
 // DEBUG CONTROLS
-typedef struct debug_sim
-{
-    bool battery;
-    bool solar;
-    bool height;
-    bool temp;
-} ds;
 
 /**
  * @brief a function to test the FSM
@@ -176,8 +125,8 @@ typedef struct debug_sim
  *      b - battery
  *      s = solar PV
  */
-void testState(data &d, debug_sim ds, std::vector<std::string> params);
-void parseParams(data &d, debug_sim ds, std::vector<std::string> params);
+void testState(data &d);
+
 void updateTime(data &d);
 
 // Debugging

@@ -14,35 +14,6 @@ void FSM(data &d)
     // this should be in the comms handler.
     checkPowerHandler(d);
     loraListen(d);
-
-#if DEBUG
-    debug_sim ds;
-    std::vector<std::string> params;
-
-    // battery
-    ds.battery = false;
-    char buf[30];
-    double num = analogRead(A3);
-    num /= analogRead(A4);
-    num *= 14.0;
-    snprintf(buf, 30, "b=%f", num);
-    params.push_back(buf);
-
-    ds.height = true;
-    ds.temp = true;
-    ds.solar = true;
-
-    updateTime(d);
-    int interval = 3;
-
-    if (d.t.seconds != d.last && d.t.seconds % interval == 0)
-    {
-        testState(d, ds, params);
-        d.last = d.t.seconds;
-    }
-
-    params.clear();
-#endif
 }
 
 #pragma region Initialize
@@ -60,8 +31,6 @@ void initializeStartup(data &d)
 {
 #if DEBUG
     initializeDebug();
-    initializeNormalFSM(d);
-    Serial.println("Hard Coded into normal mode");
 #endif
 
     attachInterrupt(digitalPinToInterrupt(RX_INTERRUPT), commsHandler, RISING);
@@ -69,29 +38,14 @@ void initializeStartup(data &d)
     // init the lora class
     d.lora = new LoraRadio;
     noConnectionMode = d.lora->sendHandshake();
+
     d.winch = new winchData(LIFT_PIN, LOWER_PIN, A0);
-    d.liftFlag[0] = 0;
-    d.height[0] = -1;
 
     d.cam = new CameraHandler;
     d.cam->begin();
 
     // initializes the check power interrupt the comms handler, and the emergency lift lowering timer interrupt
     // initializeLPMandNCM(d);
-}
-
-/**
- * @brief Initialize the conditions for the Normal FSM\n
- * The mode variables should be set to 0\n
- * The check power interrupt should already be initialized\n
- *
- * if NCM was 1, then a "connected" initialization might be needed\n
- * TODO: Come up with a better name for the "connected" initialization
- */
-void initializeNormalFSM(data &d)
-{
-    // NCM -> Normal
-    d.state = NORMAL;
 }
 
 /**
@@ -107,14 +61,7 @@ void initializeDebug()
 
 #pragma endregion Initialize
 
-void sleep()
-{
-    // Sleep until an interrupt occurs
-    // asm - tells compiler this is inline assembly
-    // __volatile__ - tells compiler this code has side effects that should not be optimized away
-    // "wfi" - wait for interrupt ~ enters low power / sleep mode
-    //__asm__ __volatile__("wfi");
-}
+#pragma region Power
 
 void checkPowerHandler(data &d)
 {
@@ -137,6 +84,8 @@ void checkPowerHandler(data &d)
         }
     }
 }
+
+#pragma endregion Power
 
 //////////////////////////////////////////
 //          Comms stuff
@@ -202,32 +151,6 @@ int runCommands(data &d)
     return 0;
 }
 
-JsonDocument jsonify(data &d)
-{
-    // Clear the previous document
-
-    JsonDocument doc;
-
-    // Set the state
-    doc["state"] = d.state;
-
-    // Set the power vector
-    JsonArray powerArray = d.doc["power"].to<JsonArray>();
-    for (size_t i = 0; i < d.power.size(); i++)
-    {
-        powerArray.add(d.power[i]);
-    }
-
-    // Set the temperature readings
-    JsonArray tempArray = d.doc["temp"].to<JsonArray>();
-    for (size_t i = 0; i < d.temp.size(); i++)
-    {
-        tempArray.add(d.temp[i]);
-    }
-
-    return doc;
-}
-
 bool sendData(data &d)
 {
     // Convert the data struct to JSON
@@ -237,7 +160,10 @@ bool sendData(data &d)
     serializeJson(doc, buffer, len + 1);
     // Send the JSON over LoRa
     bool success = d.lora->sendPackets(buffer);
-    Serial.print("made it out 100");
+    if (success)
+    {
+        // clear the data struct
+    }
     delete[] buffer; // Free the allocated memory
     return success;
 }
@@ -258,50 +184,6 @@ bool sendError(data &d)
 }
 
 #pragma endregion Comms
-
-void getIntoLowPowerMode(data &d)
-{
-    if (d.state == NORMAL)
-    {
-        d.state = LOW_POWER;
-    }
-    else
-    {
-        d.state = LOW_POWER_NO_CONNECTION;
-    }
-}
-
-void getOutOfLowPowerMode(data &d)
-{
-    if (d.state == LOW_POWER_NO_CONNECTION)
-    {
-        d.state = NO_CONNECTION;
-    }
-    else
-    {
-        d.state = NORMAL;
-    }
-}
-
-void powerStateChange(data &d)
-{
-    bool already_in_lpm = d.state == LOW_POWER || d.state == LOW_POWER_NO_CONNECTION;
-    int temporary = 0;
-    if (temporary < POWER_THRESHOLD)
-    {
-        if (!already_in_lpm)
-        {
-            getIntoLowPowerMode(d);
-        }
-    }
-    else
-    {
-        if (already_in_lpm)
-        {
-            getOutOfLowPowerMode(d);
-        }
-    }
-}
 
 #pragma region Sensors
 
@@ -378,6 +260,56 @@ void updateTemp(data &d)
 
 #pragma endregion Sensors
 
+#pragma region Helpers
+JsonDocument jsonify(data &d)
+{
+    // Clear the previous document
+
+    JsonDocument doc;
+
+    // Set the state
+    /*
+    doc["state"] = d.state;
+
+    // Set the power vector
+    JsonArray powerArray = d.doc["power"].to<JsonArray>();
+    for (size_t i = 0; i < d.power.size(); i++)
+    {
+        powerArray.add(d.power[i]);
+    }
+
+    // Set the temperature readings
+    JsonArray tempArray = d.doc["temp"].to<JsonArray>();
+    for (size_t i = 0; i < d.temp.size(); i++)
+    {
+        tempArray.add(d.temp[i]);
+    }
+*/
+    return doc;
+}
+
+std::string getState()
+{
+    if (lowPowerMode && noConnectionMode)
+    {
+        return "Low Power No Connection";
+    }
+    else if (lowPowerMode)
+    {
+        return "Low Power";
+    }
+    else if (noConnectionMode)
+    {
+        return "No Connection";
+    }
+    else
+    {
+        return "Normal";
+    }
+}
+
+#pragma endregion Helpers
+
 ////////////////////////////////////////////////////////////////////////////
 // Zach's House
 ////////////////////////////////////////////////////////////////////////////
@@ -392,12 +324,9 @@ void updateTime(data &d)
     d.t.hours = t.hours;
 }
 
-void testState(data &d, debug_sim ds, std::vector<std::string> params)
+void testState(data &d)
 {
     char buffer[80 * 24];
-
-    parseParams(d, ds, params);
-
     char output[] = "\033[38;5;%d;80;80mCurrent state : %d\n"
                     "Height: %0.2f\t|\tTemp: %0.2f\n"
                     "Solar_V: %0.2f\t|\tBatt_V: %0.2f\n"
@@ -408,60 +337,13 @@ void testState(data &d, debug_sim ds, std::vector<std::string> params)
     color += 31; // comment this out if you hate fun :(
 
     sprintf(buffer, output,
-            color, d.state,
-            d.height[0], d.temp[0],
+            color, getState(),
+            getHeight(), d.temp[0],
             d.powerData.solarPanelVoltage, d.powerData.batteryVoltage,
             d.t.minutes, d.t.seconds,
             0, 0);
     Serial.println(buffer);
 }
-
-void parseParams(data &d, debug_sim ds, std::vector<std::string> params)
-{
-    for (std::string s : params)
-    {
-        std::string w = s.substr(s.find('=') + 1);
-        char *ptr;
-        double value = strtod(w.c_str(), &ptr);
-        switch (s[0])
-        {
-        case 'h':
-            d.height[0] = value;
-            ds.height = false;
-            break;
-        case 't':
-            d.temp[0] = value;
-            ds.temp = false;
-            break;
-        case 'b':
-            d.powerData.batteryVoltage = value;
-            ds.battery = false;
-            break;
-        case 's':
-            d.powerData.solarPanelVoltage = value;
-            ds.solar = false;
-            break;
-        }
-    }
-
-    // default values to set;
-    if (ds.battery)
-    {
-        d.powerData.batteryVoltage = 12.6;
-    }
-    if (ds.height)
-    {
-        d.height[0] = 3.0;
-    }
-    if (ds.temp)
-    {
-        d.temp[0] = 76.0;
-    }
-    if (ds.solar)
-    {
-        d.powerData.solarPanelVoltage = 12.7;
-    }
-};
 
 #pragma endregion Debug
 
