@@ -12,7 +12,7 @@ int fetchVictronStats(ShuntPowerData& stats) {
             return 2;   // transmission error
         }
     }
-    delay(100);
+    delay(100); // messages are in two blocks.
     while (Serial1.available()) {
         buffer[index] = Serial1.read();
         index++;
