@@ -32,17 +32,15 @@ void initializeStartup(data &d)
 #endif
 
     attachInterrupt(digitalPinToInterrupt(RX_INTERRUPT), commsHandler, RISING);
-
     // init the heap pointers (jayson said that we should do this)
+    Serial1.begin(9600, SERIAL_8N1);
+    timerInit();
     initMuxPins();
     d.powerData = new powerInfo;
     d.lora = new LoraRadio;
     d.winch = new winchData(LIFT_PIN, LOWER_PIN, POT_PIN);
     d.cam = new CameraHandler;
     d.powerData = new powerInfo;
-
-    Serial1.begin(9600, SERIAL_8N1);
-    timerInit();
 
     d.cam->begin();
     noConnectionMode = d.lora->sendHandshake();

@@ -9,12 +9,13 @@
 
 static int zeroPosition = 0;
 static int maxHeight = 960;
-static int minHeight = 0;
+static int minHeight = 200;
 static float maxHeightFt = 4.0; // default max height in feet
 
 void initPot()
 {
     pinMode(POT_PIN, INPUT);
+    analogReadResolution(12);
 }
 
 int getRawPotValue()
@@ -49,7 +50,6 @@ void setZeroHeight()
 {
     zeroPosition = analogRead(POT_PIN);
 #if HARDCODE
-    zeroPosition = 60;
 #endif
 
     setMinHeight();
