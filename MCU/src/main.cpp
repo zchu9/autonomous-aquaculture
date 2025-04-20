@@ -11,6 +11,5 @@ void setup()
 static int firstrunna = 0;
 void loop()
 {
-  d.lora->sendHandshake();
-  // FSM(d);
+  FSM(d);
 }

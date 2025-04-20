@@ -32,7 +32,7 @@ void initializeStartup(data &d)
 #endif
 
     attachInterrupt(digitalPinToInterrupt(RX_INTERRUPT), commsHandler, RISING);
-    
+
     // init the heap pointers (jayson said that we should do this)
     initMuxPins();
     d.powerData = new powerInfo;
@@ -42,7 +42,7 @@ void initializeStartup(data &d)
     d.powerData = new powerInfo;
 
     Serial1.begin(9600, SERIAL_8N1);
-    timerInit(); 
+    timerInit();
 
     d.cam->begin();
     noConnectionMode = d.lora->sendHandshake();
@@ -141,6 +141,7 @@ int runCommands(data &d)
             d.winch->lift(1);
         }
         Serial.println(">>>>>Lift command received");
+        getAndSendImg(d);
     }
     if (d.doc["command"] == 0)
     {
@@ -153,6 +154,7 @@ int runCommands(data &d)
             d.winch->lift(0.8);
         }
         Serial.println(">>>>>Lower command received");
+        getAndSendImg(d);
     }
     // clear the json doc
     d.doc.clear();
