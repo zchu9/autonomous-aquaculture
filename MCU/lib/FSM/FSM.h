@@ -28,12 +28,12 @@ struct data
     winchData *winch;
     CameraHandler *cam;
 
-    std::vector<double> temp; // stores temperature readings for each device
+    double temp; // stores temperature readings for each device
 
     JsonDocument doc;
 
-    powerInfo powerData; // stores power readings for each device
-    time t;              // a value in minutes and seconds; need a better representation maybe.
+    powerInfo *powerData; // stores power readings for each device
+    time t;               // a value in minutes and seconds; need a better representation maybe.
     byte last;
 };
 

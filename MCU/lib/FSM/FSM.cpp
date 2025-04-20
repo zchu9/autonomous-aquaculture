@@ -35,17 +35,14 @@ void initializeStartup(data &d)
 
     attachInterrupt(digitalPinToInterrupt(RX_INTERRUPT), commsHandler, RISING);
 
-    // init the lora class
+    // init the heap pointers (jayson said that we should do this)
+    d.powerData = new powerInfo;
     d.lora = new LoraRadio;
-    noConnectionMode = d.lora->sendHandshake();
-
     d.winch = new winchData(LIFT_PIN, LOWER_PIN, A0);
-
     d.cam = new CameraHandler;
+    d.powerData = new powerInfo;
     d.cam->begin();
-
-    // initializes the check power interrupt the comms handler, and the emergency lift lowering timer interrupt
-    // initializeLPMandNCM(d);
+    noConnectionMode = d.lora->sendHandshake();
 }
 
 /**
@@ -82,6 +79,10 @@ void checkPowerHandler(data &d)
         {
             lowPowerMode = false;
         }
+    }
+    if (noConnectionMode = sendData(d))
+    {
+        // do something dependent on if the data was sent or not.
     }
 }
 
@@ -151,6 +152,7 @@ int runCommands(data &d)
     return 0;
 }
 
+#pragma region TODO: clear
 bool sendData(data &d)
 {
     // Convert the data struct to JSON
@@ -162,6 +164,7 @@ bool sendData(data &d)
     bool success = d.lora->sendPackets(buffer);
     if (success)
     {
+
         // clear the data struct
     }
     delete[] buffer; // Free the allocated memory
@@ -171,7 +174,7 @@ bool sendData(data &d)
 bool sendError(data &d)
 {
     // Convert the data struct to JSON
-    JsonDocument doc = jsonify(d);
+    JsonDocument doc;
     doc["state"] = "Winch Operation Error: Low Power Mode";
     size_t len = measureJson(doc);
     char *buffer = new char[len + 1]; // +1 for null terminator
@@ -182,7 +185,7 @@ bool sendError(data &d)
     delete[] buffer; // Free the allocated memory
     return success;
 }
-
+#pragma endregion TODO : clear
 #pragma endregion Comms
 
 #pragma region Sensors
@@ -244,18 +247,7 @@ void updateTemp(data &d)
 {
     // Read temperature
     // float currentTempC = getTempC();
-    float currentTempF = getTempF();
-
-    // Print the reading
-    Serial.print("Temperature: ");
-    // Serial.print(currentTempC);
-    // Serial.print(" °C / ");
-    Serial.print(currentTempF);
-    Serial.println(" °F");
-
-    // Append the reading to the temperature array in d.
-    // d.temp.push_back(currentTempC);
-    d.temp.push_back(currentTempF);
+    d.temp = getTempF();
 }
 
 #pragma endregion Sensors
@@ -265,27 +257,9 @@ JsonDocument jsonify(data &d)
 {
     // Clear the previous document
 
-    JsonDocument doc;
+    JsonDocument doc = d.powerData->data;
 
-    // Set the state
-    /*
-    doc["state"] = d.state;
-
-    // Set the power vector
-    JsonArray powerArray = d.doc["power"].to<JsonArray>();
-    for (size_t i = 0; i < d.power.size(); i++)
-    {
-        powerArray.add(d.power[i]);
-    }
-
-    // Set the temperature readings
-    JsonArray tempArray = d.doc["temp"].to<JsonArray>();
-    for (size_t i = 0; i < d.temp.size(); i++)
-    {
-        tempArray.add(d.temp[i]);
-    }
-*/
-    return doc;
+    doc["state"] = getState();
 }
 
 std::string getState()
@@ -338,8 +312,8 @@ void testState(data &d)
 
     sprintf(buffer, output,
             color, getState(),
-            getHeight(), d.temp[0],
-            d.powerData.solarPanelVoltage, d.powerData.batteryVoltage,
+            getHeight(), d.temp,
+            d.powerData->solarPanelVoltage, d.powerData->batteryVoltage,
             d.t.minutes, d.t.seconds,
             0, 0);
     Serial.println(buffer);
@@ -349,9 +323,9 @@ void testState(data &d)
 
 double checkPower(data &d)
 {
-    d.powerData.getData();               // update all power values;
+    d.powerData->getData();              // update all power values;
     uartSwitch(RADIO, 9600, SERIAL_8N1); // in the event of failure, reconnect the radio;
-    return d.powerData.batteryVoltage;
+    return d.powerData->batteryVoltage;
 };
 /*
       `'::::.
