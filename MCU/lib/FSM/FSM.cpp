@@ -83,7 +83,7 @@ void checkPowerHandler(data& d) {
         }
     }
 
-    if (noConnectionMode = sendData(d))
+    if (noConnectionMode == sendData(d))
     {
         // do something dependent on if the data was sent or not.
     }
@@ -259,10 +259,10 @@ void updateTemp(data &d)
 JsonDocument jsonify(data &d)
 {
     // Clear the previous document
-
     JsonDocument doc = d.powerData->data;
 
     doc["state"] = getState();
+    return JsonDocument();
 }
 
 std::string getState()
