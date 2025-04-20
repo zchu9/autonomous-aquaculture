@@ -16,7 +16,7 @@ uint8_t RenogyMPPT::rdDataRegisters() {
     if (result == node.ku8MBSuccess) {
 
         this->renogyData.battery_soc = data_registers[0];
-        this->renogyData.battery_voltage = data_registers[1] * .1; // will it crash if data_registers[1] doesn't exist?
+        this->renogyData.battery_voltage = data_registers[1] * .1;
         this->renogyData.battery_charging_amps = data_registers[2] * .1;
 
         this->renogyData.battery_charging_watts = this->renogyData.battery_voltage * this->renogyData.battery_charging_amps;
@@ -86,14 +86,10 @@ uint8_t RenogyMPPT::rdInfoRegisters() {
     {
         // read and process each value
         // Register 0x0A - Controller voltage and Current Rating - 0
-        // Not sure if this is correct. I get the correct amp rating for my Wanderer 30 (30 amps), but I get a voltage rating of 0 (should be 12v)
         raw_data = info_registers[0];
         this->renogyInfo.voltage_rating = raw_data / 256;
         this->renogyInfo.amp_rating = raw_data % 256;
         this->renogyInfo.wattage_rating = this->renogyInfo.voltage_rating * this->renogyInfo.amp_rating;
-        //Serial.println("raw ratings = " + String(raw_data));
-        //Serial.println("Voltage rating: " + String(this->renogyInfo.voltage_rating));
-        //Serial.println("amp rating: " + String(this->renogyInfo.amp_rating));
 
         //Register 0x0B - Controller discharge current and type - 1
         raw_data = info_registers[1];
@@ -105,23 +101,20 @@ uint8_t RenogyMPPT::rdInfoRegisters() {
         //Registers 0x014 to 0x015 - Software Version - 10-11
         itoa(info_registers[10], buffer1, 10);
         itoa(info_registers[11], buffer2, 10);
-        strcat(buffer1, buffer2); // should put a divider between the two strings?
+        strcat(buffer1, buffer2);
         strcpy(this->renogyInfo.software_version, buffer1);
-        //Serial.println("Software version: " + String(this->renogyInfo.software_version));
 
         //Registers 0x016 to 0x017 - Hardware Version - 12-13
         itoa(info_registers[12], buffer1, 10);
         itoa(info_registers[13], buffer2, 10);
-        strcat(buffer1, buffer2); // should put a divider between the two strings?
+        strcat(buffer1, buffer2);
         strcpy(this->renogyInfo.hardware_version, buffer1);
-        //Serial.println("Hardware version: " + String(this->renogyInfo.hardware_version));
 
         //Registers 0x018 to 0x019 - Product Serial Number - 14-15
         itoa(info_registers[14], buffer1, 10);
         itoa(info_registers[15], buffer2, 10);
-        strcat(buffer1, buffer2); // should put a divider between the two strings?
+        strcat(buffer1, buffer2);
         strcpy(this->renogyInfo.serial_number, buffer1);
-        //Serial.println("Serial number: " + String(this->renogyInfo.serial_number)); // (I don't think this is correct)
 
         this->renogyInfo.modbus_address = info_registers[16];
         this->renogyInfo.last_update_time = millis();
