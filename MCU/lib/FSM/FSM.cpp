@@ -34,9 +34,9 @@ void initializeStartup(data &d)
     timerInit();
     initMuxPins();
     d.powerData = new powerInfo;
+    d.powerData->initData();
     d.lora = new LoraRadio;
     d.winch = new winchData(LIFT_PIN, LOWER_PIN, POT_PIN);
-    d.powerData = new powerInfo;
 
     d.cam->begin();
     // noConnectionMode = d.lora->sendHandshake();
@@ -145,7 +145,7 @@ int runCommands(data &d)
         }
         else
         {
-            d.winch->lower(0);  // TODO: Hard-coded values
+            d.winch->lower(0); // TODO: Hard-coded values
         }
         Serial.println(">>>>>Lower command received");
         getAndSendImg(d);
@@ -182,8 +182,8 @@ bool sendError(data &d)
     serializeJson(doc, buffer, len + 1);
     // Send the JSON over LoRa
     bool success = d.lora->sendPackets(buffer);
-    Serial.print("made it out 100");    // TODO: Remove later
-    delete[] buffer; // Free the allocated memory
+    Serial.print("made it out 100"); // TODO: Remove later
+    delete[] buffer;                 // Free the allocated memory
     return success;
 }
 
@@ -301,9 +301,10 @@ void updateTime(data &d)
 
 void testState(data &d)
 {
-    static int s = (d.t.seconds+10)%60;
+    static int s = (d.t.seconds + 10) % 60;
     updateTime(d);
-    if(d.t.seconds == s) {
+    if (d.t.seconds == s)
+    {
         s = (d.t.seconds + 10) % 60;
         char buffer[80 * 24];
         char output[] = "\033[38;5;%d;80;80mCurrent state : %s\n"
@@ -311,10 +312,10 @@ void testState(data &d)
                         "Solar_V: %2.2f\t|\tBatt_V: %2.2f\n"
                         "Uptime: %2d:%2d\n"
                         "Last Transmission time:%2d:%2d\n\033[0m";
-    
+
         static int color = 16;
         color += 31; // comment this out if you hate fun :(
-    
+
         sprintf(buffer, output,
                 color, getState().c_str(),
                 getHeight(), d.temp,
