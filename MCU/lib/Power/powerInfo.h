@@ -9,11 +9,12 @@
 #include <victronFunctions.h>
 
 // misc info.
-#include <ArduinoJson.h>    // formatting
+#include <ArduinoJson.h> // formatting
 
 #include "uartSwitch.h"
 
-class powerInfo {
+class powerInfo
+{
 public:
     double batteryVoltage;
     double solarPanelVoltage;
@@ -22,13 +23,16 @@ public:
     ShuntPowerData bms;
     JsonDocument data;
 
+    void initData();
     int updateData();
     double getBatteryVoltage();
+    void printRenogyData();
+    void printVictronData();
+
 private:
     bool error(uint8_t index);
     void formatRenogyData();
     void formatVictronData();
     void hStatsVictron(uint8_t index);
-
 };
 #endif // POWERINFO_H
