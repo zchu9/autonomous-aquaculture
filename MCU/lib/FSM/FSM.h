@@ -91,7 +91,6 @@ bool sendError(data &d);
  * @brief Reads Json and runs the commands in the json doc.\n
  * Should probably clear the JSON doc after running the commands.\n
  *
- * TODO: Only LIFT is coded rn
  * @param doc
  * @return int returns 0 if the command is successfully run.\n
  */
@@ -115,29 +114,16 @@ void updateTemp(data &d);
 // DEBUG CONTROLS
 
 /**
- * @brief a function to test the FSM
+ * @brief Print data related to the current state.
  *
  * @param d FSM data struct
- * @param ds decide whether to simulate values in place of missing systems. values are power and sensors.
- * @param params in the form p=#
- *      h - height
- *      t - temp
- *      b - battery
- *      s = solar PV
+ * 
  */
 void testState(data &d);
 
 void updateTime(data &d);
 
-// Debugging
+// Debugging; initializes USB serial.
 void initializeDebug();
-
-/**
- * @brief No longer applicable.
- *
- * @param d
- */
-void CellularConnectedCase(data &d);
-void CellularDisconnectedCase(data &d);
 
 #endif // FSM_H

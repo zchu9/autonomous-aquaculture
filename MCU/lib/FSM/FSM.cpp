@@ -3,15 +3,12 @@
 static int commsFlag = 0;
 static bool lowPowerMode = false;
 static bool noConnectionMode = false;
-/**
- * @brief
- *
- */
+
 void FSM(data &d)
 {
-    // this should be in the comms handler.
-    // checkPowerHandler(d);
+    checkPowerHandler(d);
     loraListen(d);
+    testState(d);
 }
 
 #pragma region Initialize
@@ -82,9 +79,9 @@ void checkPowerHandler(data &d)
         {
             lowPowerMode = false;
         }
-        if ((noConnectionMode = sendData(d)))
+        if (noConnectionMode == sendData(d))
         {
-            // do something dependent on if the data was sent or not.
+            // TODO: do something dependent on if the data was sent or not.
         }
     }
 }
@@ -96,6 +93,7 @@ void checkPowerHandler(data &d)
 //////////////////////////////////////////
 
 #pragma region Comms
+
 void commsHandler()
 {
     if (commsFlag == 0)
@@ -134,7 +132,7 @@ int runCommands(data &d)
         }
         else
         {
-            d.winch->lift(3.3);
+            d.winch->lift(3.3); // TODO: Hard-coded values
         }
         Serial.println(">>>>>Lift command received");
         getAndSendImg(d);
@@ -147,7 +145,7 @@ int runCommands(data &d)
         }
         else
         {
-            d.winch->lower(0);
+            d.winch->lower(0);  // TODO: Hard-coded values
         }
         Serial.println(">>>>>Lower command received");
         getAndSendImg(d);
@@ -156,8 +154,6 @@ int runCommands(data &d)
     d.doc.clear();
     return 0;
 }
-
-#pragma region TODO: clear
 
 bool sendData(data &d)
 {
@@ -170,8 +166,7 @@ bool sendData(data &d)
     bool success = d.lora->sendPackets(buffer);
     if (success)
     {
-
-        // clear the data struct
+        // TODO: clear the data struct
     }
     delete[] buffer; // Free the allocated memory
     return success;
@@ -187,11 +182,10 @@ bool sendError(data &d)
     serializeJson(doc, buffer, len + 1);
     // Send the JSON over LoRa
     bool success = d.lora->sendPackets(buffer);
-    Serial.print("made it out 100");
+    Serial.print("made it out 100");    // TODO: Remove later
     delete[] buffer; // Free the allocated memory
     return success;
 }
-#pragma endregion TODO : clear
 
 #pragma endregion Comms
 
@@ -307,23 +301,28 @@ void updateTime(data &d)
 
 void testState(data &d)
 {
-    char buffer[80 * 24];
-    char output[] = "\033[38;5;%d;80;80mCurrent state : %d\n"
-                    "Height: %0.2f\t|\tTemp: %0.2f\n"
-                    "Solar_V: %0.2f\t|\tBatt_V: %0.2f\n"
-                    "Uptime: %2d:%2d\n"
-                    "Last Transmission time:%2d:%2d\n\033[0m";
-
-    static int color = 16;
-    color += 31; // comment this out if you hate fun :(
-
-    sprintf(buffer, output,
-            color, getState(),
-            getHeight(), d.temp,
-            d.powerData->solarPanelVoltage, d.powerData->batteryVoltage,
-            d.t.minutes, d.t.seconds,
-            0, 0);
-    Serial.println(buffer);
+    static int s = (d.t.seconds+10)%60;
+    updateTime(d);
+    if(d.t.seconds == s) {
+        s = (d.t.seconds + 10) % 60;
+        char buffer[80 * 24];
+        char output[] = "\033[38;5;%d;80;80mCurrent state : %s\n"
+                        "Height: %0.2f\t|\tTemp: %0.2f\n"
+                        "Solar_V: %2.2f\t|\tBatt_V: %2.2f\n"
+                        "Uptime: %2d:%2d\n"
+                        "Last Transmission time:%2d:%2d\n\033[0m";
+    
+        static int color = 16;
+        color += 31; // comment this out if you hate fun :(
+    
+        sprintf(buffer, output,
+                color, getState().c_str(),
+                getHeight(), d.temp,
+                d.powerData->solarPanelVoltage, d.powerData->batteryVoltage,
+                d.t.minutes, d.t.seconds,
+                0, 0);
+        Serial.println(buffer);
+    }
 }
 
 #pragma endregion Debug
