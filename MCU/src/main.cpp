@@ -12,4 +12,5 @@ static int firstrunna = 0;
 void loop()
 {
   FSM(d);
+  Serial.println(getHeight());
 }

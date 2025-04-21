@@ -10,7 +10,7 @@ static bool noConnectionMode = false;
 void FSM(data &d)
 {
     // this should be in the comms handler.
-    checkPowerHandler(d);
+    // checkPowerHandler(d);
     loraListen(d);
 }
 
@@ -31,7 +31,7 @@ void initializeStartup(data &d)
     initializeDebug();
 #endif
 
-    // attachInterrupt(digitalPinToInterrupt(RX_INTERRUPT), commsHandler, RISING);
+    attachInterrupt(digitalPinToInterrupt(RX_INTERRUPT), commsHandler, RISING);
     //  init the heap pointers (jayson said that we should do this)
     Serial1.begin(9600, SERIAL_8N1);
     timerInit();
@@ -135,7 +135,7 @@ int runCommands(data &d)
         }
         else
         {
-            d.winch->lift(1);
+            d.winch->lift(3.5);
         }
         Serial.println(">>>>>Lift command received");
         getAndSendImg(d);
@@ -148,7 +148,7 @@ int runCommands(data &d)
         }
         else
         {
-            d.winch->lift(0.8);
+            d.winch->lift(0);
         }
         Serial.println(">>>>>Lower command received");
         getAndSendImg(d);
