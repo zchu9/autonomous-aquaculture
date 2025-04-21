@@ -1,17 +1,13 @@
-#include "camera_handler.h"
 #include <SPI.h>
 #include <Wire.h>
 #include <ArduCAM.h>
-#include "memorysaver.h" // This file should define OV2640_MINI_2MP_PLUS for configuration
-
-// Define the chip select pin for the ArduCAM module.
-// Adjust if your hardware wiring is different.
-#define CS_PIN 7
+#include "pins.h"
+#include "camera_handler.h"
 
 // Create an instance of the ArduCAM class.
 // We use OV2640 (a valid numeric constant defined in ArduCAM.h) as the sensor model.
-// The memorysaver.h file configures the module as OV2640 Mini 2MP Plus.
-ArduCAM myCAM{OV2640, CS_PIN};
+//! The memorysaver.h file configures the module as OV2640 Mini 2MP Plus.
+ArduCAM myCAM{ OV2640, CS_PIN };
 // Resolution selection – choose your desired resolution.
 // Uncomment the one you wish to use.
 // #define JPEG_RESOLUTION OV2640_160x120     // 160 x 120 resolution
@@ -23,8 +19,7 @@ ArduCAM myCAM{OV2640, CS_PIN};
 // #define JPEG_RESOLUTION OV2640_1280x1024   // 1280 x 1024 resolution (SXGA)
 // #define JPEG_RESOLUTION OV2640_1600x1200   // 1600 x 1200 resolution (UXGA)
 
-void CameraHandler::begin()
-{
+void CameraHandler::begin() {
     // Initialize SPI.
     SPI.begin();
 
@@ -32,16 +27,27 @@ void CameraHandler::begin()
     pinMode(CS_PIN, OUTPUT);
     digitalWrite(CS_PIN, HIGH);
 
+    //Reset the CPLD
+    myCAM.write_reg(0x07, 0x80);
+    delay(100);
+    myCAM.write_reg(0x07, 0x00);
+    delay(100);
+
     // Initialize I2C.
     Wire.begin();
 
+    uint8_t temp;
     // Test communication with the camera module.
+        //Check if the ArduCAM SPI bus is OK
     myCAM.write_reg(ARDUCHIP_TEST1, 0x55);
-    if (myCAM.read_reg(ARDUCHIP_TEST1) != 0x55)
-    {
-        Serial.println("ArduCAM init failed. Communication error.");
+    temp = myCAM.read_reg(ARDUCHIP_TEST1);
+    if (temp != 0x55) {
+        Serial.println(F("ACK CMD SPI interface Error! END"));
+        delay(1000);
     }
-
+    else {
+        Serial.println(F("ACK CMD SPI interface OK. END"));
+    }
     // Set the image format to JPEG.
     myCAM.set_format(JPEG);
 
@@ -53,13 +59,13 @@ void CameraHandler::begin()
     myCAM.CS_LOW();
     myCAM.clear_fifo_flag(); // Uses SPI!
     myCAM.CS_HIGH();
-
-    Serial.println("ArduCAM OV2640 Mini 2MP Plus initialized.");
+#ifdef DEBUG
+    validateModel();
+#endif
 }
 
 // depreciated in favor of segmented image transfers.
-uint32_t CameraHandler::captureImage()
-{
+uint32_t CameraHandler::captureImage() {
     // Reset image length and position.
     imgLength = 0;
     currentPos = 0;
@@ -104,8 +110,7 @@ uint32_t CameraHandler::captureImage()
     return imgLength;
 }
 
-void CameraHandler::startImageStream()
-{
+void CameraHandler::startImageStream() {
     // Reset the current position.
     this->currentPos = 0;
     // Begin burst read from FIFO.
@@ -115,8 +120,7 @@ void CameraHandler::startImageStream()
     Serial.println("start reading pal");
 }
 
-uint16_t CameraHandler::readImageChunk(uint16_t chunkSize, uint8_t *buffer)
-{
+uint16_t CameraHandler::readImageChunk(uint16_t chunkSize, uint8_t* buffer) {
     uint16_t bytesRead = 0;
     // Read until either the requested chunk size is reached or no more bytes.
     for (uint16_t i = 0; i < chunkSize && currentPos < imgLength; i++, currentPos++)
@@ -127,8 +131,7 @@ uint16_t CameraHandler::readImageChunk(uint16_t chunkSize, uint8_t *buffer)
     return bytesRead;
 }
 
-void CameraHandler::finishImageStream()
-{
+void CameraHandler::finishImageStream() {
     // empty buffer, then drive CSn.
     myCAM.flush_fifo();
     myCAM.clear_fifo_flag();
@@ -136,4 +139,19 @@ void CameraHandler::finishImageStream()
     myCAM.CS_HIGH();
 
     Serial.println("cutting off stream (ouch)");
+}
+
+void CameraHandler::validateModel() {
+    uint8_t vid, pid;
+    //Check if the camera module type is OV2640
+    myCAM.wrSensorReg8_8(0xff, 0x01);
+    myCAM.rdSensorReg8_8(OV2640_CHIPID_HIGH, &vid);
+    myCAM.rdSensorReg8_8(OV2640_CHIPID_LOW, &pid);
+    if ((vid != 0x26) && ((pid != 0x41) || (pid != 0x42))) {
+        Serial.println(F("ACK CMD Can't find OV2640 module! END"));
+        delay(1000);
+    }
+    else {
+        Serial.println(F("ACK CMD OV2640 detected. END"));
+    }
 }
