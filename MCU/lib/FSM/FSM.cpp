@@ -39,7 +39,6 @@ void initializeStartup(data &d)
     d.powerData = new powerInfo;
     d.lora = new LoraRadio;
     d.winch = new winchData(LIFT_PIN, LOWER_PIN, POT_PIN);
-    d.cam = new CameraHandler;
     d.powerData = new powerInfo;
 
     d.cam->begin();
@@ -135,7 +134,7 @@ int runCommands(data &d)
         }
         else
         {
-            d.winch->lift(3.5);
+            d.winch->lift(3.3);
         }
         Serial.println(">>>>>Lift command received");
         getAndSendImg(d);
@@ -148,7 +147,7 @@ int runCommands(data &d)
         }
         else
         {
-            d.winch->lift(0);
+            d.winch->lower(0);
         }
         Serial.println(">>>>>Lower command received");
         getAndSendImg(d);
@@ -159,6 +158,7 @@ int runCommands(data &d)
 }
 
 #pragma region TODO: clear
+
 bool sendData(data &d)
 {
     // Convert the data struct to JSON
@@ -192,6 +192,7 @@ bool sendError(data &d)
     return success;
 }
 #pragma endregion TODO : clear
+
 #pragma endregion Comms
 
 #pragma region Sensors

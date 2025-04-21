@@ -23,10 +23,6 @@ ArduCAM myCAM{OV2640, CS_PIN};
 // #define JPEG_RESOLUTION OV2640_1280x1024   // 1280 x 1024 resolution (SXGA)
 // #define JPEG_RESOLUTION OV2640_1600x1200   // 1600 x 1200 resolution (UXGA)
 
-CameraHandler::CameraHandler()
-{
-}
-
 void CameraHandler::begin()
 {
     // Initialize SPI.
