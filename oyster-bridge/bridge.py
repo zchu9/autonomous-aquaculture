@@ -19,8 +19,8 @@ PACKET_SIZE = 100 # fine tune latter; higher than 100 and the checksums start ge
 MAX_PACKETS = 500 # possibly increase; size doesn't really matter on the Pi side
 BUFFER_SIZE = 260 # max incomming packet can only be 256; extra bytes appended to buffer for safety
 #(Timeout*Retries) MUST BE LARGER THAN THE ARDUINO SIDE (Timeout*Retries) FOR RELIABLE CAGE LIFTS DUE TO LORA BEING HALF DUPLEX
-ACK_TIMEOUT = 20 #possibly increase
-RETRY_LIMIT = 10 #possibly increase
+ACK_TIMEOUT = 3 #possibly increase
+RETRY_LIMIT = 30 #possibly increase
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -29,6 +29,8 @@ received_packets = ["" for _ in range(MAX_PACKETS)]
 mqtt_task_list = []
 image_data_base64 = ""
 i_hate_this=0
+
+logging.basicConfig(level=logging.DEBUG)
 
 lora = serial.Serial(LORA_PORT, BAUD_RATE, timeout=1)
 
@@ -74,7 +76,7 @@ def send_command(command):
         line += char
         if char == b'\n':
             break
-    logging.info(f"Command sent to LoRa: {(line.decode('utf-8').strip())}")
+    logging.info(f"Flushing LoRa setup buffer: {(line.decode('utf-8').strip())}")
     lora.flushInput()
 
 def configure_lora():
@@ -255,7 +257,10 @@ while True:
         mqtt_task_list.remove(mqtt_task_list[0])
     else:
         if lora.in_waiting:
-            char = lora.read().decode("utf-8")
+            try:
+                char = lora.read().decode("utf-8")
+            except:
+                logging.error(f"Failed to decode LoRa transmission char: {e}")
             if char == '\n':
                 process_received_data(buffer.strip())
                 buffer = ""
