@@ -11,15 +11,85 @@
 #include <Arduino.h>
 #include "powerInfo.h"
 #include "timer.h"
+// collect power data from each source, format it as needed.
+// handles all serial line switching, as needed.
+int powerInfo::updateData()
+{
+    // this should not take more than 60 seconds, timeout if needed.
+    time t = getTime();
+    // int timeoutM = (t.minutes + 1) % 60;
+    int timeoutS = (t.seconds + 5) % 60;
+
+    int successfulReads = 0;
+    uint8_t ret;
+
+    // Read from the SmartShunt
+    uartSwitch(BMS, VICTRON_BAUD, VICTRON_CONFIG);
+    while (successfulReads < 10)
+    {
+        ret = fetchVictronStats(this->bms);
+        if (!ret)
+        {
+            // this->printVictronRawData();
+            this->formatVictronData();
+            successfulReads++;
+        }
+
+        t = getTime();
+        if (timeoutS == t.seconds)
+        {
+            successfulReads = 2; // timeout error
+        }
+    }
+
+    // Read data from the MPPT
+    uartSwitch(MPPT, RENOGY_BAUD, RENOGY_CONFIG);
+    while (successfulReads < 11)
+    {
+        ret = this->mppt.rdDataRegisters();
+        if (!error(ret))
+        {
+            // ! format
+            successfulReads++;
+        }
+        t = getTime();
+        Serial.print("MPPT1 att time: ");
+        Serial.println(t.seconds);
+        if (timeoutS == t.seconds)
+        {
+            return 1; // timeout error
+        }
+    }
+
+    // Read info from the MPPT
+    while (successfulReads < 12)
+    {
+        ret = this->mppt.rdInfoRegisters();
+        if (!error(ret))
+        {
+            // ! format
+            successfulReads++;
+        }
+        Serial.print("MPPT2 att time: ");
+        Serial.println(t.seconds);
+        t = getTime();
+        if (timeoutS == t.seconds)
+        {
+            return 1; // timeout error
+        }
+    }
+
+    return 0;
+}
 
 bool powerInfo::checkFieldNum(size_t index)
 {
     // Check if the field is a valid integer before converting
-    if (this->bms.fields[index].empty() || !std::isdigit(this->bms.fields[index][0]) &&
-                                               (this->bms.fields[index][0] != '-' || this->bms.fields[index].length() < 2 || !std::isdigit(this->bms.fields[index][1])))
+    if (this->bms.fields[index].empty() || (!std::isdigit(this->bms.fields[index][0]) &&
+                                            (this->bms.fields[index][0] != '-' || this->bms.fields[index].length() < 2 || !std::isdigit(this->bms.fields[index][1]))))
     {
-        Serial.print("Invalid integer value in field: ");
-        Serial.println(this->bms.fields[index].c_str());
+        // Serial.print("Invalid integer value in field: ");
+        // Serial.println(this->bms.fields[index].c_str());
         return false;
     }
     return true;
@@ -51,18 +121,9 @@ void powerInfo::formatVictronData()
     size_t labelSize = bms.labels.size();
     size_t fieldsSize = bms.fields.size();
     size_t minSize = min(labelSize, fieldsSize);
-    // Print the sizes of arrays for debugging
-    Serial.print("Label size: ");
-    Serial.print(labelSize);
-    Serial.print(", Fields size: ");
-    Serial.print(fieldsSize);
-    Serial.print(", Using min size: ");
-    Serial.println(minSize);
 
     for (size_t i = 0; i < minSize; i++)
     {
-        Serial.print("Made it seeyuhhhh 1 ");
-        Serial.println(i);
 
         if (!this->bms.labels[i].compare("Checksum"))
         {
@@ -73,8 +134,6 @@ void powerInfo::formatVictronData()
         {
             if (this->bms.labels[i][0] == 'H')
             {
-                Serial.print("Made it seeyuhhhh 2 ");
-                Serial.println(i);
                 hStatsVictron(i);
             }
             else
@@ -137,89 +196,13 @@ void powerInfo::formatVictronData()
                 break;
                 // put the switch case with the ones that can take strings.
             }
-            Serial.print("Made it seeyuhhhh 3 ");
-            Serial.println(i);
         }
     }
-}
-
-// collect power data from each source, format it as needed.
-// handles all serial line switching, as needed.
-int powerInfo::updateData()
-{
-    // this should not take more than 60 seconds, timeout if needed.
-    time t = getTime();
-    // int timeoutM = (t.minutes + 1) % 60;
-    int timeoutS = (t.seconds + 5) % 60;
-
-    int successfulReads = 0;
-    uint8_t ret;
-
-    // Read from the SmartShunt
-    uartSwitch(BMS, VICTRON_BAUD, VICTRON_CONFIG);
-    while (successfulReads < 10)
-    {
-        ret = fetchVictronStats(this->bms);
-        if (!ret)
-        {
-            this->printVictronRawData();
-            this->formatVictronData();
-            Serial.println("Made it seeyuhhhh");
-            successfulReads++;
-        }
-
-        t = getTime();
-        if (timeoutS == t.seconds)
-        {
-            successfulReads = 2; // timeout error
-        }
-    }
-
-    // Read data from the MPPT
-    uartSwitch(MPPT, RENOGY_BAUD, RENOGY_CONFIG);
-    while (successfulReads < 11)
-    {
-        ret = this->mppt.rdDataRegisters();
-        if (!error(ret))
-        {
-            // ! format
-            successfulReads++;
-        }
-        t = getTime();
-        Serial.print("MPPT1 att time: ");
-        Serial.println(t.seconds);
-        if (timeoutS == t.seconds)
-        {
-            return 1; // timeout error
-        }
-    }
-
-    // Read info from the MPPT
-    while (successfulReads < 12)
-    {
-        ret = this->mppt.rdInfoRegisters();
-        if (!error(ret))
-        {
-            // ! format
-            successfulReads++;
-        }
-        Serial.print("MPPT2 att time: ");
-        Serial.println(t.seconds);
-        t = getTime();
-        if (timeoutS == t.seconds)
-        {
-            return 1; // timeout error
-        }
-    }
-
-    return 0;
 }
 
 void powerInfo::hStatsVictron(uint8_t index)
 {
     uint8_t value = stoi(this->bms.labels[index].substr(1));
-
-#pragma region TODO
 
     switch (value)
     {
