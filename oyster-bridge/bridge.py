@@ -212,7 +212,8 @@ def reconstruct_message(address):
                     logging.info(f"LoRa address: {address}")
                     farm_id=get_id_by_address(address)
                     logging.info(f"Corresponding Farm ID: {farm_id}")
-                    mqtt_client.publish(f"farm/{farm_id}/sensorData", full_message)
+                    mqtt_client.publish(f"farm/{farm_id}/sensorData", full_message["sensor"])
+                    mqtt_client.publish(f"farm/{farm_id}/systemLevels", full_message["power"])
                     mqtt_client.publish(f"farm/{farm_id}/status", "1")
             except json.JSONDecodeError as e:
                 logging.error(f"JSON decoding failed: {e}")
