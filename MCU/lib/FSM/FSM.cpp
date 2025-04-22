@@ -32,6 +32,7 @@ void initializeStartup(data &d)
     //  init the heap pointers (jayson said that we should do this)
     Serial1.begin(9600, SERIAL_8N1);
     timerInit();
+    initTemperatureSensor();
     initMuxPins();
     d.powerData = new powerInfo;
     d.powerData->initData();
@@ -266,10 +267,9 @@ JsonDocument jsonify(data &d)
 
     // Create a nested JsonObject for power-related data
     JsonObject power = doc["power"].to<JsonObject>();
-    // Create a nested JsonArray for smart_shunt data inside power object
-    JsonArray smart_shunt = power["smart_shunt"].to<JsonArray>();
-    // Create a nested JsonObject as the first element of smart_shunt array
-    JsonObject shunt_data = smart_shunt.add<JsonObject>();
+    // Create a nested JsonObject for smart_shunt data inside power object
+    JsonObject shunt_data = power["smart_shunt"].to<JsonObject>();
+    // Populate the smart_shunt data
     // Populate Victron SmartShunt data from powerData
     shunt_data["battery_voltage"] = d.powerData->bms.mvoltage / 1000.0; // Convert mV to V
     shunt_data["battery_current"] = d.powerData->bms.mcurrent / 1000.0; // Convert mA to A

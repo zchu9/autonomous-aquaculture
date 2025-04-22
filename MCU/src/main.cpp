@@ -32,6 +32,6 @@ void loop()
     checkPowerHandler(d);
     firstrun = 0;
   }
-
+  Serial.println(getTempF());
   // FSM(d);
 }
