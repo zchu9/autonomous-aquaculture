@@ -21,7 +21,6 @@ public:
 
     RenogyMPPT mppt;
     ShuntPowerData bms;
-    JsonDocument data;
 
     void initData();
     int updateData();
@@ -29,6 +28,7 @@ public:
     void printRenogyData();
     void printVictronData();
     void printVictronRawData();
+    JsonDocument getPowerJson();
 
 private:
     bool checkFieldNum(size_t index);

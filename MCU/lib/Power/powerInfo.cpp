@@ -22,13 +22,17 @@ int powerInfo::updateData()
 
     int successfulReads = 0;
     uint8_t ret;
+    bool success = false;
 
     // Read from the SmartShunt
+    Serial.println("before uart");
     uartSwitch(BMS, VICTRON_BAUD, VICTRON_CONFIG);
+    Serial.println("after uart");
     while (successfulReads < 10)
     {
-        ret = fetchVictronStats(this->bms);
-        if (!ret)
+        Serial.println("WHile loop");
+        success = fetchVictronStats(this->bms);
+        if (success)
         {
             // this->printVictronRawData();
             this->formatVictronData();
@@ -36,6 +40,8 @@ int powerInfo::updateData()
         }
 
         t = getTime();
+        Serial.print("Bms :) ");
+        Serial.println(t.seconds);
         if (timeoutS == t.seconds)
         {
             successfulReads = 2; // timeout error
@@ -78,8 +84,13 @@ int powerInfo::updateData()
             return 1; // timeout error
         }
     }
+    uartSwitch(RADIO, 9600, SERIAL_8N1); // in the event of failure, reconnect the radio;
 
     return 0;
+}
+
+JsonDocument powerInfo::getPowerJson()
+{
 }
 
 bool powerInfo::checkFieldNum(size_t index)
@@ -419,7 +430,4 @@ void powerInfo::initData()
     memset(mppt.renogyInfo.softwareVersion, 0, sizeof(mppt.renogyInfo.softwareVersion));
     memset(mppt.renogyInfo.hardwareVersion, 0, sizeof(mppt.renogyInfo.hardwareVersion));
     memset(mppt.renogyInfo.serialNumber, 0, sizeof(mppt.renogyInfo.serialNumber));
-
-    // Clear JSON document
-    data.clear();
 }

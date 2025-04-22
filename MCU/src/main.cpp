@@ -20,16 +20,16 @@ void setup()
 {
   // my current file structure makes my interrupts awkwardly be in main
   // to avoid a dependency loop
-  //initializeStartup(d);
-  initJustPower(d);
+  initializeStartup(d);
+  // initJustPower(d);
 }
 
 void loop()
 {
 
+  Serial.println("momma we made");
+
   d.powerData->updateData();
-  d.powerData->printRenogyData();
-  d.powerData->printVictronData();
-  delay(1000);
+  sendData(d);
   // FSM(d);
 }

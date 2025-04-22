@@ -53,7 +53,7 @@ void setPowerFlag(int flag)
 
 void powerInterrupt()
 {
-    rtc.setAlarmMinutes(minutes = minutes + 10 % 60);
+    rtc.setAlarmMinutes(minutes = minutes + 1 % 60);
     Serial.println("Time: " + String(getHours()) + ":" + String(getMinutes()) + ":" + String(getSeconds()));
     if (minutes % 10 == 0)
     {

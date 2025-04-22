@@ -64,8 +64,7 @@ void checkPowerHandler(data &d)
 #endif
         setPowerFlag(false);
 
-        d.powerData->updateData();           // fetch new data from the controllers;
-        uartSwitch(RADIO, 9600, SERIAL_8N1); // in the event of failure, reconnect the radio;
+        d.powerData->updateData(); // fetch new data from the controllers;
 
         double battVoltage = d.powerData->getBatteryVoltage();
 
@@ -79,7 +78,7 @@ void checkPowerHandler(data &d)
         {
             lowPowerMode = false;
         }
-        if (noConnectionMode == sendData(d))
+        if ((noConnectionMode = sendData(d)))
         {
             // TODO: do something dependent on if the data was sent or not.
         }
@@ -159,6 +158,12 @@ bool sendData(data &d)
 {
     // Convert the data struct to JSON
     JsonDocument doc = jsonify(d);
+    if (doc.isNull())
+    {
+        Serial.print("syuh");
+        return false;
+    }
+
     size_t len = measureJson(doc);
     char *buffer = new char[len + 1]; // +1 for null terminator
     serializeJson(doc, buffer, len + 1);
@@ -256,11 +261,51 @@ void updateTemp(data &d)
 #pragma region Helpers
 JsonDocument jsonify(data &d)
 {
-    // Clear the previous document
-    JsonDocument doc = d.powerData->data;
+    JsonDocument doc;
+    doc.clear(); // Clear previous data
+
+    // Populate Victron SmartShunt data from powerData
+    doc["victron_voltage"] = d.powerData->bms.mvoltage / 1000.0; // Convert mV to V
+    doc["victron_current"] = d.powerData->bms.mcurrent / 1000.0; // Convert mA to A
+    doc["victron_power"] = d.powerData->bms.power;
+    doc["victron_consumed_ah"] = d.powerData->bms.consumedmAH / 1000.0; // Convert mAh to Ah
+    doc["victron_soc"] = d.powerData->bms.stateOfCharge;
+    doc["victron_time_to_go"] = d.powerData->bms.timeToGo;
+    doc["victron_alarm"] = d.powerData->bms.alarm;
+    doc["victron_alarm_reason"] = d.powerData->bms.alarmReason;
+    doc["victron_firmware"] = d.powerData->bms.firmware;
+    doc["victron_model"] = d.powerData->bms.model;
+
+    // Add historical data
+    doc["victron_deepest_discharge"] = d.powerData->bms.deepestDischargeDepth;
+    doc["victron_last_discharge"] = d.powerData->bms.lastDischargeDepth;
+    doc["victron_avg_discharge"] = d.powerData->bms.avgDischargeDepth;
+    doc["victron_charge_cycles"] = d.powerData->bms.chargeCycles;
+    doc["victron_full_discharges"] = d.powerData->bms.fullDischarges;
+    doc["victron_total_ah_drawn"] = d.powerData->bms.totalAmpHoursDrawn;
+    doc["victron_min_voltage"] = d.powerData->bms.minMainBattVoltage / 1000.0;
+    doc["victron_max_voltage"] = d.powerData->bms.maxMainBattVoltage / 1000.0;
+    doc["victron_seconds_since_full"] = d.powerData->bms.secondsSinceLastFullCharge;
+    doc["victron_num_synchros"] = d.powerData->bms.numSynchros;
+    doc["victron_low_volt_alarms"] = d.powerData->bms.numLowVoltAlarms;
+    doc["victron_high_volt_alarms"] = d.powerData->bms.numHighVoltAlarms;
+
+    /*
+    // Add Renogy MPPT data
+    JsonObject mpptData = data.createNestedObject("renogy_mppt");
+    mpptData["battery_voltage"] = mppt.renogyData.batteryVoltage;
+    mpptData["solar_voltage"] = mppt.renogyData.solarPanelVoltage;
+    mpptData["battery_soc"] = mppt.renogyData.batterySoc;
+    mpptData["battery_charging_amps"] = mppt.renogyData.batteryChargingAmps;
+    mpptData["battery_charging_watts"] = mppt.renogyData.batteryChargingWatts;
+    mpptData["battery_temp"] = mppt.renogyData.batteryTemperature;
+    mpptData["controller_temp"] = mppt.renogyData.controllerTemperature;
+    mpptData["controller_connected"] = mppt.renogyData.controllerConnected;
+    */
 
     doc["state"] = getState();
-    return JsonDocument();
+
+    return doc;
 }
 
 std::string getState()
