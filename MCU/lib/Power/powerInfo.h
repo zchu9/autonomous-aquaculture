@@ -28,8 +28,10 @@ public:
     double getBatteryVoltage();
     void printRenogyData();
     void printVictronData();
+    void printVictronRawData();
 
 private:
+    bool checkFieldNum(size_t index);
     bool error(uint8_t index);
     void formatRenogyData();
     void formatVictronData();

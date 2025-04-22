@@ -1,25 +1,16 @@
 #include "victron.h"
 
-int fetchVictronStats(ShuntPowerData& stats) {
-    const size_t buffer_size = 256; // SAMD RX buffer is 256 total.
-    uint8_t buffer[buffer_size] = { '\0' };   // checksum byte is not guaranteed to be ascii
+int fetchVictronStats(ShuntPowerData &stats)
+{
+    const size_t buffer_size = 256;       // SAMD RX buffer is 256 total.
+    uint8_t buffer[buffer_size] = {'\0'}; // checksum byte is not guaranteed to be ascii
     int index = 0;
+    while (Serial1.available())
+    {
+        buffer[index] = Serial1.read();
+        index++;
+    }
 
-    while (Serial1.available()) {
-        buffer[index] = Serial1.read();
-        index++;
-        if (!victronChecksum(buffer, buffer_size)) {
-            return 2;   // transmission error
-        }
-    }
-    delay(100); // messages are in two blocks.
-    while (Serial1.available()) {
-        buffer[index] = Serial1.read();
-        index++;
-        if (!victronChecksum(buffer, buffer_size)) {
-            return 2;   // transmission error
-        }
-    }
     victronParse(stats, buffer, buffer_size);
     return 0;
 }

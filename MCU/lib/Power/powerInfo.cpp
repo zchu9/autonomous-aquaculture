@@ -12,18 +12,67 @@
 #include "powerInfo.h"
 #include "timer.h"
 
+bool powerInfo::checkFieldNum(size_t index)
+{
+    // Check if the field is a valid integer before converting
+    if (this->bms.fields[index].empty() || !std::isdigit(this->bms.fields[index][0]) &&
+                                               (this->bms.fields[index][0] != '-' || this->bms.fields[index].length() < 2 || !std::isdigit(this->bms.fields[index][1])))
+    {
+        Serial.print("Invalid integer value in field: ");
+        Serial.println(this->bms.fields[index].c_str());
+        return false;
+    }
+    return true;
+}
+
+void powerInfo::printVictronRawData()
+{
+    Serial.println("===== VICTRON RAW DATA =====");
+    if (bms.labels.size() != bms.fields.size())
+    {
+        Serial.println("Error: Labels and fields size mismatch");
+        return;
+    }
+
+    for (size_t i = 0; i < bms.labels.size(); i++)
+    {
+        Serial.print(bms.labels[i].c_str());
+        Serial.print(": ");
+        Serial.println(bms.fields[i].c_str());
+    }
+    Serial.println("===========================");
+}
+
 // stats come in two packets: one is primarily H##, the other is mixed.
 void powerInfo::formatVictronData()
 {
-    for (size_t i = 0; i < this->bms.labels.size(); i++)
+
+    // Find the shorter of the two lists to prevent out of bounds access
+    size_t labelSize = bms.labels.size();
+    size_t fieldsSize = bms.fields.size();
+    size_t minSize = min(labelSize, fieldsSize);
+    // Print the sizes of arrays for debugging
+    Serial.print("Label size: ");
+    Serial.print(labelSize);
+    Serial.print(", Fields size: ");
+    Serial.print(fieldsSize);
+    Serial.print(", Using min size: ");
+    Serial.println(minSize);
+
+    for (size_t i = 0; i < minSize; i++)
     {
+        Serial.print("Made it seeyuhhhh 1 ");
+        Serial.println(i);
+
         if (!this->bms.labels[i].compare("Checksum"))
         {
             continue;
         }
 
-        if (this->bms.labels[i][0] == 'H')
+        if (this->bms.labels[i][0] == 'H' && checkFieldNum(i))
         {
+            Serial.print("Made it seeyuhhhh 2 ");
+            Serial.println(i);
             hStatsVictron(i);
         }
         else
@@ -67,8 +116,12 @@ void powerInfo::formatVictronData()
             case 'M':
                 this->bms.monitorMode = stoi(this->bms.fields[i]);
                 break;
+            default:
+                break;
             }
         }
+        Serial.print("Made it seeyuhhhh 3 ");
+        Serial.println(i);
     }
 };
 
@@ -86,18 +139,18 @@ int powerInfo::updateData()
 
     // Read from the SmartShunt
     uartSwitch(BMS, VICTRON_BAUD, VICTRON_CONFIG);
-    while (successfulReads < 2)
+    while (successfulReads < 10)
     {
         ret = fetchVictronStats(this->bms);
-        if (!error(ret))
+        if (!ret)
         {
+            this->printVictronRawData();
             this->formatVictronData();
+            Serial.println("Made it seeyuhhhh");
             successfulReads++;
         }
 
         t = getTime();
-        Serial.print("Victron att time: ");
-        Serial.println(t.seconds);
         if (timeoutS == t.seconds)
         {
             successfulReads = 2; // timeout error
@@ -106,7 +159,7 @@ int powerInfo::updateData()
 
     // Read data from the MPPT
     uartSwitch(MPPT, RENOGY_BAUD, RENOGY_CONFIG);
-    while (successfulReads < 3)
+    while (successfulReads < 11)
     {
         ret = this->mppt.rdDataRegisters();
         if (!error(ret))
@@ -124,7 +177,7 @@ int powerInfo::updateData()
     }
 
     // Read info from the MPPT
-    while (successfulReads > 4)
+    while (successfulReads < 12)
     {
         ret = this->mppt.rdInfoRegisters();
         if (!error(ret))
@@ -147,6 +200,9 @@ int powerInfo::updateData()
 void powerInfo::hStatsVictron(uint8_t index)
 {
     uint8_t value = stoi(this->bms.labels[index].substr(1));
+
+#pragma region TODO
+
     switch (value)
     {
     case (1):
@@ -201,6 +257,8 @@ void powerInfo::hStatsVictron(uint8_t index)
     case (18):
         // Total Charged Energy // DC MONITOR MODE
         break;
+    default:
+        break;
     }
 }
 
@@ -209,6 +267,7 @@ bool powerInfo::error(uint8_t ret)
     char buf[60];
     if (!ret)
     {
+        Serial.println("fuck");
         return true;
     }
     else
