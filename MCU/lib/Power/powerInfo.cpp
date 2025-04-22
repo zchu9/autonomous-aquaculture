@@ -11,6 +11,8 @@
 #include <Arduino.h>
 #include "powerInfo.h"
 #include "timer.h"
+
+#define NUM_VICTRON_READS 3
 // collect power data from each source, format it as needed.
 // handles all serial line switching, as needed.
 int powerInfo::updateData()
@@ -25,12 +27,9 @@ int powerInfo::updateData()
     bool success = false;
 
     // Read from the SmartShunt
-    Serial.println("before uart");
     uartSwitch(BMS, VICTRON_BAUD, VICTRON_CONFIG);
-    Serial.println("after uart");
-    while (successfulReads < 10)
+    while (successfulReads < NUM_VICTRON_READS)
     {
-        Serial.println("WHile loop");
         success = fetchVictronStats(this->bms);
         if (success)
         {
@@ -40,7 +39,6 @@ int powerInfo::updateData()
         }
 
         t = getTime();
-        Serial.print("Bms :) ");
         Serial.println(t.seconds);
         if (timeoutS == t.seconds)
         {
@@ -50,7 +48,7 @@ int powerInfo::updateData()
 
     // Read data from the MPPT
     uartSwitch(MPPT, RENOGY_BAUD, RENOGY_CONFIG);
-    while (successfulReads < 11)
+    while (successfulReads < NUM_VICTRON_READS + 1)
     {
         ret = this->mppt.rdDataRegisters();
         if (!error(ret))
@@ -68,7 +66,7 @@ int powerInfo::updateData()
     }
 
     // Read info from the MPPT
-    while (successfulReads < 12)
+    while (successfulReads < NUM_VICTRON_READS + 2)
     {
         ret = this->mppt.rdInfoRegisters();
         if (!error(ret))

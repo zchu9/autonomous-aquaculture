@@ -24,10 +24,19 @@ void uartSwitch(device dev, long baud, uint16_t config)
     {
         Serial1.read(); // clear input buffer.
     }
+    if (dev == BMS)
+    {
+        digitalWrite(MUX_SEL_0, LOW);
+        digitalWrite(MUX_SEL_1, HIGH);
+        digitalWrite(MUX_SEL_2, LOW); // ancillary in this case, we won't have this many lines.
+    }
+    else
+    {
+        digitalWrite(MUX_SEL_0, LOW);
+        digitalWrite(MUX_SEL_1, LOW);
+        digitalWrite(MUX_SEL_2, LOW); // ancillary in this case, we won't have this many lines.
+    }
 
-    digitalWrite(MUX_SEL_0, (dev & 0x001));
-    digitalWrite(MUX_SEL_1, (dev & 0x010));
-    digitalWrite(MUX_SEL_2, (dev & 0x100)); // ancillary in this case, we won't have this many lines.
-    digitalWrite(MUX_DISABLE_0, LOW);       // rx
-    digitalWrite(MUX_DISABLE_1, LOW);       // tx
+    digitalWrite(MUX_DISABLE_0, LOW); // rx
+    digitalWrite(MUX_DISABLE_1, LOW); // tx
 }
