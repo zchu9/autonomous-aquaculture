@@ -49,7 +49,7 @@ void victronParse(ShuntPowerData &data, uint8_t *buffer, size_t buffer_size)
                 label += buffer[i];
                 i++;
             }
-            Serial.println(label.c_str());
+            // Serial.println(label.c_str());
             data.labels.push_back(label);
 
             if (!label.compare("Checksum"))
@@ -73,7 +73,7 @@ void victronParse(ShuntPowerData &data, uint8_t *buffer, size_t buffer_size)
                 field += buffer[i];
                 i++;
             }
-            Serial.println(field.c_str());
+            // Serial.println(field.c_str());
 
             data.fields.push_back(field);
         }
