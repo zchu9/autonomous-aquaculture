@@ -23,13 +23,15 @@ void setup()
   initializeStartup(d);
   // initJustPower(d);
 }
-
+static int firstrun = 1;
 void loop()
 {
+  if (firstrun == 1)
+  {
+    setPowerFlag(1);
+    checkPowerHandler(d);
+    firstrun = 0;
+  }
 
-  Serial.println("momma we made");
-
-  d.powerData->updateData();
-  sendData(d);
   // FSM(d);
 }

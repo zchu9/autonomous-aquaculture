@@ -264,31 +264,36 @@ JsonDocument jsonify(data &d)
     JsonDocument doc;
     doc.clear(); // Clear previous data
 
+    // Create a nested JsonObject for power-related data
+    JsonObject power = doc["power"].to<JsonObject>();
+    // Create a nested JsonArray for smart_shunt data inside power object
+    JsonArray smart_shunt = power["smart_shunt"].to<JsonArray>();
+    // Create a nested JsonObject as the first element of smart_shunt array
+    JsonObject shunt_data = smart_shunt.add<JsonObject>();
     // Populate Victron SmartShunt data from powerData
-    doc["victron_voltage"] = d.powerData->bms.mvoltage / 1000.0; // Convert mV to V
-    doc["victron_current"] = d.powerData->bms.mcurrent / 1000.0; // Convert mA to A
-    doc["victron_power"] = d.powerData->bms.power;
-    doc["victron_consumed_ah"] = d.powerData->bms.consumedmAH / 1000.0; // Convert mAh to Ah
-    doc["victron_soc"] = d.powerData->bms.stateOfCharge;
-    doc["victron_time_to_go"] = d.powerData->bms.timeToGo;
-    doc["victron_alarm"] = d.powerData->bms.alarm;
-    doc["victron_alarm_reason"] = d.powerData->bms.alarmReason;
-    doc["victron_firmware"] = d.powerData->bms.firmware;
-    doc["victron_model"] = d.powerData->bms.model;
+    shunt_data["battery_voltage"] = d.powerData->bms.mvoltage / 1000.0; // Convert mV to V
+    shunt_data["battery_current"] = d.powerData->bms.mcurrent / 1000.0; // Convert mA to A
+    shunt_data["power"] = d.powerData->bms.power;
+    shunt_data["state_of_charge"] = d.powerData->bms.stateOfCharge;
+    shunt_data["time_to_go"] = d.powerData->bms.timeToGo;
+    shunt_data["alarm_status"] = d.powerData->bms.alarm;
+    shunt_data["alarm_reason"] = d.powerData->bms.alarmReason;
+    shunt_data["firmware_version"] = d.powerData->bms.firmware;
+    shunt_data["model_description"] = d.powerData->bms.model;
 
     // Add historical data
-    doc["victron_deepest_discharge"] = d.powerData->bms.deepestDischargeDepth;
-    doc["victron_last_discharge"] = d.powerData->bms.lastDischargeDepth;
-    doc["victron_avg_discharge"] = d.powerData->bms.avgDischargeDepth;
-    doc["victron_charge_cycles"] = d.powerData->bms.chargeCycles;
-    doc["victron_full_discharges"] = d.powerData->bms.fullDischarges;
-    doc["victron_total_ah_drawn"] = d.powerData->bms.totalAmpHoursDrawn;
-    doc["victron_min_voltage"] = d.powerData->bms.minMainBattVoltage / 1000.0;
-    doc["victron_max_voltage"] = d.powerData->bms.maxMainBattVoltage / 1000.0;
-    doc["victron_seconds_since_full"] = d.powerData->bms.secondsSinceLastFullCharge;
-    doc["victron_num_synchros"] = d.powerData->bms.numSynchros;
-    doc["victron_low_volt_alarms"] = d.powerData->bms.numLowVoltAlarms;
-    doc["victron_high_volt_alarms"] = d.powerData->bms.numHighVoltAlarms;
+    shunt_data["deepest_discharged"] = d.powerData->bms.deepestDischargeDepth;
+    shunt_data["last_discharge"] = d.powerData->bms.lastDischargeDepth;
+    shunt_data["avg_discharge"] = d.powerData->bms.avgDischargeDepth;
+    shunt_data["charge_cycles"] = d.powerData->bms.chargeCycles;
+    shunt_data["full_discharge_cycles"] = d.powerData->bms.fullDischarges;
+    shunt_data["cum_amp_hrs_drawn"] = d.powerData->bms.totalAmpHoursDrawn;
+    shunt_data["min_volt_battery"] = d.powerData->bms.minMainBattVoltage / 1000.0;
+    shunt_data["max_volt_battery"] = d.powerData->bms.maxMainBattVoltage / 1000.0;
+    shunt_data["last_full_charge"] = d.powerData->bms.secondsSinceLastFullCharge;
+    shunt_data["auto_sync_count"] = d.powerData->bms.numSynchros;
+    shunt_data["low_volt_alarm_count"] = d.powerData->bms.numLowVoltAlarms;
+    shunt_data["high_volt_alarm_count"] = d.powerData->bms.numHighVoltAlarms;
 
     /*
     // Add Renogy MPPT data
@@ -302,8 +307,10 @@ JsonDocument jsonify(data &d)
     mpptData["controller_temp"] = mppt.renogyData.controllerTemperature;
     mpptData["controller_connected"] = mppt.renogyData.controllerConnected;
     */
-
-    doc["state"] = getState();
+    JsonObject sensor = doc["sensor"].to<JsonObject>();
+    sensor["state"] = getState();
+    sensor["height"] = getHeight();
+    sensor["temperature"] = getTempF();
 
     return doc;
 }

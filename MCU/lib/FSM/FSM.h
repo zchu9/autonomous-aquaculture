@@ -70,14 +70,6 @@ void emergencyLiftHandler(data &d);
 
 // power helpers
 /**
- * @brief updates the power data struct with the current power readings.\n
- *
- * @param d
- * @return double The current battery voltage
- */
-double checkPower(data &d);
-
-/**
  * @brief Called on serial edge Rising interrupt
  *
  * @param d data struct
@@ -117,7 +109,7 @@ void updateTemp(data &d);
  * @brief Print data related to the current state.
  *
  * @param d FSM data struct
- * 
+ *
  */
 void testState(data &d);
 

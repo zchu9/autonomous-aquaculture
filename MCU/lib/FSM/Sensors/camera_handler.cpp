@@ -153,8 +153,8 @@ void CameraHandler::validateModel()
     uint8_t vid, pid;
     // Check if the camera module type is OV2640
     myCAM.wrSensorReg8_8(0xff, 0x01);
-    // myCAM.rdSensorReg8_8(OV2640_CHIPID_HIGH, &vid);
-    // myCAM.rdSensorReg8_8(OV2640_CHIPID_LOW, &pid);
+    myCAM.rdSensorReg8_8(OV2640_CHIPID_HIGH, &vid);
+    myCAM.rdSensorReg8_8(OV2640_CHIPID_LOW, &pid);
     if ((vid != 0x26) && ((pid != 0x41) || (pid != 0x42)))
     {
         Serial.println(F("ACK CMD Can't find OV2640 module! END"));
