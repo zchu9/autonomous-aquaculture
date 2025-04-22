@@ -21,10 +21,10 @@ void uartSwitch(device dev, long baud, uint16_t config)
 
     Serial1.flush();             // Wait for tx to clear.
     Serial1.begin(baud, config); // change baud.
-    while (Serial1.available())
-    {
-        Serial1.read(); // clear input buffer.
-    }
+    // while (Serial1.available())
+    // {
+    //     Serial1.read(); // clear input buffer.
+    // }
 
     digitalWrite(MUX_SEL_0, (dev & 0x001));
     digitalWrite(MUX_SEL_1, (dev & 0x010));
