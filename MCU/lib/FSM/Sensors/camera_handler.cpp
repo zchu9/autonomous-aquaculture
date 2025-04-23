@@ -9,6 +9,7 @@
 ArduCAM myCAM{OV2640, CS_PIN};
 
 static int imageLength = 0;
+static int currentPos = 0;
 // Resolution selection – choose your desired resolution.
 // Uncomment the one you wish to use.
 // #define JPEG_RESOLUTION OV2640_160x120     // 160 x 120 resolution
@@ -73,7 +74,7 @@ void CameraHandler::begin()
 uint32_t CameraHandler::captureImage()
 {
     // Reset image length and position.
-    this->imgLength = 0;
+    imageLength = 0;
     currentPos = 0;
 
     myCAM.CS_LOW();
@@ -119,7 +120,7 @@ uint32_t CameraHandler::captureImage()
 void CameraHandler::startImageStream()
 {
     // Reset the current position.
-    this->currentPos = 0;
+    currentPos = 0;
     // Begin burst read from FIFO.
     myCAM.CS_LOW();
     myCAM.set_fifo_burst(); // equivalent to SPI.transfer(0x3C) or SPI.transfer(BURST_FIFO_READ);
@@ -131,7 +132,7 @@ uint16_t CameraHandler::readImageChunk(uint16_t chunkSize, uint8_t *buffer)
 {
     uint16_t bytesRead = 0;
     // Read until either the requested chunk size is reached or no more bytes.
-    for (uint16_t i = 0; i < chunkSize && currentPos < imgLength; i++, currentPos++)
+    for (uint16_t i = 0; i < chunkSize && currentPos < imageLength; i++, currentPos++)
     {
         buffer[i] = SPI.transfer(0x00);
         bytesRead++;
