@@ -1,6 +1,5 @@
 #include <SPI.h>
 #include <Wire.h>
-#include <ArduCAM.h>
 #include "pins.h"
 #include "camera_handler.h"
 #define DEBUG 1
@@ -8,6 +7,8 @@
 // We use OV2640 (a valid numeric constant defined in ArduCAM.h) as the sensor model.
 //! The memorysaver.h file configures the module as OV2640 Mini 2MP Plus.
 ArduCAM myCAM{OV2640, CS_PIN};
+
+static int imageLength = 0;
 // Resolution selection – choose your desired resolution.
 // Uncomment the one you wish to use.
 // #define JPEG_RESOLUTION OV2640_160x120     // 160 x 120 resolution
@@ -72,7 +73,7 @@ void CameraHandler::begin()
 uint32_t CameraHandler::captureImage()
 {
     // Reset image length and position.
-    imgLength = 0;
+    this->imgLength = 0;
     currentPos = 0;
 
     myCAM.CS_LOW();
@@ -97,22 +98,22 @@ uint32_t CameraHandler::captureImage()
             return 0;
         }
     }
-
+    Serial.print(imageLength);
     // Retrieve the length (in bytes) of the captured image.
     // This function returns (value & 0x07fffff).
-    imgLength = myCAM.read_fifo_length();
+    imageLength = myCAM.read_fifo_length();
 
-    if (!imgLength)
+    if ((imageLength >= 0x7FFFFF) || (imageLength == 0))
     {
         Serial.println("Error: Image length is invalid.");
         return 0;
     }
 
     Serial.print("Image captured. Size: ");
-    Serial.print(imgLength);
+    Serial.print(imageLength);
     Serial.println(" bytes.");
 
-    return imgLength;
+    return imageLength;
 }
 
 void CameraHandler::startImageStream()
