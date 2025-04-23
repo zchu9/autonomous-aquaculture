@@ -3,7 +3,7 @@
 #include <ArduCAM.h>
 #include "pins.h"
 #include "camera_handler.h"
-
+#define DEBUG 1
 // Create an instance of the ArduCAM class.
 // We use OV2640 (a valid numeric constant defined in ArduCAM.h) as the sensor model.
 //! The memorysaver.h file configures the module as OV2640 Mini 2MP Plus.
@@ -51,6 +51,7 @@ void CameraHandler::begin()
     {
         Serial.println(F("ACK CMD SPI interface OK. END"));
     }
+
     // Set the image format to JPEG.
     myCAM.set_format(JPEG);
 
@@ -148,7 +149,7 @@ void CameraHandler::finishImageStream()
     Serial.println("cutting off stream (ouch)");
 }
 
-void CameraHandler::validateModel()
+bool CameraHandler::validateModel()
 {
     uint8_t vid, pid;
     // Check if the camera module type is OV2640
@@ -158,10 +159,11 @@ void CameraHandler::validateModel()
     if ((vid != 0x26) && ((pid != 0x41) || (pid != 0x42)))
     {
         Serial.println(F("ACK CMD Can't find OV2640 module! END"));
-        delay(1000);
+        return false;
     }
     else
     {
         Serial.println(F("ACK CMD OV2640 detected. END"));
+        return true;
     }
 }

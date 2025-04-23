@@ -29,8 +29,7 @@ public:
     void finishImageStream();
 
 private:
-
-    void validateModel();
+    bool validateModel();
 
     uint32_t imgLength;  // Total captured image length.
     uint32_t currentPos; // Current read position in the FIFO.

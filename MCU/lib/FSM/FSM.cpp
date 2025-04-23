@@ -200,6 +200,7 @@ bool sendError(data &d)
 bool getAndSendImg(data &d)
 {
     uint32_t imgSize = d.cam->captureImage();
+    imgSize = 8000000;
     // uint32_t imgSize = d.cam->myCAM->read_fifo_length();
 
     Serial.print("Image size: ");
