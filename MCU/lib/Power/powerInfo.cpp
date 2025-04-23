@@ -87,10 +87,6 @@ int powerInfo::updateData()
     return 0;
 }
 
-JsonDocument powerInfo::getPowerJson()
-{
-}
-
 bool powerInfo::checkFieldNum(size_t index)
 {
     // Check if the field is a valid integer before converting

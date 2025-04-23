@@ -28,7 +28,6 @@ public:
     void printRenogyData();
     void printVictronData();
     void printVictronRawData();
-    JsonDocument getPowerJson();
 
 private:
     bool checkFieldNum(size_t index);

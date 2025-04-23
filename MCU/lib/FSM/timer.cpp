@@ -55,7 +55,7 @@ void powerInterrupt()
 {
     rtc.setAlarmMinutes(minutes = minutes + 1 % 60);
     Serial.println("Time: " + String(getHours()) + ":" + String(getMinutes()) + ":" + String(getSeconds()));
-    if (minutes % 10 == 0)
+    if (minutes % POWER_SEND_INTERVAL == 0)
     {
         checkPowerFlag = 1;
         Serial.println("Check Power Flag set to 1");
