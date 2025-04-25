@@ -13,10 +13,10 @@
 #include "timer.h"
 
 #define NUM_VICTRON_READS 3
-// collect power data from each source, format it as needed.
-// handles all serial line switching, as needed.
-int powerInfo::updateData()
-{
+
+ // collect power data from each source, format it as needed.
+ // handles all serial line switching, as needed.
+int powerInfo::updateData() {
     // this should not take more than 60 seconds, timeout if needed.
     time t = getTime();
     // int timeoutM = (t.minutes + 1) % 60;
@@ -30,7 +30,7 @@ int powerInfo::updateData()
     uartSwitch(BMS, VICTRON_BAUD, VICTRON_CONFIG);
     while (successfulReads < NUM_VICTRON_READS)
     {
-        success = fetchVictronStats(this->bms);
+        success = this->fetchVictronStats(this->bms);
         if (success)
         {
             // this->printVictronRawData();
@@ -87,11 +87,10 @@ int powerInfo::updateData()
     return 0;
 }
 
-bool powerInfo::checkFieldNum(size_t index)
-{
+bool powerInfo::checkFieldNum(size_t index) {
     // Check if the field is a valid integer before converting
     if (this->bms.fields[index].empty() || (!std::isdigit(this->bms.fields[index][0]) &&
-                                            (this->bms.fields[index][0] != '-' || this->bms.fields[index].length() < 2 || !std::isdigit(this->bms.fields[index][1]))))
+        (this->bms.fields[index][0] != '-' || this->bms.fields[index].length() < 2 || !std::isdigit(this->bms.fields[index][1]))))
     {
         // Serial.print("Invalid integer value in field: ");
         // Serial.println(this->bms.fields[index].c_str());
@@ -100,28 +99,29 @@ bool powerInfo::checkFieldNum(size_t index)
     return true;
 }
 
-void powerInfo::printVictronRawData()
-{
-    Serial.println("===== VICTRON RAW DATA =====");
-    if (bms.labels.size() != bms.fields.size())
+int powerInfo::fetchVictronStats(ShuntPowerData& stats) {
+    const size_t buffer_size = 256;       // SAMD RX buffer is 256 total.
+    uint8_t buffer[buffer_size] = { '\0' }; // checksum byte is not guaranteed to be ascii
+    int index = 0;
+    bool successful = false;
+    Serial.println("fetching");
+    if (Serial1.available())
     {
-        Serial.println("Error: Labels and fields size mismatch");
-        return;
+        successful = true;
+    }
+    while (Serial1.available())
+    {
+
+        buffer[index] = Serial1.read();
+        index++;
     }
 
-    for (size_t i = 0; i < bms.labels.size(); i++)
-    {
-        Serial.print(bms.labels[i].c_str());
-        Serial.print(": ");
-        Serial.println(bms.fields[i].c_str());
-    }
-    Serial.println("===========================");
+    victronParse(stats, buffer, buffer_size);
+    return successful;
 }
 
-// stats come in two packets: one is primarily H##, the other is mixed.
-void powerInfo::formatVictronData()
-{
-
+void powerInfo::formatVictronData() {
+    // stats come in two packets: one is primarily H##, the other is mixed.
     // Find the shorter of the two lists to prevent out of bounds access
     size_t labelSize = bms.labels.size();
     size_t fieldsSize = bms.fields.size();
@@ -199,14 +199,13 @@ void powerInfo::formatVictronData()
                 break;
             default:
                 break;
-                // put the switch case with the ones that can take strings.
+                // TODO: put the switch case with the ones that can take strings.
             }
         }
     }
 }
 
-void powerInfo::hStatsVictron(uint8_t index)
-{
+void powerInfo::hStatsVictron(uint8_t index) {
     uint8_t value = stoi(this->bms.labels[index].substr(1));
 
     switch (value)
@@ -268,12 +267,13 @@ void powerInfo::hStatsVictron(uint8_t index)
     }
 }
 
-bool powerInfo::error(uint8_t ret)
-{
+#pragma region Debug
+
+bool powerInfo::error(uint8_t ret) {
     char buf[60];
     if (!ret)
     {
-        Serial.println("fuck");
+        Serial.println("Oops, there was an error.");
         return true;
     }
     else
@@ -291,14 +291,12 @@ bool powerInfo::error(uint8_t ret)
     return false;
 }
 
-double powerInfo::getBatteryVoltage()
-{
+double powerInfo::getBatteryVoltage() {
     this->batteryVoltage = this->mppt.renogyData.batteryVoltage;
     return this->batteryVoltage;
 }
 
-void powerInfo::printRenogyData()
-{
+void powerInfo::printRenogyData() {
     Serial.print("Battery Voltage: ");
     Serial.println(this->mppt.renogyData.batteryVoltage);
     Serial.print("Solar Panel Voltage: ");
@@ -312,8 +310,7 @@ void powerInfo::printRenogyData()
     Serial.println(this->mppt.renogyInfo.ampRating);
 }
 
-void powerInfo::printVictronData()
-{
+void powerInfo::printVictronData() {
     Serial.println("===== VICTRON SMART SHUNT DATA =====");
     Serial.print("Battery Voltage: ");
     Serial.print(bms.mvoltage / 1000.0, 2);
@@ -338,8 +335,24 @@ void powerInfo::printVictronData()
     Serial.println("==============================");
 }
 
-void powerInfo::initData()
-{
+void powerInfo::printVictronRawData() {
+    Serial.println("===== VICTRON RAW DATA =====");
+    if (bms.labels.size() != bms.fields.size())
+    {
+        Serial.println("Error: Labels and fields size mismatch");
+        return;
+    }
+
+    for (size_t i = 0; i < bms.labels.size(); i++)
+    {
+        Serial.print(bms.labels[i].c_str());
+        Serial.print(": ");
+        Serial.println(bms.fields[i].c_str());
+    }
+    Serial.println("===========================");
+}
+
+void powerInfo::initData() {
     // Initialize basic properties
     batteryVoltage = 255.0;
     solarPanelVoltage = 255.0;
@@ -425,3 +438,5 @@ void powerInfo::initData()
     memset(mppt.renogyInfo.hardwareVersion, 0, sizeof(mppt.renogyInfo.hardwareVersion));
     memset(mppt.renogyInfo.serialNumber, 0, sizeof(mppt.renogyInfo.serialNumber));
 }
+
+#pragma endregion Debug

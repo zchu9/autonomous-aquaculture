@@ -5,12 +5,10 @@
 #include <renogy.h>
 
 // for accessing victron SmartShunt
-#include <victron.h>
 #include <victronFunctions.h>
 
 // misc info.
-#include <ArduinoJson.h> // formatting
-
+#include "ArduinoJson.h"
 #include "uartSwitch.h"
 
 class powerInfo
@@ -24,7 +22,10 @@ public:
 
     void initData();
     int updateData();
+    int fetchVictronStats(ShuntPowerData& stats);
     double getBatteryVoltage();
+    
+    // debugging prints
     void printRenogyData();
     void printVictronData();
     void printVictronRawData();
