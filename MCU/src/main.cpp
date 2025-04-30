@@ -24,15 +24,7 @@ void setup()
   // initJustPower(d);
 }
 
-static int firstrun = 1;
 void loop()
 {
-  if (firstrun == 1)
-  {
-    setPowerFlag(1);
-    checkPowerHandler(d);
-    getAndSendImg(d);
-    firstrun = 0;
-  }
   FSM(d);
 }
