@@ -6,9 +6,15 @@
 #include <string>
 
 // assume this stuff is provided by a config file
-#define LORA_ADDRESS 42069       // 0 to 65535
+#ifndef LORA_ADDRESS
+#define LORA_ADDRESS 42069 // 0 to 65535
+#endif
+#ifndef LORA_PASSWORD
 #define LORA_PASSWORD "A3F7B9C2" // 00000001 to FFFFFFFF
+#endif
+#ifndef FARM_ID
 #define FARM_ID "6803b540c9dd79fcdfc62192"
+#endif
 
 #define TARGET_ADDRESS "1"
 #define PACKET_SIZE 100
