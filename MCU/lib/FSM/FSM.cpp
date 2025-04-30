@@ -27,20 +27,27 @@ void initializeStartup(data &d)
 #if DEBUG
     initializeDebug();
 #endif
-
+    // for waking up from sleep
     attachInterrupt(digitalPinToInterrupt(RX_INTERRUPT), commsHandler, RISING);
-    //  init the heap pointers (jayson said that we should do this)
+
+    // uart comms to radio, mppt, bms
     Serial1.begin(9600, SERIAL_8N1);
+
+    // general timer, temperature, and control initialization
     timerInit();
     initTemperatureSensor();
     initMuxPins();
+
+    // power modules initialization
     d.powerData = new powerInfo;
     d.powerData->initData();
+
+    // radio and winch initalization
     d.lora = new LoraRadio;
     d.winch = new winchData(LIFT_PIN, LOWER_PIN, POT_PIN);
 
+    // camera initialization
     d.cam->begin();
-    // noConnectionMode = d.lora->sendHandshake();
 }
 
 /**
@@ -260,6 +267,7 @@ void updateTemp(data &d)
 #pragma endregion Sensors
 
 #pragma region Helpers
+
 JsonDocument jsonify(data &d)
 {
     JsonDocument doc;
@@ -335,14 +343,6 @@ std::string getState()
     }
 }
 
-#pragma endregion Helpers
-
-////////////////////////////////////////////////////////////////////////////
-// Zach's House
-////////////////////////////////////////////////////////////////////////////
-
-#pragma region Debug
-
 void updateTime(data &d)
 {
     time t = getTime();
@@ -378,7 +378,7 @@ void testState(data &d)
     }
 }
 
-#pragma endregion Debug
+#pragma endregion Helpers
 
 /*
       `'::::.
