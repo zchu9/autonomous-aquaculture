@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker compose --profile bridge up
+docker compose --profile bridge --profile prod up
