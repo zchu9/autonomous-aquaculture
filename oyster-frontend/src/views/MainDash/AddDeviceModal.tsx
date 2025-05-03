@@ -13,8 +13,6 @@ import Grid from "@mui/material/Grid";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 
-import Typography from "@mui/material/Typography";
-
 const base_url = `${import.meta.env.VITE_API_URL}`;
 
 interface AddDeviceModalProps {

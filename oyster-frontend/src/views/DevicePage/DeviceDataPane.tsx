@@ -55,9 +55,10 @@ const DataPane = styled(Paper)(({ theme }) => ({
 }));
 
 export function DeviceDataPane(props: DeviceDataPaneProps) {
-  const [objectData, setObjectData] = React.useState<SensorData>();
-  const [solarPanelData, setSolarPanelData] = React.useState<SolarPanelData>();
-  const [batteryData, setBatteryData] = React.useState<BatteryData>();
+  const [objectData, setObjectData] = React.useState<SensorData[]>();
+  const [solarPanelData, setSolarPanelData] =
+    React.useState<SolarPanelData[]>();
+  const [batteryData, setBatteryData] = React.useState<BatteryData[]>();
   const [cameraStr, setCameraStr] = React.useState<string>("");
 
   async function fetchSensorData() {

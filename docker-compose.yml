@@ -1,15 +1,30 @@
 services:
-  backend:
+  backend-dev:
     container_name: oyster-backend-service
+    profiles: ["dev"]
     image: oyster-backend-service
-    build: ./backend
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile.dev
     ports:
       - "3000:3000"
     depends_on:
       - mongo
-    links:
-      - mqtt
+    networks:
+      - oyster-network
+  backend-prod:
+    container_name: oyster-backend-service
+    profiles: ["prod"]
+    image: oyster-backend-service
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
       - mongo
+    networks:
+      - oyster-network
   mongo:
     container_name: oyster-mongoDB
     image: mongo:latest
@@ -19,31 +34,56 @@ services:
       - ./data:/data/db
       - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
     restart: always
+    networks:
+      - oyster-network
   mqtt:
     container_name: oyster-message-broker
     image: oyster-message-broker
     build: ./broker
     ports:
       - "1883:1883"
-  frontend:
+    networks:
+      - oyster-network
+  frontend-dev:
     container_name: oyster-frontend
     image: oyster-frontend
-    build: ./oyster-frontend
+    build:
+      context: ./oyster-frontend
+      dockerfile: Dockerfile.dev
+    profiles: ["dev"]
     ports:
       -  "5173:5173"
-    links:
-      - backend
     volumes:
       - ./oyster-frontend:/usr/src/app
       - /usr/src/app/node_modules
+    networks:
+      - oyster-network
+  frontend:
+    container_name: oyster-frontend
+    image: oyster-frontend
+    build:
+      context: ./oyster-frontend
+      dockerfile: Dockerfile
+    profiles: ["prod"]
+    ports:
+      -  "5173:5173"
+    volumes:
+      - ./oyster-frontend:/usr/src/app
+      - /usr/src/app/node_modules
+    networks:
+      - oyster-network
   bridge:
     container_name: oyster-bridge
     image: oyster-bridge
     build: ./oyster-bridge
     profiles: ["bridge"]
-    links:
-      - mqtt
     volumes:
       - ./oyster-bridge/data:/python-docker/data
     devices:
       - "/dev/serial/by-id/usb-Silicon_Labs_CP2102N_USB_to_UART_Bridge_Controller_2e74289bdc24ec119aa676c2a8a1c857-if00-port0:/dev/serial0"
+    networks:
+      - oyster-network
+
+networks:
+  oyster-network:
+    driver: bridge

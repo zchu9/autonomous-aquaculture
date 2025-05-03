@@ -10,7 +10,11 @@ import Typography from "@mui/material/Typography";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 
-import IOSSwitch from "../comm/Switch";
+import Modal from "@mui/joy/Modal";
+import ModalClose from "@mui/joy/ModalClose";
+import ModalDialog from "@mui/joy/ModalDialog";
+import ScheduleOpModal from "../comm/ScheduleOpModal";
+import EditCalendarOutlinedIcon from "@mui/icons-material/EditCalendarOutlined";
 
 import Paper from "@mui/material/Paper";
 import { styled } from "@mui/material/styles";
@@ -37,13 +41,17 @@ const InfoPane = styled(Paper)(({ theme }) => ({
   flexDirection: "column",
 }));
 
-const InfoPaneRow = styled(Box)(({ theme }) => ({
+const InfoPaneRow = styled(Box)(() => ({
   textAlign: "left",
 }));
 
 export default function DeviceInfoPane(props: DeviceInfoPaneProps) {
   const [objectData, setObjectData] = React.useState<DeviceData>();
   const [scheduleList, setSchedules] = React.useState<ScheduleList[]>();
+
+  const [scheduleModalopen, setScheduleModalOpen] = React.useState(false);
+  const handleScheduleModalOpen = () => setScheduleModalOpen(true);
+  const handleScheduleModalClose = () => setScheduleModalOpen(false);
 
   async function fetchFarmData() {
     console.log(`Fetching device data from ${base_url}...`);
@@ -121,7 +129,7 @@ export default function DeviceInfoPane(props: DeviceInfoPaneProps) {
               <Typography variant="h5" fontWeight="bold">
                 {objectData?.farm_name}
               </Typography>
-              <Typography variant="body3">{objectData?._id}</Typography>
+              <Typography variant="body1">{objectData?._id}</Typography>
             </InfoPaneRow>
           </Grid>
           <Grid size={6} sx={{ textAlign: "right" }}>
@@ -189,7 +197,7 @@ export default function DeviceInfoPane(props: DeviceInfoPaneProps) {
                   return (
                     <List>
                       <ListItem key={idx}>
-                        <div key={idx}>
+                        <div>
                           {schedule.date.toLocaleString()} -{" "}
                           {schedule.command ? "Up" : "Down"} for{" "}
                           {schedule.duration} minutes
@@ -206,6 +214,29 @@ export default function DeviceInfoPane(props: DeviceInfoPaneProps) {
               <Typography variant="subtitle2" fontWeight="bold">
                 Schedule an Operation:
               </Typography>
+
+              <Button
+                variant="contained"
+                startIcon={<EditCalendarOutlinedIcon />}
+                onClick={handleScheduleModalOpen}
+              >
+                Bulk Schedule
+              </Button>
+
+              <Modal
+                open={scheduleModalopen}
+                onClose={handleScheduleModalClose}
+                aria-labelledby="modal-modal-title"
+                aria-describedby="modal-modal-description"
+              >
+                <ModalDialog>
+                  <ModalClose />
+                  <ScheduleOpModal
+                    closeFn={handleScheduleModalClose}
+                    devices={[objectData!]}
+                  />
+                </ModalDialog>
+              </Modal>
             </InfoPaneRow>
           </Grid>
         </Grid>

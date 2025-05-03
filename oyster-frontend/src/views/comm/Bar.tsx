@@ -1,4 +1,4 @@
-import { AppBar, Toolbar, Typography, Box, Container } from "@mui/material";
+import { AppBar, Toolbar, Typography } from "@mui/material";
 
 interface BarProps {
   title: string;

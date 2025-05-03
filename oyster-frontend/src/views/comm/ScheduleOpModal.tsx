@@ -17,6 +17,7 @@ import Chip from "@mui/material/Chip";
 import { styled } from "@mui/material/styles";
 import DeviceData from "./DeviceDataInterface";
 import TextField from "@mui/material/TextField";
+import { Dayjs } from "dayjs";
 
 const base_url = `${import.meta.env.VITE_API_URL}`;
 
@@ -35,7 +36,7 @@ export default function ScheduleOpModal(props: ScheduleModalProps) {
   const [isValidOpSelected, setIsValidOpSelected] =
     React.useState<boolean>(false);
   const [scheduleDate, setScheduleDate] = React.useState<Date>();
-  const [operation, setOperation] = React.useState<number>();
+  const [operation, setOperation] = React.useState<string>();
   const [duration, setDuration] = React.useState<number>();
 
   const [devices, setDevices] = React.useState<readonly DeviceData[]>(
@@ -74,7 +75,9 @@ export default function ScheduleOpModal(props: ScheduleModalProps) {
           farm_ids: ids,
           schedule: [
             {
-              dates: [formatDate(scheduleDate!)],
+              dates: [
+                doSendNow ? formatDate(new Date()) : formatDate(scheduleDate!),
+              ],
               command: operation,
               duration: duration,
               status: "pending",
@@ -97,11 +100,11 @@ export default function ScheduleOpModal(props: ScheduleModalProps) {
   };
 
   const handleDateTimeChosen = (
-    value: TValue,
-    context: FieldChangeHandlerContext
+    value: Dayjs | null,
+    context: { validationError: string | null }
   ) => {
     if (value != null) {
-      var d = value["$d"];
+      var d = value.toDate();
       if (context.validationError == null) {
         setScheduleDate(d);
         setDateIsValid(true);
@@ -111,7 +114,10 @@ export default function ScheduleOpModal(props: ScheduleModalProps) {
     }
   };
 
-  const handleOperationChosen = (event: SelectChangeEvent, child?: object) => {
+  const handleOperationChosen = (
+    event: SelectChangeEvent,
+    _child?: React.ReactNode
+  ) => {
     var choice = event.target.value;
     if (choice != null) {
       setOperation(choice);
@@ -122,7 +128,10 @@ export default function ScheduleOpModal(props: ScheduleModalProps) {
     console.log(isValidOpSelected);
   };
 
-  const handleDuration = (event: SelectChangeEvent, child?: object) => {
+  const handleDuration = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    _child?: object
+  ) => {
     setDuration(parseInt(event.target.value));
   };
 
@@ -171,7 +180,7 @@ export default function ScheduleOpModal(props: ScheduleModalProps) {
             />
           </Box>
 
-          <Box sx>
+          <Box>
             <Typography>Set Duration: </Typography>
             <TextField
               id="outlined-basic"

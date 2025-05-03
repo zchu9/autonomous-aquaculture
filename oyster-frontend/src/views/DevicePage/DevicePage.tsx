@@ -1,20 +1,18 @@
 import { useSearchParams } from "react-router-dom";
 
 import Button from "@mui/material/Button";
-import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid2";
 import Box from "@mui/material/Box";
 import DeviceInfoPane from "./DeviceInfoPane";
-import { DeviceDataPane, IQueryResult } from "./DeviceDataPane";
+import { DeviceDataPane } from "./DeviceDataPane";
 import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
 import { Link as RouterLink } from "react-router-dom";
-import { AppBar, Toolbar, Typography } from "@mui/material";
 import Bar from "../comm/Bar";
 
 export default function DevicePage() {
-  const [deviceUUID, setDeviceUUID] = useSearchParams();
+  const [deviceUUID, _setDeviceUUID] = useSearchParams();
   const uuid = deviceUUID.get("id");
-  const paramsObject = Object.fromEntries(deviceUUID);
+  // const _paramsObject = Object.fromEntries(deviceUUID);
 
   return (
     <Box
@@ -58,7 +56,7 @@ export default function DevicePage() {
             size={6}
             sx={{ display: "flex", flexDirection: "column", flexGrow: 1 }}
           >
-            <DeviceInfoPane uuid={uuid} />
+            <DeviceInfoPane uuid={uuid!} />
           </Grid>
           <Grid
             size={6}
@@ -68,7 +66,7 @@ export default function DevicePage() {
               flexGrow: 1,
             }}
           >
-            <DeviceDataPane uuid={uuid} />
+            <DeviceDataPane uuid={uuid!} />
           </Grid>
         </Grid>
       </Box>
