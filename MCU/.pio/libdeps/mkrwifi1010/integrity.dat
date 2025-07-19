@@ -1,0 +1,10 @@
+rocketscream/Low-Power
+khoih-prog/SAMD_TimerInterrupt
+arduino-libraries/Arduino Low Power@^1.2.2
+arduino-libraries/RTCZero@^1.6.0
+agdl/Base64@^1.0.2
+milesburton/DallasTemperature@^4.0.4
+arducam/ArduCAM@^1.0.0
+paulstoffregen/OneWire@^2.3.8
+4-20ma/ModbusMaster@^2.0.1
+bblanchon/ArduinoJson @ ^7.3.1
