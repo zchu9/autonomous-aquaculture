@@ -4,10 +4,11 @@ data d;
 
 void setup()
 {
-  initializeStartup(d);
+//   initializeStartup(d);
 }
 
 void loop()
 {
-  FSM(d);
+    debugLoop();
+    FSM(d);
 }

@@ -39,7 +39,7 @@ int powerInfo::updateData() {
         }
 
         t = getTime();
-        Serial.println(t.seconds);
+// Serial.println(t.seconds);
         if (timeoutS == t.seconds)
         {
             successfulReads = 2; // timeout error
@@ -57,8 +57,8 @@ int powerInfo::updateData() {
             successfulReads++;
         }
         t = getTime();
-        Serial.print("MPPT1 att time: ");
-        Serial.println(t.seconds);
+// Serial.print("MPPT1 att time: ");
+// Serial.println(t.seconds);
         if (timeoutS == t.seconds)
         {
             return 1; // timeout error
@@ -74,8 +74,8 @@ int powerInfo::updateData() {
             // ! format
             successfulReads++;
         }
-        Serial.print("MPPT2 att time: ");
-        Serial.println(t.seconds);
+// Serial.print("MPPT2 att time: ");
+// Serial.println(t.seconds);
         t = getTime();
         if (timeoutS == t.seconds)
         {
@@ -104,7 +104,7 @@ int powerInfo::fetchVictronStats(ShuntPowerData& stats) {
     uint8_t buffer[buffer_size] = { '\0' }; // checksum byte is not guaranteed to be ascii
     int index = 0;
     bool successful = false;
-    Serial.println("fetching");
+// Serial.println("fetching");
     if (Serial1.available())
     {
         successful = true;
@@ -273,7 +273,7 @@ bool powerInfo::error(uint8_t ret) {
     char buf[60];
     if (!ret)
     {
-        Serial.println("Oops, there was an error.");
+// Serial.println("Oops, there was an error.");
         return true;
     }
     else
@@ -297,59 +297,59 @@ double powerInfo::getBatteryVoltage() {
 }
 
 void powerInfo::printRenogyData() {
-    Serial.print("Battery Voltage: ");
-    Serial.println(this->mppt.renogyData.batteryVoltage);
-    Serial.print("Solar Panel Voltage: ");
-    Serial.println(this->mppt.renogyData.solarPanelVoltage);
-    Serial.print("Battery SOC: ");
-    Serial.print(this->mppt.renogyData.batterySoc);
-    Serial.println("%");
-    Serial.print("Voltage Rating: ");
-    Serial.println(this->mppt.renogyInfo.voltageRating);
-    Serial.print("Amp Rating: ");
-    Serial.println(this->mppt.renogyInfo.ampRating);
+// Serial.print("Battery Voltage: ");
+// Serial.println(this->mppt.renogyData.batteryVoltage);
+// Serial.print("Solar Panel Voltage: ");
+// Serial.println(this->mppt.renogyData.solarPanelVoltage);
+// Serial.print("Battery SOC: ");
+// Serial.print(this->mppt.renogyData.batterySoc);
+// Serial.println("%");
+// Serial.print("Voltage Rating: ");
+// Serial.println(this->mppt.renogyInfo.voltageRating);
+// Serial.print("Amp Rating: ");
+// Serial.println(this->mppt.renogyInfo.ampRating);
 }
 
 void powerInfo::printVictronData() {
-    Serial.println("===== VICTRON SMART SHUNT DATA =====");
-    Serial.print("Battery Voltage: ");
-    Serial.print(bms.mvoltage / 1000.0, 2);
-    Serial.println(" V");
+// Serial.println("===== VICTRON SMART SHUNT DATA =====");
+// Serial.print("Battery Voltage: ");
+// Serial.print(bms.mvoltage / 1000.0, 2);
+// Serial.println(" V");
 
-    Serial.print("Current: ");
-    Serial.print(bms.mcurrent / 1000.0, 2);
-    Serial.println(" A");
+// Serial.print("Current: ");
+// Serial.print(bms.mcurrent / 1000.0, 2);
+// Serial.println(" A");
 
-    Serial.print("Power: ");
-    Serial.print(bms.power);
-    Serial.println(" W");
+// Serial.print("Power: ");
+// Serial.print(bms.power);
+// Serial.println(" W");
 
-    Serial.print("Consumed: ");
-    Serial.print(bms.consumedmAH / 1000.0, 2);
-    Serial.println(" Ah");
+// Serial.print("Consumed: ");
+// Serial.print(bms.consumedmAH / 1000.0, 2);
+// Serial.println(" Ah");
 
-    Serial.print("State of Charge: ");
-    Serial.print(bms.stateOfCharge);
-    Serial.println("%");
+// Serial.print("State of Charge: ");
+// Serial.print(bms.stateOfCharge);
+// Serial.println("%");
 
-    Serial.println("==============================");
+// Serial.println("==============================");
 }
 
 void powerInfo::printVictronRawData() {
-    Serial.println("===== VICTRON RAW DATA =====");
+// Serial.println("===== VICTRON RAW DATA =====");
     if (bms.labels.size() != bms.fields.size())
     {
-        Serial.println("Error: Labels and fields size mismatch");
+// Serial.println("Error: Labels and fields size mismatch");
         return;
     }
 
     for (size_t i = 0; i < bms.labels.size(); i++)
     {
-        Serial.print(bms.labels[i].c_str());
-        Serial.print(": ");
-        Serial.println(bms.fields[i].c_str());
+// Serial.print(bms.labels[i].c_str());
+// Serial.print(": ");
+// Serial.println(bms.fields[i].c_str());
     }
-    Serial.println("===========================");
+// Serial.println("===========================");
 }
 
 void powerInfo::initData() {

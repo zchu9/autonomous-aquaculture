@@ -19,6 +19,9 @@
 
 #define DEBUG true
 
+enum farmState { STANDARD, LOW_POWER, NO_CONNECTION };
+void debugLoop();
+
 struct data
 {
     // Assuming the size of the array is 10, you can adjust it as needed

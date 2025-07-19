@@ -1,8 +1,64 @@
 #include "FSM.h"
+#include <RTCZero.h>
 
 static int commsFlag = 0;
 static bool lowPowerMode = false;
 static bool noConnectionMode = false;
+
+
+void debugLoop() {
+    static bool debug = false;
+    static bool mode = false;
+    char reportString[20];
+    RTCZero rtc;
+    uint8_t endTime = 0;
+    uint8_t lastTime = 0;
+
+    Serial.begin(115200);
+    rtc.begin();
+    endTime = (rtc.getSeconds() + 5) % 60;
+    pinMode(LED_BUILTIN, OUTPUT);
+    while (rtc.getSeconds() != endTime) {
+        if (rtc.getSeconds() != lastTime) {
+            mode = !mode;
+            lastTime = rtc.getSeconds();
+        }
+        digitalWrite(LED_BUILTIN, mode);
+
+        if(Serial.available() > 0) {
+            std::string msg = Serial.readStringUntil('\n').c_str();
+            int res = strcmp(msg.c_str(), "sclink");
+            if(res == 0){
+                Serial.write("connected");
+                debug = true;
+                break;
+            }else {
+                Serial.write(msg.c_str());
+            }
+        }
+    }
+
+    while (debug) {
+        if (Serial.available() > 0) {
+            std::string msg = Serial.readStringUntil('\n').c_str();
+            switch (msg[0])
+            {
+            case 'x':
+                mode = !mode;
+                break;
+            case 'r':
+                sprintf(reportString, "Current mode: %d\n", mode);
+                Serial.println(reportString);
+                break;
+            default:
+                break;
+            }
+        }
+        digitalWrite(LED_BUILTIN, mode);
+    }
+    digitalWrite(LED_BUILTIN, LOW);
+}
+
 
 void FSM(data &d)
 {
@@ -56,7 +112,7 @@ void initializeStartup(data &d)
 void initializeDebug()
 {
     Serial.begin(9600);
-    Serial.println("Debugging Initialized");
+// Serial.println("Debugging Initialized");
 }
 
 #pragma endregion Initialize
@@ -68,7 +124,7 @@ void checkPowerHandler(data &d)
     if (getPowerFlag() == 1)
     {
 #if DEBUG
-        Serial.println("Power check function");
+// Serial.println("Power check function");
 #endif
         setPowerFlag(false);
 
@@ -114,7 +170,7 @@ void loraListen(data &d)
     if (commsFlag == 1)
     {
 #if DEBUG
-        Serial.println("Comms Module Interrupt");
+// Serial.println("Comms Module Interrupt");
 #endif
         detachInterrupt(digitalPinToInterrupt(RX_INTERRUPT));
         d.lora->receiveMsg(d.doc);
@@ -128,7 +184,7 @@ int runCommands(data &d)
 {
     if (d.doc.isNull())
     {
-        Serial.println("No valid JSON received");
+// Serial.println("No valid JSON received");
         return -1;
     }
     if (d.doc["command"] == 1)
@@ -141,7 +197,7 @@ int runCommands(data &d)
         {
             d.winch->lift(3.3); // TODO: Hard-coded values
         }
-        Serial.println(">>>>>Lift command received");
+// Serial.println(">>>>>Lift command received");
         getAndSendImg(d);
     }
     if (d.doc["command"] == 0)
@@ -154,7 +210,7 @@ int runCommands(data &d)
         {
             d.winch->lower(0); // TODO: Hard-coded values
         }
-        Serial.println(">>>>>Lower command received");
+// Serial.println(">>>>>Lower command received");
         getAndSendImg(d);
     }
     // clear the json doc
@@ -168,7 +224,7 @@ bool sendData(data &d)
     JsonDocument doc = jsonify(d);
     if (doc.isNull())
     {
-        Serial.print("syuh");
+// Serial.print("syuh");
         return false;
     }
 
@@ -195,7 +251,7 @@ bool sendError(data &d)
     serializeJson(doc, buffer, len + 1);
     // Send the JSON over LoRa
     bool success = d.lora->sendPackets(buffer);
-    Serial.print("made it out 100"); // TODO: Remove later
+// Serial.print("made it out 100"); // TODO: Remove later
     delete[] buffer;                 // Free the allocated memory
     return success;
 }
@@ -209,8 +265,8 @@ bool getAndSendImg(data &d)
     uint32_t imgSize = d.cam->captureImage();
     // uint32_t imgSize = d.cam->myCAM->read_fifo_length();
 
-    Serial.print("Image size: ");
-    Serial.println(imgSize);
+// Serial.print("Image size: ");
+// Serial.println(imgSize);
 
     uint32_t imDivider = 6;
     int chunkSize = imgSize / imDivider;
@@ -236,11 +292,11 @@ bool getAndSendImg(data &d)
 
             if (d.lora->sendPackets(encodedImg))
             {
-                Serial.println("Chunk:" + String(currentChunk + 1) + " sent");
+// Serial.println("Chunk:" + String(currentChunk + 1) + " sent");
             }
             else
             {
-                Serial.println("Failed to send chunk:" + String(currentChunk + 1));
+// Serial.println("Failed to send chunk:" + String(currentChunk + 1));
                 d.cam->finishImageStream(); // returns CS line high on failure.
                 return false;
             }
@@ -248,7 +304,7 @@ bool getAndSendImg(data &d)
     }
     else
     {
-        Serial.println("Failed to capture image.");
+// Serial.println("Failed to capture image.");
         d.cam->finishImageStream();
         return false;
     }
@@ -374,7 +430,7 @@ void testState(data &d)
                 d.powerData->solarPanelVoltage, d.powerData->batteryVoltage,
                 d.t.minutes, d.t.seconds,
                 0, 0);
-        Serial.println(buffer);
+// Serial.println(buffer);
     }
 }
 
