@@ -51,6 +51,7 @@ void RTCZero::begin(bool resetTime)
   // POR causes a reset anyway, BOD behaviour is?
   bool validTime = false;
   RTC_MODE2_CLOCK_Type oldTime;
+  oldTime.reg = 0;
 
   if ((!resetTime) && (PM->RCAUSE.reg & (PM_RCAUSE_SYST | PM_RCAUSE_WDT | PM_RCAUSE_EXT))) {
     if (RTC->MODE2.CTRL.reg & RTC_MODE2_CTRL_MODE_CLOCK) {

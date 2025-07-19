@@ -43,8 +43,8 @@ bool winchData::selectWinchLine(bool lift)
 
 bool winchData::lower(double desiredHeight)
 {
-    int numIterations = 1;
-    int beginningHeight = getHeight();
+    // int numIterations = 1;
+    // int beginningHeight = getHeight();
 
     selectWinchLine(false);
 
@@ -62,8 +62,8 @@ bool winchData::lower(double desiredHeight)
 
 bool winchData::lift(double desiredHeight)
 {
-    int numIterations = 1;
-    int beginningHeight = getHeight();
+    // int numIterations = 1;
+    // int beginningHeight = getHeight();
 
     selectWinchLine(true);
 

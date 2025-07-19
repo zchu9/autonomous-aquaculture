@@ -2945,7 +2945,7 @@ int ArduCAM::wrSensorRegs8_8(const struct sensor_reg reglist[])
 	#if defined (RASPBERRY_PI)
 		arducam_i2c_write_regs(reglist);
 	#else
-		int err = 0;
+		// int err = 0;
 	  uint16_t reg_addr = 0;
 	  uint16_t reg_val = 0;
 	  const struct sensor_reg *next = reglist;
@@ -2953,7 +2953,7 @@ int ArduCAM::wrSensorRegs8_8(const struct sensor_reg reglist[])
 	  {
 	    reg_addr = pgm_read_word(&next->reg);
 	    reg_val = pgm_read_word(&next->val);
-	    err = wrSensorReg8_8(reg_addr, reg_val);
+	    // err = wrSensorReg8_8(reg_addr, reg_val);
 	    next++;
 		#if (defined(ESP8266)||defined(ESP32)||defined(TEENSYDUINO))
 		    yield();
@@ -2969,8 +2969,8 @@ int ArduCAM::wrSensorRegs8_16(const struct sensor_reg reglist[])
 	#if defined (RASPBERRY_PI)
 		arducam_i2c_write_regs16(reglist);
 	#else
-		int err = 0;
-	  unsigned int reg_addr, reg_val;
+		// int err = 0;
+	  unsigned int reg_addr = 0, reg_val = 0;
 	  const struct sensor_reg *next = reglist;
 	
 	  while ((reg_addr != 0xff) | (reg_val != 0xffff))
@@ -2982,7 +2982,7 @@ int ArduCAM::wrSensorRegs8_16(const struct sensor_reg reglist[])
 	     reg_addr = pgm_read_word(&next->reg);
 	     reg_val = pgm_read_word(&next->val);
 	    #endif
-	    err = wrSensorReg8_16(reg_addr, reg_val);
+	    // err = wrSensorReg8_16(reg_addr, reg_val);
 	    //  if (!err)
 	    //return err;
 	    next++;
@@ -3000,9 +3000,9 @@ int ArduCAM::wrSensorRegs16_8(const struct sensor_reg reglist[])
 	#if defined (RASPBERRY_PI)
 		arducam_i2c_write_word_regs(reglist);
 	#else
-		int err = 0;
-	  unsigned int reg_addr;
-	  unsigned char reg_val;
+	// int err = 0;
+	  unsigned int reg_addr = 0;
+	  unsigned char reg_val = 0;
 	  const struct sensor_reg *next = reglist;
 	
 	  while ((reg_addr != 0xffff) | (reg_val != 0xff))
@@ -3015,7 +3015,7 @@ int ArduCAM::wrSensorRegs16_8(const struct sensor_reg reglist[])
 	     reg_addr = pgm_read_word(&next->reg);
 	     reg_val = pgm_read_word(&next->val);
 	    #endif
-	    err = wrSensorReg16_8(reg_addr, reg_val);
+	    // err = wrSensorReg16_8(reg_addr, reg_val);
 	    //if (!err)
 	    //return err;
 	    next++;
@@ -3032,14 +3032,14 @@ int ArduCAM::wrSensorRegs16_16(const struct sensor_reg reglist[])
 {
 	#if defined (RASPBERRY_PI)
 	#else
-	  int err = 0;
+	//   int err = 0;
 	  unsigned int reg_addr, reg_val;
 	  const struct sensor_reg *next = reglist;
 	  reg_addr = pgm_read_word(&next->reg);
 	  reg_val = pgm_read_word(&next->val);
 	  while ((reg_addr != 0xffff) | (reg_val != 0xffff))
 	  {
-	    err = wrSensorReg16_16(reg_addr, reg_val);
+	    // err = wrSensorReg16_16(reg_addr, reg_val);
 	    //if (!err)
 	    //   return err;
 	    next++;
