@@ -116,11 +116,11 @@
 #endif
 #endif
 
-
 ArduCAM::ArduCAM() {
     sensor_model = OV7670;
     sensor_addr = 0x42;
 }
+
 ArduCAM::ArduCAM(byte model, int CS) {
 #if defined (RASPBERRY_PI)
     if (CS >= 0)
@@ -709,6 +709,7 @@ void ArduCAM::set_fifo_burst() {
 void ArduCAM::CS_HIGH(void) {
     sbi(P_CS, B_CS);
 }
+
 void ArduCAM::CS_LOW(void) {
     cbi(P_CS, B_CS);
 }
