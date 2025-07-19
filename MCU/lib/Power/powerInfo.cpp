@@ -168,6 +168,7 @@ void powerInfo::formatVictronData() {
                     {
                         this->bms.alarmReason = stoi(this->bms.fields[i]);
                     }
+                    break;
                 case 'F':
                     this->bms.firmware = stoi(this->bms.fields[i]);
                     break;
