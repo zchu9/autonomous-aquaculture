@@ -1,7 +1,9 @@
 #include "uartSwitch.h"
+#include <ArduinoTrace.h>
 
 void initMuxPins()
 {
+    TRACE();
     pinMode(MUX_DISABLE_0, OUTPUT);
     pinMode(MUX_DISABLE_1, OUTPUT);
     pinMode(MUX_SEL_0, OUTPUT);

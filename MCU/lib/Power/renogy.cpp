@@ -84,12 +84,12 @@ uint8_t RenogyMPPT::rdDataRegisters()
     {
         if (result == 0xE2)
         {
-            Serial.println("Timed out reading the data registers!");
+// Serial.println("Timed out reading the data registers!");
         }
         else
         {
-            Serial.print("Failed to read the data registers... ");
-            Serial.println(result, HEX); // E2 is timeout
+// Serial.print("Failed to read the data registers... ");
+// Serial.println(result, HEX); // E2 is timeout
         }
     }
 #endif
@@ -147,12 +147,12 @@ uint8_t RenogyMPPT::rdInfoRegisters()
     {
         if (result == 0xE2)
         {
-            Serial.println("Timed out reading the info registers!");
+// Serial.println("Timed out reading the info registers!");
         }
         else
         {
-            Serial.print("Failed to read the info registers... ");
-            Serial.println(result, HEX); // E2 is timeout
+// Serial.print("Failed to read the info registers... ");
+// Serial.println(result, HEX); // E2 is timeout
         }
     }
 #endif

@@ -7,12 +7,14 @@
 #include "pins.h"
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include <ArduinoTrace.h>
 
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
 void initTemperatureSensor()
 {
+    TRACE();
     sensors.begin();
 }
 

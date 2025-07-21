@@ -53,7 +53,7 @@ bool winchData::lower(double desiredHeight)
     while (getHeight() > desiredHeight)
     {
         digitalWrite(lowerPin, HIGH);
-        Serial.println(getHeight());
+// Serial.println(getHeight());
     }
     digitalWrite(lowerPin, LOW);
     this->currentHeight = getHeight();
@@ -72,7 +72,7 @@ bool winchData::lift(double desiredHeight)
     while (getHeight() < desiredHeight)
     {
         digitalWrite(liftPin, HIGH);
-        Serial.println(getHeight());
+// Serial.println(getHeight());
     }
     digitalWrite(liftPin, LOW);
     this->currentHeight = getHeight();

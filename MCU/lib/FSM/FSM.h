@@ -16,11 +16,11 @@
 #include "powerInfo.h" // for all power information
 #include "timer.h"
 #include "uartSwitch.h"
+#include <WDTZero.h>
 
 #define DEBUG true
 
 enum farmState { STANDARD, LOW_POWER, NO_CONNECTION };
-void debugLoop();
 
 struct data
 {
@@ -30,7 +30,7 @@ struct data
     LoraRadio *lora; // a class to hold all the lora variables.
     winchData *winch;
     CameraHandler *cam;
-
+    WDTZero *watch;
     double temp; // stores temperature readings for each device
 
     JsonDocument doc;

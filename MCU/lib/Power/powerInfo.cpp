@@ -11,12 +11,14 @@
 #include <Arduino.h>
 #include "powerInfo.h"
 #include "timer.h"
+#include <ArduinoTrace.h>
 
 #define NUM_VICTRON_READS 3
 
  // collect power data from each source, format it as needed.
  // handles all serial line switching, as needed.
 int powerInfo::updateData() {
+    TRACE();
     // this should not take more than 60 seconds, timeout if needed.
     time t = getTime();
     // int timeoutM = (t.minutes + 1) % 60;
@@ -45,7 +47,6 @@ int powerInfo::updateData() {
             successfulReads = 2; // timeout error
         }
     }
-
     // Read data from the MPPT
     uartSwitch(MPPT, RENOGY_BAUD, RENOGY_CONFIG);
     while (successfulReads < NUM_VICTRON_READS + 1)
@@ -88,6 +89,7 @@ int powerInfo::updateData() {
 }
 
 bool powerInfo::checkFieldNum(size_t index) {
+    TRACE();
     // Check if the field is a valid integer before converting
     if (this->bms.fields[index].empty() || (!std::isdigit(this->bms.fields[index][0]) &&
         (this->bms.fields[index][0] != '-' || this->bms.fields[index].length() < 2 || !std::isdigit(this->bms.fields[index][1]))))
@@ -111,7 +113,6 @@ int powerInfo::fetchVictronStats(ShuntPowerData& stats) {
     }
     while (Serial1.available())
     {
-
         buffer[index] = Serial1.read();
         index++;
     }
@@ -121,6 +122,7 @@ int powerInfo::fetchVictronStats(ShuntPowerData& stats) {
 }
 
 void powerInfo::formatVictronData() {
+    TRACE();
     // stats come in two packets: one is primarily H##, the other is mixed.
     // Find the shorter of the two lists to prevent out of bounds access
     size_t labelSize = bms.labels.size();
@@ -207,6 +209,7 @@ void powerInfo::formatVictronData() {
 }
 
 void powerInfo::hStatsVictron(uint8_t index) {
+    TRACE();
     uint8_t value = stoi(this->bms.labels[index].substr(1));
 
     switch (value)
@@ -298,17 +301,17 @@ double powerInfo::getBatteryVoltage() {
 }
 
 void powerInfo::printRenogyData() {
-// Serial.print("Battery Voltage: ");
-// Serial.println(this->mppt.renogyData.batteryVoltage);
-// Serial.print("Solar Panel Voltage: ");
-// Serial.println(this->mppt.renogyData.solarPanelVoltage);
-// Serial.print("Battery SOC: ");
-// Serial.print(this->mppt.renogyData.batterySoc);
-// Serial.println("%");
-// Serial.print("Voltage Rating: ");
-// Serial.println(this->mppt.renogyInfo.voltageRating);
-// Serial.print("Amp Rating: ");
-// Serial.println(this->mppt.renogyInfo.ampRating);
+    // Serial.print("Battery Voltage: ");
+    // Serial.println(this->mppt.renogyData.batteryVoltage);
+    // Serial.print("Solar Panel Voltage: ");
+    // Serial.println(this->mppt.renogyData.solarPanelVoltage);
+    // Serial.print("Battery SOC: ");
+    // Serial.print(this->mppt.renogyData.batterySoc);
+    // Serial.println("%");
+    // Serial.print("Voltage Rating: ");
+    // Serial.println(this->mppt.renogyInfo.voltageRating);
+    // Serial.print("Amp Rating: ");
+    // Serial.println(this->mppt.renogyInfo.ampRating);
 }
 
 void powerInfo::printVictronData() {
@@ -354,90 +357,92 @@ void powerInfo::printVictronRawData() {
 }
 
 void powerInfo::initData() {
+    TRACE();
+    //! Commented out; saving flash.
     // Initialize basic properties
-    batteryVoltage = 255.0;
-    solarPanelVoltage = 255.0;
+    // batteryVoltage = 255.0;
+    // solarPanelVoltage = 255.0;
 
-    // Initialize Victron SmartShunt data
-    clear(bms);
-    bms.mvoltage = 255;
-    bms.mcurrent = 255;
-    bms.power = 255;
-    bms.consumedmAH = 255;
-    bms.stateOfCharge = 255;
-    bms.timeToGo = 255;
-    bms.alarm = false;
-    bms.alarmReason = 255;
-    bms.firmware = 255;
-    bms.deepestDischargeDepth = 255;
-    bms.lastDischargeDepth = 255;
-    bms.avgDischargeDepth = 255;
-    bms.chargeCycles = 255;
-    bms.fullDischarges = 255;
-    bms.totalAmpHoursDrawn = 255;
-    bms.minMainBattVoltage = 255;
-    bms.maxMainBattVoltage = 255;
-    bms.secondsSinceLastFullCharge = 255;
-    bms.numSynchros = 255;
-    bms.numLowVoltAlarms = 255;
-    bms.numHighVoltAlarms = 255;
-    bms.auxBattMinimum = 255;
-    bms.auxBattMaximum = 255;
+    // // Initialize Victron SmartShunt data
+    // // clear(bms);
+    // bms.mvoltage = 255;
+    // bms.mcurrent = 255;
+    // bms.power = 255;
+    // bms.consumedmAH = 255;
+    // bms.stateOfCharge = 255;
+    // bms.timeToGo = 255;
+    // bms.alarm = false;
+    // bms.alarmReason = 255;
+    // bms.firmware = 255;
+    // bms.deepestDischargeDepth = 255;
+    // bms.lastDischargeDepth = 255;
+    // bms.avgDischargeDepth = 255;
+    // bms.chargeCycles = 255;
+    // bms.fullDischarges = 255;
+    // bms.totalAmpHoursDrawn = 255;
+    // bms.minMainBattVoltage = 255;
+    // bms.maxMainBattVoltage = 255;
+    // bms.secondsSinceLastFullCharge = 255;
+    // bms.numSynchros = 255;
+    // bms.numLowVoltAlarms = 255;
+    // bms.numHighVoltAlarms = 255;
+    // bms.auxBattMinimum = 255;
+    // bms.auxBattMaximum = 255;
 
-    // Initialize string fields to empty strings
-    bms.PID = "";
-    bms.model = "";
-    bms.monitorMode = "";
+    // // Initialize string fields to empty strings
+    // bms.PID = "";
+    // bms.model = "";
+    // bms.monitorMode = "";
 
-    // Clear any existing data in vectors
-    bms.labels.clear();
-    bms.fields.clear();
+    // // ? Clear any existing data in vectors
+    // // bms.labels.clear();
+    // // bms.fields.clear();
 
-    // Initialize Renogy MPPT data
-    mppt.renogyData.batterySoc = 255;
-    mppt.renogyData.batteryVoltage = 255.0;
-    mppt.renogyData.batteryChargingAmps = 255.0;
-    mppt.renogyData.batteryTemperature = 255;
-    mppt.renogyData.controllerTemperature = 255;
-    mppt.renogyData.loadVoltage = 255.0;
-    mppt.renogyData.loadAmps = 255.0;
-    mppt.renogyData.loadWatts = 255;
-    mppt.renogyData.solarPanelVoltage = 255.0;
-    mppt.renogyData.solarPanelAmps = 255.0;
-    mppt.renogyData.solarPanelWatts = 255;
-    mppt.renogyData.minBatteryVoltageToday = 255.0;
-    mppt.renogyData.maxBatteryVoltageToday = 255.0;
-    mppt.renogyData.maxChargingAmpsToday = 255.0;
-    mppt.renogyData.maxDischargingAmpsToday = 255.0;
-    mppt.renogyData.maxChargeWattsToday = 255;
-    mppt.renogyData.maxDischargeWattsToday = 255;
-    mppt.renogyData.chargeAmphoursToday = 255;
-    mppt.renogyData.dischargeAmphoursToday = 255;
-    mppt.renogyData.chargeWatthoursToday = 255;
-    mppt.renogyData.dischargeWatthoursToday = 255;
-    mppt.renogyData.controllerUptimeDays = 255;
-    mppt.renogyData.totalBatteryOvercharges = 255;
-    mppt.renogyData.totalBatteryFullcharges = 255;
-    mppt.renogyData.batteryTemperatureF = 255.0;
-    mppt.renogyData.controllerTemperatureF = 255.0;
-    mppt.renogyData.batteryChargingWatts = 255.0;
-    mppt.renogyData.lastUpdateTime = 0;
-    mppt.renogyData.controllerConnected = false;
+    // // Initialize Renogy MPPT data
+    // mppt.renogyData.batterySoc = 255;
+    // mppt.renogyData.batteryVoltage = 255.0;
+    // mppt.renogyData.batteryChargingAmps = 255.0;
+    // mppt.renogyData.batteryTemperature = 255;
+    // mppt.renogyData.controllerTemperature = 255;
+    // mppt.renogyData.loadVoltage = 255.0;
+    // mppt.renogyData.loadAmps = 255.0;
+    // mppt.renogyData.loadWatts = 255;
+    // mppt.renogyData.solarPanelVoltage = 255.0;
+    // mppt.renogyData.solarPanelAmps = 255.0;
+    // mppt.renogyData.solarPanelWatts = 255;
+    // mppt.renogyData.minBatteryVoltageToday = 255.0;
+    // mppt.renogyData.maxBatteryVoltageToday = 255.0;
+    // mppt.renogyData.maxChargingAmpsToday = 255.0;
+    // mppt.renogyData.maxDischargingAmpsToday = 255.0;
+    // mppt.renogyData.maxChargeWattsToday = 255;
+    // mppt.renogyData.maxDischargeWattsToday = 255;
+    // mppt.renogyData.chargeAmphoursToday = 255;
+    // mppt.renogyData.dischargeAmphoursToday = 255;
+    // mppt.renogyData.chargeWatthoursToday = 255;
+    // mppt.renogyData.dischargeWatthoursToday = 255;
+    // mppt.renogyData.controllerUptimeDays = 255;
+    // mppt.renogyData.totalBatteryOvercharges = 255;
+    // mppt.renogyData.totalBatteryFullcharges = 255;
+    // mppt.renogyData.batteryTemperatureF = 255.0;
+    // mppt.renogyData.controllerTemperatureF = 255.0;
+    // mppt.renogyData.batteryChargingWatts = 255.0;
+    // mppt.renogyData.lastUpdateTime = 0;
+    // mppt.renogyData.controllerConnected = false;
 
-    // Initialize controller info
-    mppt.renogyInfo.voltageRating = 255;
-    mppt.renogyInfo.ampRating = 255;
-    mppt.renogyInfo.dischargeAmpRating = 255;
-    mppt.renogyInfo.type = 255;
-    mppt.renogyInfo.controllerName = 255;
-    mppt.renogyInfo.wattageRating = 255.0;
-    mppt.renogyInfo.lastUpdateTime = 0;
-    mppt.renogyInfo.modbusAddress = 255;
+    // // Initialize controller info
+    // mppt.renogyInfo.voltageRating = 255;
+    // mppt.renogyInfo.ampRating = 255;
+    // mppt.renogyInfo.dischargeAmpRating = 255;
+    // mppt.renogyInfo.type = 255;
+    // mppt.renogyInfo.controllerName = 255;
+    // mppt.renogyInfo.wattageRating = 255.0;
+    // mppt.renogyInfo.lastUpdateTime = 0;
+    // mppt.renogyInfo.modbusAddress = 255;
 
     // Clear string fields
-    memset(mppt.renogyInfo.softwareVersion, 0, sizeof(mppt.renogyInfo.softwareVersion));
-    memset(mppt.renogyInfo.hardwareVersion, 0, sizeof(mppt.renogyInfo.hardwareVersion));
-    memset(mppt.renogyInfo.serialNumber, 0, sizeof(mppt.renogyInfo.serialNumber));
+    // memset(mppt.renogyInfo.softwareVersion, 0, sizeof(mppt.renogyInfo.softwareVersion));
+    // memset(mppt.renogyInfo.hardwareVersion, 0, sizeof(mppt.renogyInfo.hardwareVersion));
+    // memset(mppt.renogyInfo.serialNumber, 0, sizeof(mppt.renogyInfo.serialNumber));
 }
 
 #pragma endregion Debug

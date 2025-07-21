@@ -20,9 +20,10 @@ static int currentPos = 0;
 // #define JPEG_RESOLUTION OV2640_1024x768    // 1024 x 768 resolution (XGA)
 // #define JPEG_RESOLUTION OV2640_1280x1024   // 1280 x 1024 resolution (SXGA)
 // #define JPEG_RESOLUTION OV2640_1600x1200   // 1600 x 1200 resolution (UXGA)
-
+#include <ArduinoTrace.h>
 void CameraHandler::begin()
 {
+    TRACE();
     // Initialize SPI.
     SPI.begin();
 
@@ -46,12 +47,12 @@ void CameraHandler::begin()
     temp = myCAM.read_reg(ARDUCHIP_TEST1);
     if (temp != 0x55)
     {
-        Serial.println(F("ACK CMD SPI interface Error! END"));
+// Serial.println(F("ACK CMD SPI interface Error! END"));
         delay(1000);
     }
     else
     {
-        Serial.println(F("ACK CMD SPI interface OK. END"));
+// Serial.println(F("ACK CMD SPI interface OK. END"));
     }
 
     // Set the image format to JPEG.
@@ -85,7 +86,7 @@ uint32_t CameraHandler::captureImage()
 
     // Start image capture.
     myCAM.start_capture();
-    Serial.println("Capturing image...");
+// Serial.println("Capturing image...");
 
     // Wait until capture is complete (with a timeout).
     const unsigned long timeout = 5000; // 5000 ms timeout.
@@ -95,24 +96,24 @@ uint32_t CameraHandler::captureImage()
     {
         if (millis() - startTime > timeout)
         {
-            Serial.println("Error: Capture timed out.");
+// Serial.println("Error: Capture timed out.");
             return 0;
         }
     }
-    Serial.print(imageLength);
+// Serial.print(imageLength);
     // Retrieve the length (in bytes) of the captured image.
     // This function returns (value & 0x07fffff).
     imageLength = myCAM.read_fifo_length();
 
     if ((imageLength >= 0x7FFFFF) || (imageLength == 0))
     {
-        Serial.println("Error: Image length is invalid.");
+// Serial.println("Error: Image length is invalid.");
         return 0;
     }
 
-    Serial.print("Image captured. Size: ");
-    Serial.print(imageLength);
-    Serial.println(" bytes.");
+// Serial.print("Image captured. Size: ");
+// Serial.print(imageLength);
+// Serial.println(" bytes.");
 
     return imageLength;
 }
@@ -125,7 +126,7 @@ void CameraHandler::startImageStream()
     myCAM.CS_LOW();
     myCAM.set_fifo_burst(); // equivalent to SPI.transfer(0x3C) or SPI.transfer(BURST_FIFO_READ);
 
-    Serial.println("start reading pal");
+// Serial.println("start reading pal");
 }
 
 uint16_t CameraHandler::readImageChunk(uint16_t chunkSize, uint8_t *buffer)
@@ -148,7 +149,7 @@ void CameraHandler::finishImageStream()
 
     myCAM.CS_HIGH();
 
-    Serial.println("cutting off stream (ouch)");
+// Serial.println("cutting off stream (ouch)");
 }
 
 bool CameraHandler::validateModel()
@@ -160,12 +161,12 @@ bool CameraHandler::validateModel()
     myCAM.rdSensorReg8_8(OV2640_CHIPID_LOW, &pid);
     if ((vid != 0x26) && ((pid != 0x41) || (pid != 0x42)))
     {
-        Serial.println(F("ACK CMD Can't find OV2640 module! END"));
+// Serial.println(F("ACK CMD Can't find OV2640 module! END"));
         return false;
     }
     else
     {
-        Serial.println(F("ACK CMD OV2640 detected. END"));
+// Serial.println(F("ACK CMD OV2640 detected. END"));
         return true;
     }
 }

@@ -2,7 +2,7 @@
 #define TIMERS_H
 
 #include <Arduino.h>
-#define POWER_SEND_INTERVAL 5
+#define POWER_SEND_INTERVAL 1 
 
 struct time
 {

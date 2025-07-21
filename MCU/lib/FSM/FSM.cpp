@@ -1,70 +1,21 @@
 #include "FSM.h"
 #include <RTCZero.h>
+#include <ArduinoTrace.h>
 
 static int commsFlag = 0;
 static bool lowPowerMode = false;
 static bool noConnectionMode = false;
 
-
-void debugLoop() {
-    static bool debug = false;
-    static bool mode = false;
-    char reportString[20];
-    RTCZero rtc;
-    uint8_t endTime = 0;
-    uint8_t lastTime = 0;
-
-    Serial.begin(115200);
-    rtc.begin();
-    endTime = (rtc.getSeconds() + 5) % 60;
-    pinMode(LED_BUILTIN, OUTPUT);
-    while (rtc.getSeconds() != endTime) {
-        if (rtc.getSeconds() != lastTime) {
-            mode = !mode;
-            lastTime = rtc.getSeconds();
-        }
-        digitalWrite(LED_BUILTIN, mode);
-
-        if(Serial.available() > 0) {
-            std::string msg = Serial.readStringUntil('\n').c_str();
-            int res = strcmp(msg.c_str(), "sclink");
-            if(res == 0){
-                Serial.write("connected");
-                debug = true;
-                break;
-            }else {
-                Serial.write(msg.c_str());
-            }
-        }
-    }
-
-    while (debug) {
-        if (Serial.available() > 0) {
-            std::string msg = Serial.readStringUntil('\n').c_str();
-            switch (msg[0])
-            {
-            case 'x':
-                mode = !mode;
-                break;
-            case 'r':
-                sprintf(reportString, "Current mode: %d\n", mode);
-                Serial.println(reportString);
-                break;
-            default:
-                break;
-            }
-        }
-        digitalWrite(LED_BUILTIN, mode);
-    }
-    digitalWrite(LED_BUILTIN, LOW);
+void shutdown() {
+    Serial.println("Timeout Reached!");
 }
-
 
 void FSM(data &d)
 {
     checkPowerHandler(d);
     loraListen(d);
-    testState(d);
+    d.watch->clear();
+    // testState(d);
 }
 
 #pragma region Initialize
@@ -81,7 +32,13 @@ void FSM(data &d)
 void initializeStartup(data &d)
 {
 #if DEBUG
-    initializeDebug();
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, HIGH);
+    initializeDebug(); 
+    d.watch = new WDTZero;
+    d.watch->attachShutdown(shutdown);
+    d.watch->setup(WDT_HARDCYCLE16S);
+    TRACE();
 #endif
     // for waking up from sleep
     attachInterrupt(digitalPinToInterrupt(RX_INTERRUPT), commsHandler, RISING);
@@ -93,7 +50,6 @@ void initializeStartup(data &d)
     timerInit();
     initTemperatureSensor();
     initMuxPins();
-
     // power modules initialization
     d.powerData = new powerInfo;
     d.powerData->initData();
@@ -104,6 +60,7 @@ void initializeStartup(data &d)
 
     // camera initialization
     d.cam->begin();
+    digitalWrite(LED_BUILTIN, LOW);
 }
 
 /**
@@ -111,8 +68,8 @@ void initializeStartup(data &d)
  */
 void initializeDebug()
 {
-    Serial.begin(9600);
-// Serial.println("Debugging Initialized");
+    Serial.begin(115200);
+    delay(2000);    // let Serial connection stablilize
 }
 
 #pragma endregion Initialize
@@ -123,12 +80,14 @@ void checkPowerHandler(data &d)
 {
     if (getPowerFlag() == 1)
     {
+        TRACE();
 #if DEBUG
 // Serial.println("Power check function");
 #endif
         setPowerFlag(false);
 
-        d.powerData->updateData(); // fetch new data from the controllers;
+        //TODO: WDT Timeout is reached everytime; Should be broken down to prevent blocking.
+        // d.powerData->updateData(); // fetch new data from the controllers;
 
         double battVoltage = d.powerData->getBatteryVoltage();
 
@@ -169,6 +128,7 @@ void loraListen(data &d)
 {
     if (commsFlag == 1)
     {
+        TRACE();
 #if DEBUG
 // Serial.println("Comms Module Interrupt");
 #endif
@@ -182,6 +142,7 @@ void loraListen(data &d)
 
 int runCommands(data &d)
 {
+    TRACE();
     if (d.doc.isNull())
     {
 // Serial.println("No valid JSON received");
@@ -220,6 +181,7 @@ int runCommands(data &d)
 
 bool sendData(data &d)
 {
+    TRACE();
     // Convert the data struct to JSON
     JsonDocument doc = jsonify(d);
     if (doc.isNull())
@@ -409,6 +371,7 @@ void updateTime(data &d)
 
 void testState(data &d)
 {
+
     static int s = (d.t.seconds + 10) % 60;
     updateTime(d);
     if (d.t.seconds == s)

@@ -1,14 +1,15 @@
 #include "timer.h"
 #include "RTCZero.h"
+#include <ArduinoTrace.h>
 
 RTCZero rtc;
-static int seconds = 0;
-static int minutes = 0;
-static int checkPowerFlag = 0;
+static volatile int seconds = 0;
+static volatile int minutes = 0;
+static volatile int checkPowerFlag = 0;
 
 void timerInit()
 {
-
+    TRACE();
     rtc.begin();
     minutes = getMinutes() + 1;
     rtc.setAlarmSeconds(seconds);
@@ -54,10 +55,10 @@ void setPowerFlag(int flag)
 void powerInterrupt()
 {
     rtc.setAlarmMinutes(minutes = minutes + 1 % 60);
-    Serial.println("Time: " + String(getHours()) + ":" + String(getMinutes()) + ":" + String(getSeconds()));
+// Serial.println("Time: " + String(getHours()) + ":" + String(getMinutes()) + ":" + String(getSeconds()));
     if (minutes % POWER_SEND_INTERVAL == 0)
     {
         checkPowerFlag = 1;
-        Serial.println("Check Power Flag set to 1");
+// Serial.println("Check Power Flag set to 1");
     }
 }

@@ -1,5 +1,5 @@
 #include "LoRa.h"
-
+#include <ArduinoTrace.h>
 LoraRadio::LoraRadio()
 {
     // init buffer to null
@@ -9,21 +9,16 @@ LoraRadio::LoraRadio()
 
 bool LoraRadio::setupLoRa()
 {
+    TRACE();
     uint8_t setupDelay = 100;
 
     Serial1.begin(9600); // ideally this is handled elsewhere
     delay(2000);
-
-    Serial1.println("AT+IPR=9600");
-    delay(setupDelay);
-    Serial1.println("AT+CRFOP=22");
-    delay(setupDelay);
-    Serial1.println("AT+NETWORKID=6");
-    delay(setupDelay);
-    Serial1.println("AT+BAND=915000000");
-    delay(setupDelay);
-    Serial1.println("AT+PARAMETER=9,7,1,12");
-    delay(setupDelay);
+    static const char* params[5] = {"AT+IPR=9600","AT+CRFOP=22","AT+NETWORKID=6","AT+BAND=915000000","AT+PARAMETER=9,7,1,12"};
+    for(int i = 0; i < 5; i++) {
+        Serial1.println(params[i]);
+        delay(setupDelay);
+    }
     Serial1.println("AT+ADDRESS=" + String(LORA_ADDRESS));
     delay(setupDelay);
 
@@ -33,22 +28,24 @@ bool LoraRadio::setupLoRa()
     delay(setupDelay);
     Serial1.println("AT+CPIN?");
     delay(setupDelay);
-    bool success = sendHandshake();
-    if (!success)
-    {
-// Serial.println("Handshake failed");
-        return false;
-    }
+
+    //! HS timeout is longer than WDT
+    // bool success = sendHandshake();
+
+//     if (!success)
+//     {
+// // Serial.println("Handshake failed");
+//         return false;
+//     }
 
 // Serial.println("Transceiver setup complete!!! :D");
-    delay(setupDelay);
     //"handshake packet" to make sure the server knows the farm ID that corresponds to the LoRa address
     // sendHandshake(); put this in the initialize to take advantage of the bool
     return true;
 }
 
-bool LoraRadio::sendPackets(char *message)
-{
+bool LoraRadio::sendPackets(char *message) {
+    TRACE();
     totalPackets = (strlen(message) + PACKET_SIZE - 1) / PACKET_SIZE;
     char fragment[PACKET_SIZE + 1];
     for (int i = 0; i < totalPackets; i++)
@@ -134,6 +131,7 @@ bool LoraRadio::waitForACK(int expectedID)
 
 void LoraRadio::receiveMsg(JsonDocument &doc)
 {
+    TRACE();
     while (Serial1.available())
     {
         char c = Serial1.read();
@@ -282,6 +280,7 @@ void LoraRadio::reconstructMessage(JsonDocument &doc)
 
 bool LoraRadio::sendHandshake()
 {
+    TRACE();
     const size_t message_size = 120;
     char handshake_message[message_size];
 
