@@ -6,5 +6,4 @@ data/
 
 # Ignore VS code settings
 .vs/
-
-.vscode/
+*workspace
