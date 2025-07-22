@@ -10,7 +10,7 @@ class LiftCommand(EmbeddedDocument):
     dates = ListField(DateTimeField())
     command = BooleanField()    # Up is 1, Down is 0
     duration = IntField(defualt=None)
-    status = StringField(choices=["pending", "in progress", "completed", "failed"])
+    status = StringField(choices=['pending', 'in progress', 'completed', 'failed'])
     lift_end_time = DateTimeField(defualt=None)
 
 

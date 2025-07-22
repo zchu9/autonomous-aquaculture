@@ -8,11 +8,11 @@ def get_system_levels(id):
 
         if data:
             sys_data = data.to_mongo()
-            sys_data["_id"] = str(data.id)
-            sys_data["farm_id"] = str(data.farm_id)
+            sys_data['_id'] = str(data.id)
+            sys_data['farm_id'] = str(data.farm_id)
             eastern_time = convert_to_eastern_time(data.created_at)
             if eastern_time:
-                sys_data["created_at"] = eastern_time.strftime('%Y-%m-%d %H:%M:%S EST')
+                sys_data['created_at'] = eastern_time.strftime('%Y-%m-%d %H:%M:%S EST')
             return jsonify(sys_data), 200
         else:
             return "No system levels data found", 404
@@ -29,11 +29,11 @@ def get_all_system_levels(id):
         sys_lev_list = [sys.to_mongo() for sys in all_sys_levs]
 
         for system_level in sys_lev_list:
-            system_level["_id"] = str(system_level["_id"])
-            system_level["farm_id"] = str(system_level["farm_id"])
-            eastern_time = convert_to_eastern_time(system_level["created_at"])
+            system_level['_id'] = str(system_level['_id'])
+            system_level['farm_id'] = str(system_level['farm_id'])
+            eastern_time = convert_to_eastern_time(system_level['created_at'])
             if eastern_time:
-                system_level["created_at"] = eastern_time.strftime('%Y-%m-%d %H:%M:%S EST')
+                system_level['created_at'] = eastern_time.strftime('%Y-%m-%d %H:%M:%S EST')
 
         return jsonify(sys_lev_list), 200
 
@@ -58,8 +58,8 @@ def get_mult_system_levels(id):
             logging.info(f"UTC dates: start date = {start_date_utc} and end date = {end_date_utc}")
 
             if start_date_utc and end_date_utc:
-                query["created_at__gte"] = start_date_utc.replace(hour=0, minute=0, second=0)
-                query["created_at__lte"] = end_date_utc.replace(hour=23, minute=59, second=59)
+                query['created_at__gte'] = start_date_utc.replace(hour=0, minute=0, second=0)
+                query['created_at__lte'] = end_date_utc.replace(hour=23, minute=59, second=59)
 
         else:
             logging.info("User needs to add both start and end dates")
@@ -73,12 +73,12 @@ def get_mult_system_levels(id):
             sys_lev_list = []
             for system_level in mult_sys_levels:
                 sys_lev_data = system_level.to_mongo()
-                sys_lev_data["_id"] = str(system_level.id)
-                sys_lev_data["farm_id"] = str(system_level.farm_id)
+                sys_lev_data['_id'] = str(system_level.id)
+                sys_lev_data['farm_id'] = str(system_level.farm_id)
 
                 eastern_time = convert_to_eastern_time(system_level.created_at)
                 if eastern_time:
-                    sys_lev_data["created_at"] = eastern_time.strftime('%Y-%m-%d %H:%M:%S EST')
+                    sys_lev_data['created_at'] = eastern_time.strftime('%Y-%m-%d %H:%M:%S EST')
 
                 sys_lev_list.append(sys_lev_data)
 
@@ -108,11 +108,11 @@ def add_system_levels(id):
         logging.info(f"System levels created for farm {id}: {system_level}")
 
         sys_response = new_data.to_mongo()
-        sys_response["_id"] = str(new_data.id)
-        sys_response["farm_id"] = str(new_data.farm_id)
+        sys_response['_id'] = str(new_data.id)
+        sys_response['farm_id'] = str(new_data.farm_id)
         eastern_time = convert_to_eastern_time(new_data.created_at)
         if eastern_time:
-            sys_response["created_at"] = eastern_time.strftime("%Y-%m-%d %H:%M:%S EST")
+            sys_response['created_at'] = eastern_time.strftime("%Y-%m-%d %H:%M:%S EST")
 
         return jsonify(sys_response), 201
 

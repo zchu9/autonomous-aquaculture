@@ -8,11 +8,11 @@ def get_sensor_data(id):
 
         if data:
             sensor_data = data.to_mongo()
-            sensor_data["_id"] = str(data.id)
-            sensor_data["farm_id"] = str(data.farm_id)
+            sensor_data['_id'] = str(data.id)
+            sensor_data['farm_id'] = str(data.farm_id)
             eastern_time = convert_to_eastern_time(data.created_at)
             if eastern_time:
-                sensor_data["created_at"] = eastern_time.strftime('%Y-%m-%d %H:%M:%S EST')
+                sensor_data['created_at'] = eastern_time.strftime('%Y-%m-%d %H:%M:%S EST')
             return jsonify(sensor_data), 200
         else:
             return "No sensor data found", 404
@@ -28,11 +28,11 @@ def get_all_sensor_data(id):
         sensor_data_list = [sensor.to_mongo() for sensor in all_sensor_data]
 
         for sensor_data in sensor_data_list:
-            sensor_data["_id"] = str(sensor_data["_id"])
-            sensor_data["farm_id"] = str(sensor_data["farm_id"])
-            eastern_time = convert_to_eastern_time(sensor_data["created_at"])
+            sensor_data['_id'] = str(sensor_data['_id'])
+            sensor_data['farm_id'] = str(sensor_data['farm_id'])
+            eastern_time = convert_to_eastern_time(sensor_data['created_at'])
             if eastern_time:
-                sensor_data["created_at"] = eastern_time.strftime('%Y-%m-%d %H:%M:%S EST')
+                sensor_data['created_at'] = eastern_time.strftime('%Y-%m-%d %H:%M:%S EST')
 
         return jsonify(sensor_data_list), 200
 
@@ -57,8 +57,8 @@ def get_mult_sensor_data(id):
             logging.info(f"UTC dates: start date = {start_date_utc} and end date = {end_date_utc}")
 
             if start_date_utc and end_date_utc:
-                query["created_at__gte"] = start_date_utc.replace(hour=0, minute=0, second=0)
-                query["created_at__lte"] = end_date_utc.replace(hour=23, minute=59, second=59)
+                query['created_at__gte'] = start_date_utc.replace(hour=0, minute=0, second=0)
+                query['created_at__lte'] = end_date_utc.replace(hour=23, minute=59, second=59)
 
         else:
             logging.info("User needs to add both start and end dates")
@@ -69,13 +69,13 @@ def get_mult_sensor_data(id):
         if mult_sensor_data:
             sensor_data_list = [sensor.to_mongo() for sensor in mult_sensor_data]
             for sensor_data in sensor_data_list:
-                sensor_data["_id"] = str(sensor_data["_id"])
-                sensor_data["farm_id"] = str(sensor_data["farm_id"])
-                eastern_time = convert_to_eastern_time(sensor_data["created_at"])
+                sensor_data['_id'] = str(sensor_data['_id'])
+                sensor_data['farm_id'] = str(sensor_data['farm_id'])
+                eastern_time = convert_to_eastern_time(sensor_data['created_at'])
                 if eastern_time:
-                    sensor_data["created_at"] = eastern_time.strftime('%Y-%m-%d %H:%M:%S EST')
+                    sensor_data['created_at'] = eastern_time.strftime('%Y-%m-%d %H:%M:%S EST')
 
-            logging.info(f"Found all sensor data within the specfied date range")
+            logging.info("Found all sensor data within the specfied date range")
             return jsonify(sensor_data_list), 200
         else:
             logging.info("Can not find the sensor data in specified dates")
@@ -99,11 +99,11 @@ def add_sensor_data(id):
         logging.info(f"Sensor data created for farm {id}: {sensor_data}")
         
         sensor_response = new_data.to_mongo()
-        sensor_response["_id"] = str(new_data.id)
-        sensor_response["farm_id"] = str(new_data.farm_id)
+        sensor_response['_id'] = str(new_data.id)
+        sensor_response['farm_id'] = str(new_data.farm_id)
         eastern_time = convert_to_eastern_time(new_data.created_at)
         if eastern_time:
-            sensor_response["created_at"] = eastern_time.strftime("%Y-%m-%d %H:%M:%S EST")
+            sensor_response['created_at'] = eastern_time.strftime("%Y-%m-%d %H:%M:%S EST")
         
         return jsonify(sensor_response), 201
     
