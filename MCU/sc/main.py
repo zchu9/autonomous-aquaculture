@@ -1,5 +1,5 @@
 import serial
-# import time
+import time
 
 import serial.tools
 import serial.tools.list_ports
@@ -13,6 +13,7 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 def main():
+    time.sleep(1) # allows time for Arduino serial to setup
     while 1:
         ports = serial.tools.list_ports.grep("Arduino|Feather", include_links=True)
         for port in ports:
