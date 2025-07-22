@@ -79,8 +79,8 @@ services:
     profiles: ["bridge"]
     volumes:
       - ./oyster-bridge/data:/python-docker/data
-    devices:
-      - "/dev/serial/by-id/usb-Silicon_Labs_CP2102N_USB_to_UART_Bridge_Controller_2e74289bdc24ec119aa676c2a8a1c857-if00-port0:/dev/serial0"
+    # devices:
+    #   - "/dev/serial/by-id/usb-Silicon_Labs_CP2102N_USB_to_UART_Bridge_Controller_2e74289bdc24ec119aa676c2a8a1c857-if00-port0:/dev/serial0"
     networks:
       - oyster-network
 
